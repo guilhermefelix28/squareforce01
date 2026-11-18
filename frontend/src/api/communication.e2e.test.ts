@@ -1,0 +1,83 @@
+/**
+ * Comunicação REAL frontend <-> backend: usa o mesmo cliente de API da interface contra o
+ * uvicorn iniciado em backend.global-setup.ts (banco temporário; planilha real só leitura).
+ */
+import { existsSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { beforeAll, describe, expect, inject, it } from "vitest";
+import { ApiError, configureApi, newIdempotencyKey } from "./client";
+import {
+  closeSession,
+  createSession,
+  getCompetitionOptions,
+  getHealth,
+  getSession,
+  importBase,
+  listClubs,
+  listPlayers,
+  sessionSocketUrl,
+} from "./endpoints";
+
+const REAL_XLSX = resolve(__dirname, "../../../Dados/jogadores.xlsx");
+const hasReal = existsSync(REAL_XLSX);
+
+beforeAll(() => {
+  configureApi({ baseUrl: inject("backendUrl"), retryDelayMs: 50, fetchImpl: (...a) => fetch(...a) });
+});
+
+const xlsx = () => new File([readFileSync(REAL_XLSX)], "jogadores.xlsx");
+
+describe("frontend <-> backend real", () => {
+  it("consulta o health check", async () => {
+    const h = await getHealth();
+    expect(h.status).toBe("ok");
+    expect(h.database.schema_version).toBe(1);
+  });
+
+  it("recebe erro padronizado em sessão inexistente", async () => {
+    const err = await getSession("inexistente").catch((e) => e);
+    expect(err).toBeInstanceOf(ApiError);
+    expect(err.code).toBe("SESSION_NOT_FOUND");
+  });
+
+  it.runIf(hasReal)("importa as bases reais e consulta o catálogo", async () => {
+    const clubs = await importBase("clubs", xlsx());
+    expect(clubs.rows_imported).toBe(40);
+    const players = await importBase("players", xlsx());
+    expect(players.rows_imported).toBe(1574);
+    expect((await listClubs()).total).toBe(40);
+    const goalkeepers = await listPlayers({ position: "GOL", limit: 5 });
+    expect(goalkeepers.items.every((p) => p.natural_positions.includes("GK"))).toBe(true);
+    expect((await getCompetitionOptions()).catalog_ready).toBe(true);
+  });
+
+  it.runIf(hasReal)("cria sessão, bloqueia importação, notifica via WebSocket e encerra", async () => {
+    const key = newIdempotencyKey();
+    const cfg = { format: "cup" as const, num_clubs: 16, user_club_uid: 322, league_rounds: null, confirm_replace: false };
+    const s = await createSession(cfg, key);
+    // repetição do mesmo comando (ex.: resposta perdida) devolve a mesma sessão
+    expect((await createSession(cfg, key)).id).toBe(s.id);
+
+    const blocked = await importBase("players", xlsx()).catch((e) => e);
+    expect(blocked.code).toBe("IMPORT_BLOCKED_ACTIVE_COMPETITION");
+
+    const ws = new WebSocket(sessionSocketUrl(s.id));
+    const messages: { type: string; version?: number }[] = [];
+    const closedEvt = new Promise<void>((ok) => {
+      ws.onmessage = (ev) => {
+        const m = JSON.parse(String(ev.data));
+        messages.push(m);
+        if (m.type === "session.closed") ok();
+      };
+    });
+    await new Promise<void>((ok) => (ws.onopen = () => ok()));
+    await expect.poll(() => messages.length).toBeGreaterThan(0);
+    expect(messages[0]).toMatchObject({ type: "session.snapshot", version: 1 });
+
+    const closed = await closeSession(s.id, s.version);
+    expect(closed.status).toBe("closed");
+    await closedEvt;
+    expect(messages.at(-1)).toMatchObject({ type: "session.closed", version: 2 });
+    ws.close();
+  });
+});
