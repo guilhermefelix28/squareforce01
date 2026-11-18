@@ -12,6 +12,7 @@ from fastapi.responses import FileResponse, JSONResponse
 
 from services.auction.engine import AuctionError
 from services.trading.engine import TradingError
+from services.competition.season import SeasonError
 from services.competition.options import competition_options
 from squadforce_shared import __version__
 from squadforce_shared.contracts import (
@@ -27,6 +28,9 @@ from squadforce_shared.contracts import (
     CompetitionConfig,
     CompetitionOptions,
     CompetitionOut,
+    MatchReportOut,
+    SeasonStateOut,
+    SeasonSummaryOut,
     DatabaseHealth,
     ErrorResponse,
     HealthResponse,
@@ -145,6 +149,7 @@ async def create_session(c: C, request: Request, body: SessionCreateRequest, ide
         if previous is not None and previous.id != state.id:
             c.auctions.discard(previous.id)
             c.trading.discard(previous.id)
+            c.seasons.discard(previous.id)
         return 201, state.to_out().model_dump(mode="json")
 
     status, out, replayed = c.idempotency.execute("sessions:create", key, fingerprint(raw), run)
@@ -182,6 +187,7 @@ async def close_session(
         out = c.sessions.close(session_id, expected).to_out().model_dump(mode="json")
         c.auctions.discard(session_id)  # estado do leilão e do mercado some com a sessão (sem persistência)
         c.trading.discard(session_id)
+        c.seasons.discard(session_id)
         return 200, out
 
     status, out, replayed = c.idempotency.execute(f"sessions:close:{session_id}", key, fingerprint(raw), run)
@@ -494,3 +500,136 @@ async def act_on_proposal(
         return m.respond(m.user_club_uid, proposal_id, action == "accept", key)
 
     return _trading_command(c, session_id, key, raw + proposal_id.encode() + action.encode(), "act", act)
+
+
+# ------------------------------------------------------------------ temporada: Liga e Copa (Entrega 7)
+_SEASON_STATUS = {"INVALID_STATE": 409, "ALREADY_CONSOLIDATED": 409, "NOTHING_TO_RETRY": 409, "ROUND_FAILED": 500}
+
+
+def _season_error(exc: SeasonError) -> AppError:
+    status = _SEASON_STATUS.get(exc.code, 500)
+    if status == 409:
+        code = ErrorCode.INVALID_PHASE
+    else:
+        code = ErrorCode.ROUND_FAILED if exc.code == "ROUND_FAILED" else ErrorCode.SEASON_FAILED
+    return AppError(status, code, exc.message, retryable=status == 500, details={"reason": exc.code, **exc.details})
+
+
+def _season(c: Container, session_id: str):
+    c.sessions.get(session_id)
+    season = c.seasons.get(session_id)
+    if season is None:
+        raise AppError(404, ErrorCode.SEASON_NOT_FOUND, "A competição desta sessão ainda não foi iniciada.")
+    return season
+
+
+def _club_names(c: Container) -> dict[int, str]:
+    page = c.data.list_clubs(None, 10_000, 0)
+    return {x.club_uid: x.short_name or x.name for x in page.items}
+
+
+@router.post("/sessions/{session_id}/season/start", response_model=SeasonStateOut, status_code=201, responses=ERR, tags=["season"])
+async def start_season(c: C, request: Request, session_id: str, idempotency_key: IdemKey = None):
+    """Inicia a Liga/Copa com os elencos finais do mercado. Exige o mercado encerrado (fase competition)."""
+    key = validate_key(idempotency_key)
+    raw = await request.body()
+
+    def run() -> tuple[int, dict[str, Any]]:
+        state = c.sessions.get(session_id)
+        market = c.trading.get(session_id)
+        if market is not None:
+            c.trading.state(session_id, market)  # avança o relógio do mercado
+            _sync_trading_phase(c, session_id, market)
+            state = c.sessions.get(session_id)
+        if state.status != "active" or state.phase != "competition" or market is None:
+            raise AppError(409, ErrorCode.INVALID_PHASE,
+                           f"A competição só começa após o mercado de negociações (fase atual: {state.phase}).")
+        if c.seasons.get(session_id) is not None:
+            raise AppError(409, ErrorCode.INVALID_PHASE, "A competição desta sessão já foi iniciada.")
+        try:
+            season = c.seasons.create(session_id, competition_id=state.config.format.value, structure=state.structure,
+                                      market=market, names=_club_names(c), seed=(state.seed or 0) + 3)
+        except SeasonError as exc:
+            raise _season_error(exc) from exc
+        return 201, c.seasons.state(session_id, season).model_dump(mode="json")
+
+    status, out, replayed = c.idempotency.execute(f"season:start:{session_id}", key, fingerprint(raw), run)
+    if not replayed:
+        await c.hub.broadcast(session_id, WsEnvelope(type="season.started", session_id=session_id))
+    return _respond(status, out, replayed)
+
+
+@router.get("/sessions/{session_id}/season", response_model=SeasonStateOut, responses=ERR, tags=["season"])
+def get_season(c: C, session_id: str) -> SeasonStateOut:
+    season = _season(c, session_id)
+    with c.seasons.lock(session_id):
+        return c.seasons.state(session_id, season)
+
+
+def _season_command(c: Container, session_id: str, action: str):
+    season = _season(c, session_id)
+
+    def run() -> tuple[int, dict[str, Any]]:
+        with c.seasons.lock(session_id):
+            try:
+                if action == "play":
+                    if season.failed:
+                        season.retry_failed(c.seasons.executor())  # repete SOMENTE as partidas falhas
+                    else:
+                        season.play(c.seasons.executor())
+                else:
+                    season.advance()
+            except SeasonError as exc:
+                raise _season_error(exc) from exc
+            if season.phase == "finished":
+                st = c.sessions.active()
+                if st is not None and st.id == session_id and st.phase == "competition":
+                    c.sessions.transition(session_id, "competition", "finished")
+            return 200, c.seasons.state(session_id, season).model_dump(mode="json")
+
+    return run
+
+
+@router.post("/sessions/{session_id}/season/play", response_model=SeasonStateOut, responses=ERR, tags=["season"])
+async def play_round(c: C, request: Request, session_id: str, idempotency_key: IdemKey = None):
+    """Processa a rodada/fase atual em paralelo e consolida atomicamente. Se partidas falharem, nada é
+    consolidado (500, retryable) e a próxima chamada repete apenas as falhas, com a mesma semente e estado."""
+    key = validate_key(idempotency_key)
+    raw = await request.body()
+    run = _season_command(c, session_id, "play")
+    status, out, replayed = await asyncio.to_thread(
+        c.idempotency.execute, f"season:play:{session_id}", key, fingerprint("play", raw), run)
+    if not replayed:
+        await c.hub.broadcast(session_id, WsEnvelope(type="season.round_played", session_id=session_id))
+    return _respond(status, out, replayed)
+
+
+@router.post("/sessions/{session_id}/season/advance", response_model=SeasonStateOut, responses=ERR, tags=["season"])
+async def advance_round(c: C, request: Request, session_id: str, idempotency_key: IdemKey = None):
+    """Avanço MANUAL para a próxima rodada/fase (nunca automático)."""
+    key = validate_key(idempotency_key)
+    raw = await request.body()
+    run = _season_command(c, session_id, "advance")
+    status, out, replayed = c.idempotency.execute(f"season:advance:{session_id}", key, fingerprint("advance", raw), run)
+    if not replayed:
+        await c.hub.broadcast(session_id, WsEnvelope(type="season.advanced", session_id=session_id))
+    return _respond(status, out, replayed)
+
+
+@router.get("/sessions/{session_id}/season/matches/{match_id}", response_model=MatchReportOut, responses=ERR, tags=["season"])
+def match_report(c: C, session_id: str, match_id: str) -> MatchReportOut:
+    """Pós-partida: resultado, principais eventos, estatísticas, avaliações e Craque da Partida."""
+    season = _season(c, session_id)
+    with c.seasons.lock(session_id):
+        out = c.seasons.report(season, match_id)
+    if out is None:
+        raise AppError(404, ErrorCode.MATCH_NOT_FOUND, f"Partida {match_id} inexistente ou ainda não consolidada.")
+    return out
+
+
+@router.get("/sessions/{session_id}/season/summary", response_model=SeasonSummaryOut, responses=ERR, tags=["season"])
+def season_summary(c: C, session_id: str) -> SeasonSummaryOut:
+    """Campeão, campanhas, artilharia, assistências, melhor média (mín. 50%), Craque da Partida e histórico."""
+    season = _season(c, session_id)
+    with c.seasons.lock(session_id):
+        return c.seasons.summary(session_id, season)

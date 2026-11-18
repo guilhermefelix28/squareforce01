@@ -39,6 +39,9 @@ Gerenciar a única competição ativa com estado autoritativo no servidor, sem n
 2. Transições novas: validar fase de origem, publicar evento WS após a mutação, cobrir com teste de concorrência.
 3. Frontend guarda apenas o `id` em `localStorage`; o servidor é a fonte da verdade.
 
+Entrega 7: `competition` → `finished` quando a temporada termina; `SeasonService` guarda a temporada em memória e é
+descartado com a sessão (encerramento ou substituição).
+
 ## Restrições e comportamentos proibidos
 - Persistir estado em SQLite, JSON, Redis ou qualquer armazenamento permanente.
 - Tentar "restaurar" sessões após reinício do processo.

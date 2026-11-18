@@ -373,6 +373,124 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/sessions/{session_id}/season/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start Season
+         * @description Inicia a Liga/Copa com os elencos finais do mercado. Exige o mercado encerrado (fase competition).
+         */
+        post: operations["start_season_api_sessions__session_id__season_start_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sessions/{session_id}/season": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Season */
+        get: operations["get_season_api_sessions__session_id__season_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sessions/{session_id}/season/play": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Play Round
+         * @description Processa a rodada/fase atual em paralelo e consolida atomicamente. Se partidas falharem, nada é
+         *     consolidado (500, retryable) e a próxima chamada repete apenas as falhas, com a mesma semente e estado.
+         */
+        post: operations["play_round_api_sessions__session_id__season_play_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sessions/{session_id}/season/advance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Advance Round
+         * @description Avanço MANUAL para a próxima rodada/fase (nunca automático).
+         */
+        post: operations["advance_round_api_sessions__session_id__season_advance_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sessions/{session_id}/season/matches/{match_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Match Report
+         * @description Pós-partida: resultado, principais eventos, estatísticas, avaliações e Craque da Partida.
+         */
+        get: operations["match_report_api_sessions__session_id__season_matches__match_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sessions/{session_id}/season/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Season Summary
+         * @description Campeão, campanhas, artilharia, assistências, melhor média (mín. 50%), Craque da Partida e histórico.
+         */
+        get: operations["season_summary_api_sessions__session_id__season_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -590,6 +708,19 @@ export interface components {
             /** Squads */
             squads: components["schemas"]["AuctionSquadOut"][];
         };
+        /** AwardEntryOut */
+        AwardEntryOut: {
+            /** Player */
+            player: number;
+            /** Name */
+            name: string;
+            /** Club Uid */
+            club_uid: number;
+            /** Value */
+            value: number;
+            /** Appearances */
+            appearances: number;
+        };
         /** Body_import_clubs_api_imports_clubs_post */
         Body_import_clubs_api_imports_clubs_post: {
             /**
@@ -605,6 +736,34 @@ export interface components {
              * @description Planilha jogadores.xlsx
              */
             file: string;
+        };
+        /** ClubCampaignOut */
+        ClubCampaignOut: {
+            /** Club Uid */
+            club_uid: number;
+            /** Played */
+            played: number;
+            /** Wins */
+            wins: number;
+            /** Draws */
+            draws: number;
+            /** Losses */
+            losses: number;
+            /** Goals For */
+            goals_for: number;
+            /** Goals Against */
+            goals_against: number;
+            /** Shootouts Won */
+            shootouts_won: number;
+            /** Shootouts Lost */
+            shootouts_lost: number;
+            /**
+             * Result
+             * @description Liga: posição final; Copa: campeão ou fase de eliminação.
+             */
+            result: string;
+            /** Matches */
+            matches: components["schemas"]["SeasonFixtureOut"][];
         };
         /** ClubOut */
         ClubOut: {
@@ -1013,6 +1172,91 @@ export interface components {
             /** Matches Per Club */
             matches_per_club: number;
         };
+        /** MatchEventOut */
+        MatchEventOut: {
+            /** Seq */
+            seq: number;
+            /** Minute */
+            minute: number;
+            /** Second */
+            second: number;
+            /** Period */
+            period: number;
+            /** Type */
+            type: string;
+            /** Side */
+            side?: number | null;
+            /** Club Uid */
+            club_uid?: number | null;
+            /** Player */
+            player?: number | null;
+            /** Player Name */
+            player_name?: string | null;
+            /** Other */
+            other?: number | null;
+            /** Other Name */
+            other_name?: string | null;
+            /** Data */
+            data?: {
+                [key: string]: unknown;
+            };
+        };
+        /** MatchReportOut */
+        MatchReportOut: {
+            /** Match Id */
+            match_id: string;
+            /** Round */
+            round: number;
+            /** Home Club Uid */
+            home_club_uid: number;
+            /** Away Club Uid */
+            away_club_uid: number;
+            /** Status */
+            status: string;
+            /** Score */
+            score: [
+                number,
+                number
+            ];
+            /** Official Score */
+            official_score: [
+                number,
+                number
+            ];
+            /** Shootout */
+            shootout?: [
+                number,
+                number
+            ] | null;
+            /** Winner Club Uid */
+            winner_club_uid?: number | null;
+            /**
+             * Events
+             * @description Principais acontecimentos.
+             */
+            events: components["schemas"]["MatchEventOut"][];
+            /**
+             * Stats
+             * @description Estatísticas por lado: home/away.
+             */
+            stats: {
+                [key: string]: {
+                    [key: string]: unknown;
+                };
+            };
+            /** Ratings */
+            ratings: components["schemas"]["PlayerRatingOut"][];
+            man_of_the_match?: components["schemas"]["PlayerRatingOut"] | null;
+            /** Final Postures */
+            final_postures: [
+                string,
+                string
+            ];
+            /** Engine Version */
+            engine_version: string;
+            /** Params Version */
+            params_version: string;
+        };
         /** PlayerOut */
         PlayerOut: {
             /** Unique Id */
@@ -1054,6 +1298,36 @@ export interface components {
             limit: number;
             /** Offset */
             offset: number;
+        };
+        /** PlayerRatingOut */
+        PlayerRatingOut: {
+            /** Player */
+            player: number;
+            /** Name */
+            name: string;
+            /** Club Uid */
+            club_uid: number;
+            /**
+             * Rating
+             * @description Nota exibida (uma casa decimal).
+             */
+            rating: number;
+            /** Minutes */
+            minutes: number;
+        };
+        /** PointsSystemOut */
+        PointsSystemOut: {
+            /** Win */
+            win: number;
+            /** Draw */
+            draw: number;
+            /** Loss */
+            loss: number;
+            /**
+             * Status
+             * @description Escala não definida no GDD: provisória (PC-09).
+             */
+            status: string;
         };
         /**
          * Position
@@ -1109,6 +1383,140 @@ export interface components {
              * @description Tempo restante (0 se decidida).
              */
             remaining_ms: number;
+        };
+        /** SeasonFixtureOut */
+        SeasonFixtureOut: {
+            /** Match Id */
+            match_id: string;
+            /** Round */
+            round: number;
+            /**
+             * Home Club Uid
+             * @description Mandante (Liga) ou clube A (Copa, mando neutro).
+             */
+            home_club_uid: number;
+            /** Away Club Uid */
+            away_club_uid: number;
+            /** Is User Match */
+            is_user_match: boolean;
+            /** Played */
+            played: boolean;
+            /**
+             * Score
+             * @description Gols da partida (90 min).
+             */
+            score?: [
+                number,
+                number
+            ] | null;
+            /** Official Score */
+            official_score?: [
+                number,
+                number
+            ] | null;
+            /**
+             * Shootout
+             * @description Pênaltis, registrados à parte (Copa).
+             */
+            shootout?: [
+                number,
+                number
+            ] | null;
+            /** Winner Club Uid */
+            winner_club_uid?: number | null;
+        };
+        /** SeasonStateOut */
+        SeasonStateOut: {
+            /** Session Id */
+            session_id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "league" | "cup";
+            /**
+             * Phase
+             * @description ready: rodada pronta; awaiting_advance: pós-rodada (avanço manual); finished.
+             * @enum {string}
+             */
+            phase: "ready" | "awaiting_advance" | "finished";
+            /** Round Number */
+            round_number: number;
+            /** Total Rounds */
+            total_rounds: number;
+            /** Round Label */
+            round_label: string | null;
+            /**
+             * Fixtures
+             * @description Confrontos da rodada/fase atual.
+             */
+            fixtures: components["schemas"]["SeasonFixtureOut"][];
+            /**
+             * Byes
+             * @description Clubes de folga na rodada (Liga ímpar).
+             */
+            byes: number[];
+            /**
+             * Failed Matches
+             * @description Partidas que falharam; nada foi consolidado. Jogar de novo repete só estas.
+             */
+            failed_matches: string[];
+            /**
+             * Standings
+             * @description Classificação oficial (Liga); vazia na Copa.
+             */
+            standings: components["schemas"]["StandingRowOut"][];
+            bracket?: components["schemas"]["CupBracket"] | null;
+            points_system?: components["schemas"]["PointsSystemOut"] | null;
+            /**
+             * Tiebreakers
+             * @description Critérios de desempate em uso (vazio: PC-01 pendente).
+             */
+            tiebreakers: string[];
+            /** User Club Uid */
+            user_club_uid: number;
+            /** User Eliminated */
+            user_eliminated: boolean;
+            /** Champion Club Uid */
+            champion_club_uid?: number | null;
+            /**
+             * Tied Champions
+             * @description Empate no topo sem critério oficial: campeão indefinido.
+             */
+            tied_champions: number[];
+        };
+        /** SeasonSummaryOut */
+        SeasonSummaryOut: {
+            /** Session Id */
+            session_id: string;
+            /**
+             * Finished
+             * @description Premiações são finais apenas com a competição encerrada.
+             */
+            finished: boolean;
+            /** Champion Club Uid */
+            champion_club_uid?: number | null;
+            /** Tied Champions */
+            tied_champions: number[];
+            /** Top Scorers */
+            top_scorers: components["schemas"]["AwardEntryOut"][];
+            /** Top Assists */
+            top_assists: components["schemas"]["AwardEntryOut"][];
+            /**
+             * Best Average Rating
+             * @description Mínimo: 50% das partidas da própria equipe (arredondado para cima).
+             */
+            best_average_rating: components["schemas"]["AwardEntryOut"][];
+            /** Most Man Of The Match */
+            most_man_of_the_match: components["schemas"]["AwardEntryOut"][];
+            /** Campaigns */
+            campaigns: components["schemas"]["ClubCampaignOut"][];
+            user_campaign: components["schemas"]["ClubCampaignOut"];
+            /**
+             * History
+             * @description Todas as partidas consolidadas, em ordem.
+             */
+            history: components["schemas"]["SeasonFixtureOut"][];
         };
         /** SessionCloseRequest */
         SessionCloseRequest: {
@@ -1177,6 +1585,42 @@ export interface components {
              * @description club_uid dos participantes (inclui o clube do usuário), na ordem de seleção/sorteio.
              */
             participants?: number[] | null;
+        };
+        /** StandingRowOut */
+        StandingRowOut: {
+            /**
+             * Position
+             * @description Posição; clubes empatados sem critério oficial compartilham a posição.
+             */
+            position: number;
+            /** Club Uid */
+            club_uid: number;
+            /** Played */
+            played: number;
+            /** Wins */
+            wins: number;
+            /** Draws */
+            draws: number;
+            /** Losses */
+            losses: number;
+            /** Goals For */
+            goals_for: number;
+            /** Goals Against */
+            goals_against: number;
+            /** Goal Difference */
+            goal_difference: number;
+            /** Points */
+            points: number;
+            /**
+             * Form
+             * @description Últimos 5 resultados.
+             */
+            form: ("V" | "E" | "D")[];
+            /**
+             * Tied With
+             * @description Clubes empatados sem critério de desempate oficial (PC-01 pendente).
+             */
+            tied_with: number[];
         };
         /** TradeRecordOut */
         TradeRecordOut: {
@@ -2852,6 +3296,526 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProposalOut"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Request Entity Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unsupported Media Type */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    start_season_api_sessions__session_id__season_start_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Obrigatório: identificador único do comando (8–128 caracteres). */
+                "Idempotency-Key"?: string | null;
+            };
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SeasonStateOut"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Request Entity Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unsupported Media Type */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_season_api_sessions__session_id__season_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SeasonStateOut"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Request Entity Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unsupported Media Type */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    play_round_api_sessions__session_id__season_play_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Obrigatório: identificador único do comando (8–128 caracteres). */
+                "Idempotency-Key"?: string | null;
+            };
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SeasonStateOut"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Request Entity Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unsupported Media Type */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    advance_round_api_sessions__session_id__season_advance_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Obrigatório: identificador único do comando (8–128 caracteres). */
+                "Idempotency-Key"?: string | null;
+            };
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SeasonStateOut"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Request Entity Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unsupported Media Type */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    match_report_api_sessions__session_id__season_matches__match_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+                match_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MatchReportOut"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Request Entity Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unsupported Media Type */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    season_summary_api_sessions__session_id__season_summary_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SeasonSummaryOut"];
                 };
             };
             /** @description Bad Request */

@@ -43,6 +43,11 @@ export type TradingPlayer = S["TradingPlayerOut"];
 export type Proposal = S["ProposalOut"];
 export type ProposalCreate = S["ProposalCreate"];
 export type TradeRecord = S["TradeRecordOut"];
+export type SeasonState = S["SeasonStateOut"];
+export type SeasonFixture = S["SeasonFixtureOut"];
+export type StandingRow = S["StandingRowOut"];
+export type MatchReport = S["MatchReportOut"];
+export type SeasonSummary = S["SeasonSummaryOut"];
 
 export type ImportBase = "clubs" | "players";
 

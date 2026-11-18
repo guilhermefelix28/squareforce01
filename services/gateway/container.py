@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import time
+from concurrent.futures import Executor, ProcessPoolExecutor, ThreadPoolExecutor
 from dataclasses import dataclass
 from functools import lru_cache
 from typing import Callable
@@ -13,6 +14,7 @@ from services.auction.model import AuctionModel, load_auction_model
 from services.auction.service import AuctionService
 from services.trading.service import TradingService
 from services.competition.planner import plan_competition
+from services.competition.service import SeasonService
 from services.data.service import DataService
 from services.session.manager import SessionManager
 
@@ -30,6 +32,7 @@ class Container:
     hub: SessionHub
     auctions: AuctionService
     trading: TradingService
+    seasons: SeasonService
     auction_model: AuctionModel | None  # None = fórmulas pendentes: leilão bloqueado
 
 
@@ -62,8 +65,16 @@ def build_container(
         hub=SessionHub(),
         auctions=AuctionService(clock=clock, has_photo=has_photo),
         trading=TradingService(clock=clock),
+        seasons=SeasonService(lambda: _match_executor(settings)),
         auction_model=load_auction_model() if auction_model is _UNSET else auction_model,  # type: ignore[arg-type]
     )
+
+
+def _match_executor(settings: Settings) -> Executor:
+    workers = max(1, settings.match_workers)
+    if settings.match_executor == "thread":
+        return ThreadPoolExecutor(max_workers=workers, thread_name_prefix="match")
+    return ProcessPoolExecutor(max_workers=workers)
 
 
 def get_container(request: Request) -> Container:

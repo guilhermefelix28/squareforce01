@@ -27,7 +27,11 @@ Formatos; participantes; calendário/chave; disparo paralelo das partidas; conso
 
 ## Contratos e dependências
 - Contratos: `CompetitionOptions`, `CompetitionConfig`, `CompetitionOut`, `LeagueSchedule`/`LeagueRound`/`LeagueMatch`, `CupBracket`/`CupRound`/`CupMatch`/`CupRules` (`squadforce_shared.contracts`).
-- Endpoint: `GET /api/sessions/{id}/competition`.
+- Endpoints: `GET /api/sessions/{id}/competition`; temporada (Entrega 7): `POST .../season/start|play|advance`,
+  `GET .../season`, `.../season/matches/{match_id}`, `.../season/summary` (`SeasonStateOut`, `MatchReportOut`,
+  `SeasonSummaryOut`).
+- Execução: `services/competition/season.py` (`Season`, `RoundSnapshot`), `standings.py`, `worker.py`
+  (`FixtureTask`/`play_fixture`, serializável), `service.py` (`SeasonService`). Ver `docs/architecture/competicoes.md`.
 - Porta: `CompetitionPlanner` = `plan_competition(config, eligible, rng) -> (participants, structure)`, injetada na sessão (ADR-09).
 - Elegíveis: `DataService.eligible_clubs()` → `list[EligibleClub]` (clubes importados com divisão).
 - IDs estáveis: `L-R{rodada:02}-M{jogo:02}` e `C-R{fase}-M{jogo:02}`.
@@ -40,13 +44,17 @@ Formatos; participantes; calendário/chave; disparo paralelo das partidas; conso
 3. Calendário: método do círculo (Berger) com slots sorteados; returno = espelho com mandos invertidos.
 4. Toda estrutura nova passa por `validate_league_schedule`/`validate_cup_bracket` antes de ser aceita.
 5. Progressão da Copa só por `register_cup_winner` (retorna cópia; empate → `decided_by="penalties"`).
-6. Consolidação futura: aplicar todos os resultados em uma única mutação de estado com `version + 1`.
+6. Consolidação: validar TODOS os resultados e aplicar numa cópia do estado (`_State.copy`) trocada de uma vez;
+   snapshot marcado como consolidado (nunca duas vezes). Falha => nada aplicado; repetir só as falhas com a mesma tarefa.
+7. Nada que uma partida precise pode vir de fora da sua `FixtureTask` (isolamento entre confrontos simultâneos).
+8. Avanço sempre manual (`advance`); nunca encadear rodadas automaticamente.
 
 ## Restrições e comportamentos proibidos
-Inventar critérios de desempate (PC-01) ou efeito de mando (PC-03); atribuir mando na Copa (PC-05); expor a semente; consolidar rodada parcialmente; persistir progresso; expor `register_cup_winner` por API antes do motor de partidas.
+Inventar critérios de desempate (PC-01) ou efeito de mando (PC-03); atribuir mando na Copa (PC-05); expor a semente; consolidar rodada parcialmente; persistir progresso; expor `register_cup_winner` diretamente por API; aplicar critérios de desempate não enviados (lista padrão vazia);
+usar `random` global ou semente dependente da ordem de execução.
 
 ## Critérios de teste
-`tests/unit/test_competition_planner.py` (Ligas 2/3/5/7/10/19/20 × turnos × sementes; Copas 2–32; corrupções; determinismo), `tests/integration/test_competition_api.py`, `test_session_manager.py`, `CompetitionView.test.tsx`. Futuro: pênaltis fora da artilharia, consolidação atômica, classificação.
+`tests/unit/test_competition_planner.py` (Ligas 2/3/5/7/10/19/20 × turnos × sementes; Copas 2–32; corrupções; determinismo), `tests/integration/test_competition_api.py`, `test_session_manager.py`, `CompetitionView.test.tsx`. Entrega 7: `test_standings.py`, `test_season.py`, `tests/integration/test_season_api.py`, `tests/simulation/test_season_batches.py`.
 
 ## Referências
 - [Game Design §2, §17–21](../../../docs/game-design/game-design-v5.2.md)

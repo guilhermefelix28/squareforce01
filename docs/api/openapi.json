@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "SquadForce API",
-    "description": "Gateway do SquadForce (Game Design v5.2) — Entrega 1: dados, importações e sessão.",
+    "description": "Gateway do SquadForce (Game Design v5.2) — dados, sessão, leilão, mercado e competições.",
     "version": "0.1.0"
   },
   "paths": {
@@ -2261,6 +2261,686 @@
           }
         }
       }
+    },
+    "/api/sessions/{session_id}/season/start": {
+      "post": {
+        "tags": [
+          "season"
+        ],
+        "summary": "Start Season",
+        "description": "Inicia a Liga/Copa com os elencos finais do mercado. Exige o mercado encerrado (fase competition).",
+        "operationId": "start_season_api_sessions__session_id__season_start_post",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Obrigatório: identificador único do comando (8–128 caracteres).",
+              "title": "Idempotency-Key"
+            },
+            "description": "Obrigatório: identificador único do comando (8–128 caracteres)."
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeasonStateOut"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/sessions/{session_id}/season": {
+      "get": {
+        "tags": [
+          "season"
+        ],
+        "summary": "Get Season",
+        "operationId": "get_season_api_sessions__session_id__season_get",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeasonStateOut"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/sessions/{session_id}/season/play": {
+      "post": {
+        "tags": [
+          "season"
+        ],
+        "summary": "Play Round",
+        "description": "Processa a rodada/fase atual em paralelo e consolida atomicamente. Se partidas falharem, nada é\nconsolidado (500, retryable) e a próxima chamada repete apenas as falhas, com a mesma semente e estado.",
+        "operationId": "play_round_api_sessions__session_id__season_play_post",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Obrigatório: identificador único do comando (8–128 caracteres).",
+              "title": "Idempotency-Key"
+            },
+            "description": "Obrigatório: identificador único do comando (8–128 caracteres)."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeasonStateOut"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/sessions/{session_id}/season/advance": {
+      "post": {
+        "tags": [
+          "season"
+        ],
+        "summary": "Advance Round",
+        "description": "Avanço MANUAL para a próxima rodada/fase (nunca automático).",
+        "operationId": "advance_round_api_sessions__session_id__season_advance_post",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Obrigatório: identificador único do comando (8–128 caracteres).",
+              "title": "Idempotency-Key"
+            },
+            "description": "Obrigatório: identificador único do comando (8–128 caracteres)."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeasonStateOut"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/sessions/{session_id}/season/matches/{match_id}": {
+      "get": {
+        "tags": [
+          "season"
+        ],
+        "summary": "Match Report",
+        "description": "Pós-partida: resultado, principais eventos, estatísticas, avaliações e Craque da Partida.",
+        "operationId": "match_report_api_sessions__session_id__season_matches__match_id__get",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "match_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Match Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatchReportOut"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/sessions/{session_id}/season/summary": {
+      "get": {
+        "tags": [
+          "season"
+        ],
+        "summary": "Season Summary",
+        "description": "Campeão, campanhas, artilharia, assistências, melhor média (mín. 50%), Craque da Partida e histórico.",
+        "operationId": "season_summary_api_sessions__session_id__season_summary_get",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeasonSummaryOut"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2812,6 +3492,40 @@
         ],
         "title": "AuctionSummaryOut"
       },
+      "AwardEntryOut": {
+        "properties": {
+          "player": {
+            "type": "integer",
+            "title": "Player"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "club_uid": {
+            "type": "integer",
+            "title": "Club Uid"
+          },
+          "value": {
+            "type": "number",
+            "title": "Value"
+          },
+          "appearances": {
+            "type": "integer",
+            "title": "Appearances"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "player",
+          "name",
+          "club_uid",
+          "value",
+          "appearances"
+        ],
+        "title": "AwardEntryOut"
+      },
       "Body_import_clubs_api_imports_clubs_post": {
         "properties": {
           "file": {
@@ -2841,6 +3555,74 @@
           "file"
         ],
         "title": "Body_import_players_api_imports_players_post"
+      },
+      "ClubCampaignOut": {
+        "properties": {
+          "club_uid": {
+            "type": "integer",
+            "title": "Club Uid"
+          },
+          "played": {
+            "type": "integer",
+            "title": "Played"
+          },
+          "wins": {
+            "type": "integer",
+            "title": "Wins"
+          },
+          "draws": {
+            "type": "integer",
+            "title": "Draws"
+          },
+          "losses": {
+            "type": "integer",
+            "title": "Losses"
+          },
+          "goals_for": {
+            "type": "integer",
+            "title": "Goals For"
+          },
+          "goals_against": {
+            "type": "integer",
+            "title": "Goals Against"
+          },
+          "shootouts_won": {
+            "type": "integer",
+            "title": "Shootouts Won"
+          },
+          "shootouts_lost": {
+            "type": "integer",
+            "title": "Shootouts Lost"
+          },
+          "result": {
+            "type": "string",
+            "title": "Result",
+            "description": "Liga: posição final; Copa: campeão ou fase de eliminação."
+          },
+          "matches": {
+            "items": {
+              "$ref": "#/components/schemas/SeasonFixtureOut"
+            },
+            "type": "array",
+            "title": "Matches"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "club_uid",
+          "played",
+          "wins",
+          "draws",
+          "losses",
+          "goals_for",
+          "goals_against",
+          "shootouts_won",
+          "shootouts_lost",
+          "result",
+          "matches"
+        ],
+        "title": "ClubCampaignOut"
       },
       "ClubOut": {
         "properties": {
@@ -3775,6 +4557,269 @@
         ],
         "title": "LeagueSchedule"
       },
+      "MatchEventOut": {
+        "properties": {
+          "seq": {
+            "type": "integer",
+            "title": "Seq"
+          },
+          "minute": {
+            "type": "integer",
+            "title": "Minute"
+          },
+          "second": {
+            "type": "number",
+            "title": "Second"
+          },
+          "period": {
+            "type": "integer",
+            "title": "Period"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "side": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Side"
+          },
+          "club_uid": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Club Uid"
+          },
+          "player": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Player"
+          },
+          "player_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Player Name"
+          },
+          "other": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Other"
+          },
+          "other_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Other Name"
+          },
+          "data": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Data"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "seq",
+          "minute",
+          "second",
+          "period",
+          "type"
+        ],
+        "title": "MatchEventOut"
+      },
+      "MatchReportOut": {
+        "properties": {
+          "match_id": {
+            "type": "string",
+            "title": "Match Id"
+          },
+          "round": {
+            "type": "integer",
+            "title": "Round"
+          },
+          "home_club_uid": {
+            "type": "integer",
+            "title": "Home Club Uid"
+          },
+          "away_club_uid": {
+            "type": "integer",
+            "title": "Away Club Uid"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "score": {
+            "prefixItems": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "type": "array",
+            "maxItems": 2,
+            "minItems": 2,
+            "title": "Score"
+          },
+          "official_score": {
+            "prefixItems": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "type": "array",
+            "maxItems": 2,
+            "minItems": 2,
+            "title": "Official Score"
+          },
+          "shootout": {
+            "anyOf": [
+              {
+                "prefixItems": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ],
+                "type": "array",
+                "maxItems": 2,
+                "minItems": 2
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shootout"
+          },
+          "winner_club_uid": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Winner Club Uid"
+          },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/MatchEventOut"
+            },
+            "type": "array",
+            "title": "Events",
+            "description": "Principais acontecimentos."
+          },
+          "stats": {
+            "additionalProperties": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Stats",
+            "description": "Estatísticas por lado: home/away."
+          },
+          "ratings": {
+            "items": {
+              "$ref": "#/components/schemas/PlayerRatingOut"
+            },
+            "type": "array",
+            "title": "Ratings"
+          },
+          "man_of_the_match": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlayerRatingOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "final_postures": {
+            "prefixItems": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "type": "array",
+            "maxItems": 2,
+            "minItems": 2,
+            "title": "Final Postures"
+          },
+          "engine_version": {
+            "type": "string",
+            "title": "Engine Version"
+          },
+          "params_version": {
+            "type": "string",
+            "title": "Params Version"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "match_id",
+          "round",
+          "home_club_uid",
+          "away_club_uid",
+          "status",
+          "score",
+          "official_score",
+          "events",
+          "stats",
+          "ratings",
+          "final_postures",
+          "engine_version",
+          "params_version"
+        ],
+        "title": "MatchReportOut"
+      },
       "PlayerOut": {
         "properties": {
           "unique_id": {
@@ -3882,6 +4927,71 @@
           "offset"
         ],
         "title": "PlayerPage"
+      },
+      "PlayerRatingOut": {
+        "properties": {
+          "player": {
+            "type": "integer",
+            "title": "Player"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "club_uid": {
+            "type": "integer",
+            "title": "Club Uid"
+          },
+          "rating": {
+            "type": "number",
+            "title": "Rating",
+            "description": "Nota exibida (uma casa decimal)."
+          },
+          "minutes": {
+            "type": "number",
+            "title": "Minutes"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "player",
+          "name",
+          "club_uid",
+          "rating",
+          "minutes"
+        ],
+        "title": "PlayerRatingOut"
+      },
+      "PointsSystemOut": {
+        "properties": {
+          "win": {
+            "type": "integer",
+            "title": "Win"
+          },
+          "draw": {
+            "type": "integer",
+            "title": "Draw"
+          },
+          "loss": {
+            "type": "integer",
+            "title": "Loss"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Escala não definida no GDD: provisória (PC-09)."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "win",
+          "draw",
+          "loss",
+          "status"
+        ],
+        "title": "PointsSystemOut"
       },
       "Position": {
         "type": "string",
@@ -4005,6 +5115,366 @@
           "remaining_ms"
         ],
         "title": "ProposalOut"
+      },
+      "SeasonFixtureOut": {
+        "properties": {
+          "match_id": {
+            "type": "string",
+            "title": "Match Id"
+          },
+          "round": {
+            "type": "integer",
+            "title": "Round"
+          },
+          "home_club_uid": {
+            "type": "integer",
+            "title": "Home Club Uid",
+            "description": "Mandante (Liga) ou clube A (Copa, mando neutro)."
+          },
+          "away_club_uid": {
+            "type": "integer",
+            "title": "Away Club Uid"
+          },
+          "is_user_match": {
+            "type": "boolean",
+            "title": "Is User Match"
+          },
+          "played": {
+            "type": "boolean",
+            "title": "Played"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "prefixItems": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ],
+                "type": "array",
+                "maxItems": 2,
+                "minItems": 2
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score",
+            "description": "Gols da partida (90 min)."
+          },
+          "official_score": {
+            "anyOf": [
+              {
+                "prefixItems": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ],
+                "type": "array",
+                "maxItems": 2,
+                "minItems": 2
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Official Score"
+          },
+          "shootout": {
+            "anyOf": [
+              {
+                "prefixItems": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ],
+                "type": "array",
+                "maxItems": 2,
+                "minItems": 2
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shootout",
+            "description": "Pênaltis, registrados à parte (Copa)."
+          },
+          "winner_club_uid": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Winner Club Uid"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "match_id",
+          "round",
+          "home_club_uid",
+          "away_club_uid",
+          "is_user_match",
+          "played"
+        ],
+        "title": "SeasonFixtureOut"
+      },
+      "SeasonStateOut": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "league",
+              "cup"
+            ],
+            "title": "Kind"
+          },
+          "phase": {
+            "type": "string",
+            "enum": [
+              "ready",
+              "awaiting_advance",
+              "finished"
+            ],
+            "title": "Phase",
+            "description": "ready: rodada pronta; awaiting_advance: pós-rodada (avanço manual); finished."
+          },
+          "round_number": {
+            "type": "integer",
+            "title": "Round Number"
+          },
+          "total_rounds": {
+            "type": "integer",
+            "title": "Total Rounds"
+          },
+          "round_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Round Label"
+          },
+          "fixtures": {
+            "items": {
+              "$ref": "#/components/schemas/SeasonFixtureOut"
+            },
+            "type": "array",
+            "title": "Fixtures",
+            "description": "Confrontos da rodada/fase atual."
+          },
+          "byes": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Byes",
+            "description": "Clubes de folga na rodada (Liga ímpar)."
+          },
+          "failed_matches": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Failed Matches",
+            "description": "Partidas que falharam; nada foi consolidado. Jogar de novo repete só estas."
+          },
+          "standings": {
+            "items": {
+              "$ref": "#/components/schemas/StandingRowOut"
+            },
+            "type": "array",
+            "title": "Standings",
+            "description": "Classificação oficial (Liga); vazia na Copa."
+          },
+          "bracket": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CupBracket"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "points_system": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PointsSystemOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "tiebreakers": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Tiebreakers",
+            "description": "Critérios de desempate em uso (vazio: PC-01 pendente)."
+          },
+          "user_club_uid": {
+            "type": "integer",
+            "title": "User Club Uid"
+          },
+          "user_eliminated": {
+            "type": "boolean",
+            "title": "User Eliminated"
+          },
+          "champion_club_uid": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Champion Club Uid"
+          },
+          "tied_champions": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Tied Champions",
+            "description": "Empate no topo sem critério oficial: campeão indefinido."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "session_id",
+          "kind",
+          "phase",
+          "round_number",
+          "total_rounds",
+          "round_label",
+          "fixtures",
+          "byes",
+          "failed_matches",
+          "standings",
+          "tiebreakers",
+          "user_club_uid",
+          "user_eliminated",
+          "tied_champions"
+        ],
+        "title": "SeasonStateOut"
+      },
+      "SeasonSummaryOut": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "finished": {
+            "type": "boolean",
+            "title": "Finished",
+            "description": "Premiações são finais apenas com a competição encerrada."
+          },
+          "champion_club_uid": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Champion Club Uid"
+          },
+          "tied_champions": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Tied Champions"
+          },
+          "top_scorers": {
+            "items": {
+              "$ref": "#/components/schemas/AwardEntryOut"
+            },
+            "type": "array",
+            "title": "Top Scorers"
+          },
+          "top_assists": {
+            "items": {
+              "$ref": "#/components/schemas/AwardEntryOut"
+            },
+            "type": "array",
+            "title": "Top Assists"
+          },
+          "best_average_rating": {
+            "items": {
+              "$ref": "#/components/schemas/AwardEntryOut"
+            },
+            "type": "array",
+            "title": "Best Average Rating",
+            "description": "Mínimo: 50% das partidas da própria equipe (arredondado para cima)."
+          },
+          "most_man_of_the_match": {
+            "items": {
+              "$ref": "#/components/schemas/AwardEntryOut"
+            },
+            "type": "array",
+            "title": "Most Man Of The Match"
+          },
+          "campaigns": {
+            "items": {
+              "$ref": "#/components/schemas/ClubCampaignOut"
+            },
+            "type": "array",
+            "title": "Campaigns"
+          },
+          "user_campaign": {
+            "$ref": "#/components/schemas/ClubCampaignOut"
+          },
+          "history": {
+            "items": {
+              "$ref": "#/components/schemas/SeasonFixtureOut"
+            },
+            "type": "array",
+            "title": "History",
+            "description": "Todas as partidas consolidadas, em ordem."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "session_id",
+          "finished",
+          "tied_champions",
+          "top_scorers",
+          "top_assists",
+          "best_average_rating",
+          "most_man_of_the_match",
+          "campaigns",
+          "user_campaign",
+          "history"
+        ],
+        "title": "SeasonSummaryOut"
       },
       "SessionCloseRequest": {
         "properties": {
@@ -4151,6 +5621,89 @@
           "updated_at"
         ],
         "title": "SessionOut"
+      },
+      "StandingRowOut": {
+        "properties": {
+          "position": {
+            "type": "integer",
+            "title": "Position",
+            "description": "Posição; clubes empatados sem critério oficial compartilham a posição."
+          },
+          "club_uid": {
+            "type": "integer",
+            "title": "Club Uid"
+          },
+          "played": {
+            "type": "integer",
+            "title": "Played"
+          },
+          "wins": {
+            "type": "integer",
+            "title": "Wins"
+          },
+          "draws": {
+            "type": "integer",
+            "title": "Draws"
+          },
+          "losses": {
+            "type": "integer",
+            "title": "Losses"
+          },
+          "goals_for": {
+            "type": "integer",
+            "title": "Goals For"
+          },
+          "goals_against": {
+            "type": "integer",
+            "title": "Goals Against"
+          },
+          "goal_difference": {
+            "type": "integer",
+            "title": "Goal Difference"
+          },
+          "points": {
+            "type": "integer",
+            "title": "Points"
+          },
+          "form": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "V",
+                "E",
+                "D"
+              ]
+            },
+            "type": "array",
+            "title": "Form",
+            "description": "Últimos 5 resultados."
+          },
+          "tied_with": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Tied With",
+            "description": "Clubes empatados sem critério de desempate oficial (PC-01 pendente)."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "position",
+          "club_uid",
+          "played",
+          "wins",
+          "draws",
+          "losses",
+          "goals_for",
+          "goals_against",
+          "goal_difference",
+          "points",
+          "form",
+          "tied_with"
+        ],
+        "title": "StandingRowOut"
       },
       "TradeRecordOut": {
         "properties": {

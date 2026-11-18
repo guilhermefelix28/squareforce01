@@ -14,6 +14,9 @@ import type {
   ImportBase,
   ImportReport,
   PlayerPage,
+  SeasonState,
+  SeasonSummary,
+  MatchReport,
   Session,
   SessionCreate,
 } from "../types/api";
@@ -73,6 +76,25 @@ export const createProposal = (id: string, body: ProposalCreate, idempotencyKey 
 
 export const actOnProposal = (id: string, proposalId: string, action: "accept" | "reject" | "cancel", idempotencyKey = newIdempotencyKey()) =>
   apiRequest<Proposal>(`${sid(id)}/trading/proposals/${encodeURIComponent(proposalId)}/${action}`, { method: "POST", json: {}, idempotencyKey, retries: 1 });
+
+// ---------------------------------------------------------------- temporada (Entrega 7)
+export const startSeason = (id: string, idempotencyKey = newIdempotencyKey()) =>
+  apiRequest<SeasonState>(`${sid(id)}/season/start`, { method: "POST", json: {}, idempotencyKey });
+
+export const getSeason = (id: string) => apiRequest<SeasonState>(`${sid(id)}/season`, { retries: 1 });
+
+/** Processa a rodada atual (paralelo, consolidação atômica). Erro ROUND_FAILED: chamar de novo repete só as falhas. */
+export const playRound = (id: string, idempotencyKey = newIdempotencyKey()) =>
+  apiRequest<SeasonState>(`${sid(id)}/season/play`, { method: "POST", json: {}, idempotencyKey, retries: 1 });
+
+/** Avanço manual para a próxima rodada/fase. */
+export const advanceRound = (id: string, idempotencyKey = newIdempotencyKey()) =>
+  apiRequest<SeasonState>(`${sid(id)}/season/advance`, { method: "POST", json: {}, idempotencyKey, retries: 1 });
+
+export const getMatchReport = (id: string, matchId: string) =>
+  apiRequest<MatchReport>(`${sid(id)}/season/matches/${encodeURIComponent(matchId)}`);
+
+export const getSeasonSummary = (id: string) => apiRequest<SeasonSummary>(`${sid(id)}/season/summary`);
 
 export const closeSession = (id: string, expectedVersion?: number, idempotencyKey = newIdempotencyKey()) =>
   apiRequest<Session>(`/api/sessions/${encodeURIComponent(id)}/close`, {

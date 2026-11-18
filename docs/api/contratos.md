@@ -90,8 +90,8 @@ Seleção: usuário + (n−1) clubes, primeiro da Série A e, faltando vagas, da
 | `total_rounds` / `total_matches` | log2(n) / n−1 |
 | `champion_club_uid` | `null` até a final |
 
-A progressão estrutural (`register_cup_winner`) existe no serviço de competições e é testada, mas **não** é
-exposta pela API: os resultados virão do motor de partidas (entrega futura).
+A progressão estrutural (`register_cup_winner`) não é exposta diretamente: a Copa avança pela consolidação das
+fases (`/season/play`), ver abaixo.
 
 ## Leilão (Entrega 3)
 
@@ -121,3 +121,42 @@ Detalhes, regras de concorrência, IA e eventos em [mercado](../architecture/mer
 | POST | `/api/sessions/{id}/trading/proposals/{pid}/{accept\|reject\|cancel}` | `ProposalOut` | 403 `NOT_RECIPIENT` / `NOT_PROPONENT`, 409 `PROPOSAL_NOT_PENDING` / `PROPOSAL_INVALIDATED`, 500 `TRADE_FAILED` (repetível) |
 
 Fases da sessão: `squad_completion` → `trading` (clique do usuário) → `competition` (fim dos 3 minutos).
+
+## Temporada: Liga e Copa (Entrega 7)
+
+Detalhes em [competições](../architecture/competicoes.md). Todo POST exige `Idempotency-Key`.
+
+| Método | Rota | Resposta | Erros principais |
+|---|---|---|---|
+| POST | `/api/sessions/{id}/season/start` | `SeasonStateOut` (201) | 409 `INVALID_PHASE` (mercado não encerrado ou já iniciada) |
+| GET | `/api/sessions/{id}/season` | `SeasonStateOut` | 404 `SEASON_NOT_FOUND` |
+| POST | `/api/sessions/{id}/season/play` | `SeasonStateOut` (`awaiting_advance`) | 409 `INVALID_PHASE` (rodada já jogada), 500 `ROUND_FAILED` (retryable; `details.failed`, nada consolidado; a próxima chamada repete só as falhas) |
+| POST | `/api/sessions/{id}/season/advance` | `SeasonStateOut` (`ready` ou `finished`) | 409 `INVALID_PHASE` |
+| GET | `/api/sessions/{id}/season/matches/{match_id}` | `MatchReportOut` | 404 `MATCH_NOT_FOUND` |
+| GET | `/api/sessions/{id}/season/summary` | `SeasonSummaryOut` | 404 `SEASON_NOT_FOUND` |
+
+`SeasonStateOut`:
+- `phase`: `ready`, `awaiting_advance` ou `finished`;
+- rodada atual: `round_number`/`total_rounds`, `round_label`, `fixtures[]` (placar, pênaltis e vencedor depois de jogada), `byes`, `failed_matches`;
+- `standings[]` (Liga): `tied_with` = empatados sem critério oficial (PC-01);
+- `bracket` (Copa);
+- `points_system` (provisório, PC-09) e `tiebreakers` (vazio);
+- `user_eliminated`, `champion_club_uid` e `tied_champions`.
+
+`MatchReportOut`:
+- placares (`score`, `official_score`, `shootout`);
+- `events` principais, com nomes;
+- `stats` por lado;
+- `ratings` e `man_of_the_match`;
+- `final_postures` e versões do motor.
+
+`SeasonSummaryOut`:
+- `finished` e campeão;
+- premiações `top_scorers`, `top_assists`, `best_average_rating` (mínimo de 50% das partidas da equipe, arredondado para cima) e `most_man_of_the_match`, com todos os empatados;
+- `campaigns` de todos os clubes e `user_campaign`;
+- `history` completo.
+
+Nenhum contrato expõe atributos, personalidades ou sementes.
+
+Fases da sessão: `competition` → `finished` (fim da temporada). WebSocket: `season.started`, `season.round_played`,
+`season.advanced`.

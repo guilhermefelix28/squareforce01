@@ -41,6 +41,11 @@ class ErrorCode(str, Enum):
     AUCTION_REJECTED = "AUCTION_REJECTED"
     # Mercado
     MARKET_NOT_FOUND = "MARKET_NOT_FOUND"
+    # Temporada (Liga/Copa)
+    SEASON_NOT_FOUND = "SEASON_NOT_FOUND"
+    MATCH_NOT_FOUND = "MATCH_NOT_FOUND"
+    ROUND_FAILED = "ROUND_FAILED"
+    SEASON_FAILED = "SEASON_FAILED"
 
 
 class AppError(Exception):

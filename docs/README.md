@@ -17,6 +17,7 @@
 - [Mercado de negociações](architecture/mercado.md)
 - [Motor esportivo](architecture/motor-esportivo.md) · [lotes exploratórios](architecture/motor-calibracao-exploratoria.md)
 - [IA tática dos bots](architecture/ia-tatica.md) · [lotes de comportamento](architecture/ia-tatica-lotes.md)
+- [Execução de Liga e Copa](architecture/competicoes.md)
 - [Matriz de testes](architecture/matriz-de-testes.md)
 
 ## API

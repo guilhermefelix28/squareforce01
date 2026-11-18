@@ -70,6 +70,10 @@ exploratórios com base real (`-m simulation`). Nunca afirmar calibração sem r
 moderadas, ausência de trapaça (observação limitada, controlador passivo = motor intacto) e regressão do motor
 por hashes; lotes de comportamento (`tests/simulation/test_tactics_batches.py`).
 
+**Entrega 7:** Ligas 2–20 (ímpares, turno/returno), Copas 2–32, pênaltis, folgas, afastamentos, isolamento entre
+confrontos, falhas sem consolidação parcial, repetição idêntica, consolidação única, premiações; executor real de
+processos testado na API; temporadas inteiras em `tests/simulation/test_season_batches.py`.
+
 ## Referências
 - [Matriz de testes da Entrega 1](../../../docs/architecture/matriz-de-testes.md)
 - [Especificação técnica §8–9](../../../docs/architecture/especificacao-tecnica-v5.2.md)

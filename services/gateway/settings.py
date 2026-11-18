@@ -30,3 +30,8 @@ class Settings:
     idempotency_ttl_seconds: int = 3600
     auction_tick_seconds: float = 0.1  # frequência do relógio do leilão no servidor
     auction_ticker: bool = True  # testes desligam e avançam o relógio manualmente
+    # Partidas paralelas (GDD §19): processos isolados com limite de trabalhadores
+    match_executor: str = field(default_factory=lambda: os.environ.get("SQUADFORCE_MATCH_EXECUTOR", "process"))
+    match_workers: int = field(
+        default_factory=lambda: int(os.environ.get("SQUADFORCE_MATCH_WORKERS", str(min(4, os.cpu_count() or 1))))
+    )

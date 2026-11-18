@@ -444,6 +444,143 @@ class ProposalCreate(_Model):
     money: int = Field(0, ge=0, description="Dinheiro adicional opcional pago pelo proponente.")
 
 
+# ---------------------------------------------------------------- temporada (Entrega 7)
+SeasonPhase = Literal["ready", "awaiting_advance", "finished"]
+
+
+class PointsSystemOut(_Model):
+    win: int
+    draw: int
+    loss: int
+    status: str = Field(description="Escala não definida no GDD: provisória (PC-09).")
+
+
+class StandingRowOut(_Model):
+    position: int = Field(description="Posição; clubes empatados sem critério oficial compartilham a posição.")
+    club_uid: int
+    played: int
+    wins: int
+    draws: int
+    losses: int
+    goals_for: int
+    goals_against: int
+    goal_difference: int
+    points: int
+    form: list[Literal["V", "E", "D"]] = Field(description="Últimos 5 resultados.")
+    tied_with: list[int] = Field(description="Clubes empatados sem critério de desempate oficial (PC-01 pendente).")
+
+
+class SeasonFixtureOut(_Model):
+    match_id: str
+    round: int
+    home_club_uid: int = Field(description="Mandante (Liga) ou clube A (Copa, mando neutro).")
+    away_club_uid: int
+    is_user_match: bool
+    played: bool
+    score: tuple[int, int] | None = Field(None, description="Gols da partida (90 min).")
+    official_score: tuple[int, int] | None = None
+    shootout: tuple[int, int] | None = Field(None, description="Pênaltis, registrados à parte (Copa).")
+    winner_club_uid: int | None = None
+
+
+class SeasonStateOut(_Model):
+    session_id: str
+    kind: Literal["league", "cup"]
+    phase: SeasonPhase = Field(description="ready: rodada pronta; awaiting_advance: pós-rodada (avanço manual); finished.")
+    round_number: int
+    total_rounds: int
+    round_label: str | None
+    fixtures: list[SeasonFixtureOut] = Field(description="Confrontos da rodada/fase atual.")
+    byes: list[int] = Field(description="Clubes de folga na rodada (Liga ímpar).")
+    failed_matches: list[str] = Field(description="Partidas que falharam; nada foi consolidado. Jogar de novo repete só estas.")
+    standings: list[StandingRowOut] = Field(description="Classificação oficial (Liga); vazia na Copa.")
+    bracket: CupBracket | None = None
+    points_system: PointsSystemOut | None = None
+    tiebreakers: list[str] = Field(description="Critérios de desempate em uso (vazio: PC-01 pendente).")
+    user_club_uid: int
+    user_eliminated: bool
+    champion_club_uid: int | None = None
+    tied_champions: list[int] = Field(description="Empate no topo sem critério oficial: campeão indefinido.")
+
+
+class MatchEventOut(_Model):
+    seq: int
+    minute: int
+    second: float
+    period: int
+    type: str
+    side: int | None = None
+    club_uid: int | None = None
+    player: int | None = None
+    player_name: str | None = None
+    other: int | None = None
+    other_name: str | None = None
+    data: dict[str, Any] = Field(default_factory=dict)
+
+
+class PlayerRatingOut(_Model):
+    player: int
+    name: str
+    club_uid: int
+    rating: float = Field(description="Nota exibida (uma casa decimal).")
+    minutes: float
+
+
+class MatchReportOut(_Model):
+    match_id: str
+    round: int
+    home_club_uid: int
+    away_club_uid: int
+    status: str
+    score: tuple[int, int]
+    official_score: tuple[int, int]
+    shootout: tuple[int, int] | None = None
+    winner_club_uid: int | None = None
+    events: list[MatchEventOut] = Field(description="Principais acontecimentos.")
+    stats: dict[str, dict[str, Any]] = Field(description="Estatísticas por lado: home/away.")
+    ratings: list[PlayerRatingOut]
+    man_of_the_match: PlayerRatingOut | None = None
+    final_postures: tuple[str, str]
+    engine_version: str
+    params_version: str
+
+
+class AwardEntryOut(_Model):
+    player: int
+    name: str
+    club_uid: int
+    value: float
+    appearances: int
+
+
+class ClubCampaignOut(_Model):
+    club_uid: int
+    played: int
+    wins: int
+    draws: int
+    losses: int
+    goals_for: int
+    goals_against: int
+    shootouts_won: int
+    shootouts_lost: int
+    result: str = Field(description="Liga: posição final; Copa: campeão ou fase de eliminação.")
+    matches: list[SeasonFixtureOut]
+
+
+class SeasonSummaryOut(_Model):
+    session_id: str
+    finished: bool = Field(description="Premiações são finais apenas com a competição encerrada.")
+    champion_club_uid: int | None = None
+    tied_champions: list[int]
+    top_scorers: list[AwardEntryOut]
+    top_assists: list[AwardEntryOut]
+    best_average_rating: list[AwardEntryOut] = Field(description="Mínimo: 50% das partidas da própria equipe (arredondado para cima).")
+    most_man_of_the_match: list[AwardEntryOut]
+    campaigns: list[ClubCampaignOut]
+    user_campaign: ClubCampaignOut
+    history: list[SeasonFixtureOut] = Field(description="Todas as partidas consolidadas, em ordem.")
+
+
 # ---------------------------------------------------------------- websocket
 class WsEnvelope(_Model):
     """Envelope de mensagens WebSocket. Tipos na Entrega 1: session.snapshot, session.closed, pong, error."""

@@ -1,4 +1,4 @@
-# Arquitetura — SquadForce (Entregas 1 a 6)
+# Arquitetura — SquadForce (Entregas 1 a 7)
 
 ## Visão geral
 
@@ -36,6 +36,7 @@
 | ADR-14 | **`PlayerProfile` no domínio compartilhado**: o serviço de dados carrega atributos e familiaridades para uso interno; nenhum contrato público os expõe. | Mantém o leilão sem acesso ao SQLite e preserva a ocultação de dados. |
 | ADR-15 | **Mercado com decisão única e cópia-e-confirmação**: uma `RLock` por mercado; cada proposta tem exatamente uma decisão final; a troca monta e valida o novo estado (18, sem duplicação, saldo ≥ 0) antes de aplicá-lo; idempotência no gateway e no motor (inclusive para erros definitivos). Linha do tempo (expirações, bots, fechamento) processada em ordem de tempo do servidor. | Aceite/cancelamento/expiração concorrentes e comandos duplicados nunca produzem duas trocas nem estado parcial. |
 | ADR-16 | **Motor como biblioteca pura e determinística**: `services/match_engine` não tem I/O, relógio de parede nem estado global; entrada imutável (`MatchInput`) + parâmetros versionados (`MatchParams`) + semente + decisões → eventos. Estatísticas e notas são funções dos eventos; `validate_result` confere todas as invariantes. A apresentação só converte tempo de tela em tempo de jogo. | GDD §16 (reprodutibilidade, velocidade sem efeito) e os critérios de aceitação da Entrega 5. |
+| ADR-18 | **Rodadas por snapshot imutável + executor paralelo limitado + consolidação atômica**: cada partida é uma `FixtureTask` serializável (estado inicial, semente derivada do `match_id`, contexto público, decisões) executada em `ProcessPoolExecutor` (limite configurável); resultados ficam num buffer e só são aplicados numa cópia do estado trocada de uma vez, após validar todos. Falhas não consolidam nada e são repetidas com a mesma tarefa. | GDD §19: isolamento real entre confrontos, determinismo independente da ordem, nenhuma consolidação parcial. |
 | ADR-17 | **IA tática como controlador externo do motor**: o motor expõe `TacticalController` e `TacticalObservation` (só informação permitida); a IA (`services/bot_ai/tactics.py`) decide posturas de forma determinística, sem usar o RNG do motor. Decisões viram `PostureChange` no tempo de jogo atual, idênticas às do usuário. Sem controlador, o motor é bit a bit o da Entrega 5 (teste de regressão por hashes). | Separa responsabilidades, impede trapaça (observação limitada) e preserva o determinismo. |
 | ADR-11 | **Divisões como dados de referência** (`club_divisions`, migração 0002), sem FK para `clubs`. | Reimportar clubes não apaga as divisões; clubes sem divisão ficam inelegíveis. |
 

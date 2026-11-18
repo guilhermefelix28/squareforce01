@@ -36,6 +36,7 @@ def create_app(
         logging.getLogger("squadforce").info("SQLite pronto em %s (schema v%s)", settings.db_path, version)
         task = asyncio.create_task(auction_clock(container, settings.auction_tick_seconds)) if settings.auction_ticker else None
         yield
+        container.seasons.shutdown()
         if task:
             task.cancel()
             with suppress(asyncio.CancelledError):
@@ -44,7 +45,7 @@ def create_app(
     app = FastAPI(
         title="SquadForce API",
         version=__version__,
-        description="Gateway do SquadForce (Game Design v5.2) — Entrega 1: dados, importações e sessão.",
+        description="Gateway do SquadForce (Game Design v5.2) — dados, sessão, leilão, mercado e competições.",
         lifespan=lifespan,
     )
     app.state.container = container

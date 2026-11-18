@@ -26,7 +26,10 @@ Legenda: **P** = regra pendente · **D** = decisão técnica provisória (confir
 
 | ID | Tipo | Tema | Situação |
 |---|---|---|---|
-| PC-01 | P | **Critérios de desempate da classificação** da Liga — o responsável enviará (2026-11-18). Necessário na entrega de execução das rodadas. | Aguardando |
+| PC-01 | P | **Critérios de desempate da classificação** da Liga — o responsável enviará (2026-11-18). Entrega 7: NENHUM critério aplicado; clubes com mesmos pontos compartilham a posição (`tied_with`) e empate no topo deixa o campeão indefinido (`tied_champions`). Critérios configuráveis já suportados (`services/competition/standings.py`). | Aguardando |
+| PC-09 | D | **Pontuação da Liga** 3/1/0 (vitória/empate/derrota): o GDD não define a escala. Provisória e configurável (`PointsSystem`). | Confirmar |
+| PC-10 | D | **Escalação e postura do usuário** antes da interface de partida: escolhidas automaticamente pelo mesmo algoritmo dos bots (postura inicial equilibrada, sem controlador automático). O núcleo aceita decisões de postura do usuário (`set_user_decisions`), ainda não expostas na API. | Provisória |
+| PC-11 | D | **Formações usadas na execução**: lista de amostra do motor (4-3-3, 4-4-2, 5-3-2) até a lista oficial (PM-01). | Provisória |
 | PC-02 | **C** | **Clubes elegíveis** = os 40 clubes importados que têm divisão (A ou B). A Copa sorteia entre todos eles; a Liga prioriza a Série A. Não há divergência de quantidade nas fontes: GDD §2 = 40 clubes (20 + 20) = planilha = listas 2026. | Resolvida |
 | PC-03 | P | Efeito (se houver) do **mando de campo** no motor. | Aberta |
 | PC-04 | **C** 2026-11-18 | **Escolha dentro da mesma série na Liga.** O GDD manda priorizar a Série A, mas não diz *quais* clubes da Série A entram quando há mais clubes do que vagas (ex.: Liga de 10). Implementado: **sorteio** entre os clubes da série (seleção automática dos clubes-bot), com semente automática da sessão. | Resolvida |

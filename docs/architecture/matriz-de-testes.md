@@ -122,3 +122,20 @@
 | Formação e escalação | `test_lineup_excludes_unavailable_and_respects_formation` · `test_lineup_prefers_positional_fit_over_raw_attributes` · `test_recent_performance_breaks_ties` · `test_reference_formation_and_opponent_history_shape_the_choice` · `test_emergency_players_only_below_eleven_available` · `test_no_formations_is_an_explicit_error` |
 | Regressão do motor | `tests/unit/test_match_engine_regression.py` (8 hashes da Entrega 5) + suíte do motor |
 | Lotes de comportamento | `tests/simulation/test_tactics_batches.py` · relatório `scripts/tactics_report.py` |
+
+## Entrega 7 — Liga, Copa e execução paralela
+
+| Requisito | Testes (`tests/unit/test_season.py`, salvo indicação) |
+|---|---|
+| Liga 2 a 20 clubes, ímpares, turno único e returno | `test_league_complete_any_size` (2,3,4,5,7,8 × turno/returno) · `test_league_with_20_clubs_double_round_completes` · simulação `test_full_20_club_league_integrity_and_strength_signal` |
+| Classificação e pontuação; desempate sem critério oficial | `tests/unit/test_standings.py` |
+| Copa 2, 4, 8, 16, 32; empates e pênaltis | `test_cup_complete_bracket` · `test_cup_penalties_recorded_separately_from_goals` · simulação `test_many_cups_of_32` |
+| Eliminação antecipada do usuário | `test_user_eliminated_cup_continues_until_final` |
+| Folgas | `test_byes_do_not_count_as_match_nor_reduce_absences` |
+| Afastamentos e suspensões | `test_injuries_and_suspensions_are_consolidated_and_respected` |
+| Rodadas paralelas / snapshot / isolamento | `test_standings_only_change_on_consolidation_and_snapshot_is_shared` · `test_parallel_processes_match_threads_and_order_independence` · `test_bot_matches_do_not_depend_on_the_user_match` · API `test_real_process_pool_round` |
+| Falhas em partidas simultâneas | `test_failed_parallel_match_blocks_whole_round_and_retry_is_identical` · `test_invalid_result_is_rejected` · `test_identity_mismatch_is_rejected` · `test_failure_during_consolidation_leaves_state_untouched` · API `test_failed_match_blocks_consolidation_and_retry_replays_only_failures` |
+| Reprocessamento determinístico | `test_deterministic_reprocessing` · `test_seed_is_per_match_and_stable` |
+| Consolidação única e avanço manual | `test_consolidation_happens_once_and_advance_is_manual` · API `test_full_competition_flow` |
+| Histórico, campeões e premiações | `test_awards_and_campaign` · API `test_full_competition_flow` |
+| API (início após o mercado, pós-partida, resumo, sessão encerrada) | `tests/integration/test_season_api.py` |
