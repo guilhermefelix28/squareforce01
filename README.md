@@ -3,7 +3,7 @@
 **Football Strategy Game** — simulador de futebol com leilão de jogadores, negociações, bots com IA,
 Liga, Copa e motor de partidas. Implementação do **Game Design v5.2**.
 
-**Estado:** Entrega 5 — motor esportivo determinístico (parâmetros provisórios, não calibrados); leilão e IA aguardam as fórmulas aprovadas.
+**Estado:** Entrega 6 — IA tática dos bots (formação, escalação, posturas) sobre o motor determinístico; parâmetros provisórios, não calibrados.
 
 ## Estrutura
 
@@ -16,14 +16,14 @@ services/
   data/                SQLite, migrações, importação Excel, catálogo
   competition/         opções de formato, seleção de participantes, calendário e chaveamento
   auction/             leilão: regras, motor, complementação (fórmulas via AuctionModel)
-  bot_ai/              avaliação 80/20 e lances dos bots
+  bot_ai/              avaliação 80/20, lances, trocas e tática de partidas dos bots
   trading/             mercado: propostas, decisões únicas, trocas atômicas
   match_engine/        motor de partidas: eventos, xG, disciplina, lesões, notas, determinismo
 shared/python/squadforce_shared/   domínio puro, contratos Pydantic, códigos de erro
 database/migrations/   SQL versionado (o banco .db não é versionado)
 tests/                 unit · integration · contracts · end_to_end
 docs/                  game-design · architecture · api  (índice: docs/README.md)
-scripts/               export_openapi.py, match_engine_report.py
+scripts/               export_openapi.py, match_engine_report.py, tactics_report.py
 Dados/ Graphics/       fontes originais (somente leitura, fora do Git)
 ```
 

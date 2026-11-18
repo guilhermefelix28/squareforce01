@@ -16,6 +16,7 @@
 - [Leilão e fórmulas pendentes](architecture/leilao.md)
 - [Mercado de negociações](architecture/mercado.md)
 - [Motor esportivo](architecture/motor-esportivo.md) · [lotes exploratórios](architecture/motor-calibracao-exploratoria.md)
+- [IA tática dos bots](architecture/ia-tatica.md) · [lotes de comportamento](architecture/ia-tatica-lotes.md)
 - [Matriz de testes](architecture/matriz-de-testes.md)
 
 ## API

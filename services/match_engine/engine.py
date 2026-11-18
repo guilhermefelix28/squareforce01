@@ -16,14 +16,39 @@ from __future__ import annotations
 import math
 import random
 from dataclasses import dataclass, field
-from typing import Any, Iterable, Sequence
+from typing import Any, Iterable, Mapping, Protocol, Sequence
 
 from squadforce_shared.domain.positions import Position
 
 from .attributes import skill
 from .params import DEFAULT_PARAMS, ENGINE_VERSION, POSTURES, MatchParams
 from .ratings import event_deltas, live_rating
-from .types import Card, Event, Injury, MatchInput, MatchPlayer, MatchResult, PostureChange, TeamSheet
+from .types import (
+    Card,
+    Event,
+    Injury,
+    MatchInput,
+    MatchPlayer,
+    MatchResult,
+    OwnPlayerState,
+    PostureChange,
+    TacticalObservation,
+    TeamSheet,
+)
+
+
+class TacticalController(Protocol):
+    """Controlador tático de um lado (bots — Entrega 6). Deve ser determinístico e não usar o RNG do motor."""
+
+    eval_interval: float  # segundos de jogo entre reavaliações periódicas
+
+    def decide(self, obs: TacticalObservation) -> str | None: ...
+
+    def substitution_bias(self, obs: TacticalObservation) -> str | None: ...  # "attack" | "defend" | None
+
+
+TRIGGER_EVENTS = {"goal": ("goal_for", "goal_against"), "red_card": ("red_own", "red_opp"),
+                  "player_off": ("player_off_own", "player_off_opp")}
 
 DEF, MID, FINAL = 0, 1, 2
 LINE = {Position.GK: "gk", Position.DR: "def", Position.DL: "def", Position.DC: "def",
@@ -95,7 +120,8 @@ class TeamState:
 
 
 class MatchSimulation:
-    def __init__(self, match: MatchInput, params: MatchParams = DEFAULT_PARAMS, decisions: Iterable[PostureChange] = ()):
+    def __init__(self, match: MatchInput, params: MatchParams = DEFAULT_PARAMS, decisions: Iterable[PostureChange] = (),
+                 controllers: Mapping[int, TacticalController] | None = None):
         for s in (match.home, match.away):
             if s.posture not in POSTURES:
                 raise ValueError(f"Postura desconhecida: {s.posture}")
@@ -123,6 +149,11 @@ class MatchSimulation:
         self.injuries: list[Injury] = []
         self.cards: list[Card] = []
         self.live: dict[int, float] = {}  # nota parcial incremental por jogador
+        # IA tática (Entrega 6): só age se houver controlador; sem ele o caminho é idêntico ao da Entrega 5
+        self.controllers: dict[int, TacticalController] = dict(controllers or {})
+        self._triggers: dict[int, list[str]] = {0: [], 1: []}
+        self._next_eval: dict[int, float] = {0: 0.0, 1: 0.0}
+        self._sub_bias: dict[int, str | None] = {0: None, 1: None}
         self.shootout: tuple[int, int] | None = None
         self._emit("lineups", data={
             "home": [(p.player.unique_id, p.slot.value) for p in self.teams[0].players],
@@ -162,6 +193,10 @@ class MatchSimulation:
         self.events.append(ev)
         for pid, delta, _ in event_deltas(ev, self.p):
             self.live[pid] = self.live.get(pid, 0.0) + delta
+        if self.controllers and type_ in TRIGGER_EVENTS and side is not None:
+            mine, theirs = TRIGGER_EVENTS[type_]
+            self._triggers[side].append(mine)
+            self._triggers[1 - side].append(theirs)
         return ev
 
     # ================================================================ habilidades
@@ -250,6 +285,8 @@ class MatchSimulation:
                     self._shootout()
                 self.finished = True
             return
+        if self.controllers:
+            self._consult_controllers()
         self._apply_decisions()
         for team in self.teams:
             self._consider_substitution(team)
@@ -434,9 +471,68 @@ class MatchSimulation:
         self._emit("substitution", side=team.side, player=on.unique_id, other=off.player.unique_id,
                    data={"reason": reason, "slot": off.slot.value, "number": team.subs_used})
 
+    # ================================================================ IA tática (gancho)
+    def observation(self, side: int) -> TacticalObservation:
+        from .stats import compute_stats
+
+        team, opp = self.teams[side], self.teams[1 - side]
+        stats = compute_stats(self.events)
+        keys = ("home", "away")
+        first_len = self.period_end[0]
+        total = first_len + self.p.half_seconds + self.second_half_stoppage
+        elapsed = self.t if self.period == 1 else first_len + (self.t - self.period_start)
+        return TacticalObservation(
+            side=side, second=self.t, period=self.period,
+            remaining_fraction=_clamp(1 - elapsed / total, 0.0, 1.0),
+            goals_for=team.goals, goals_against=opp.goals,
+            players_for=len(team.on_field()), players_against=len(opp.on_field()),
+            own_posture=team.posture, opponent_posture=opp.posture,
+            own_players=tuple(OwnPlayerState(p.player.unique_id, p.slot, p.condition, p.yellow, p.player)
+                              for p in team.on_field()),
+            bench=tuple(team.bench), substitutions_left=self.p.max_substitutions - team.subs_used,
+            stats_for=stats[keys[side]], stats_against=stats[keys[1 - side]],
+            triggers=tuple(self._triggers[side]), knockout=self.match.knockout,
+        )
+
+    def _consult_controllers(self) -> None:
+        for side in (0, 1):
+            ctrl = self.controllers.get(side)
+            if ctrl is None or self.finished:
+                continue
+            if self.t < self._next_eval[side] and not self._triggers[side]:
+                continue
+            obs = self.observation(side)
+            choice = ctrl.decide(obs)
+            self._sub_bias[side] = ctrl.substitution_bias(obs)
+            self._triggers[side] = []
+            self._next_eval[side] = self.t + ctrl.eval_interval
+            if choice is not None and choice in POSTURES and choice != self.teams[side].posture:
+                self.decisions.append(PostureChange(self.t, side, choice))
+                self.decisions.sort(key=lambda d: (d.second, d.side))
+
+    def _tactical_substitution(self, team: TeamState) -> bool:
+        """Substituição por contexto tático pedida pelo controlador (somente com controlador presente)."""
+        bias = self._sub_bias.get(team.side)
+        if bias is None or self.t < 60 * 60:
+            return False
+        if bias == "attack":
+            out_lines, in_pos = ("def", "mid"), (Position.STC, Position.MC)
+        else:
+            out_lines, in_pos = ("att", "mid"), (Position.DC, Position.DM)
+        tired = [p for p in team.on_field() if p.line in out_lines and p.condition < 80 and p.slot is not Position.GK]
+        bench = [b for b in team.bench if b.natural_position in in_pos]
+        if not tired or not bench:
+            return False
+        off = min(tired, key=lambda p: (p.condition, p.player.unique_id))
+        on = max(bench, key=lambda b: (b.familiarity.get(off.slot, 1), -b.unique_id))
+        self._substitute(team, off, on, "tactical")
+        return True
+
     def _consider_substitution(self, team: TeamState) -> None:
         if (team.subs_used >= self.p.max_substitutions or not team.bench
                 or self.t < self.p.sub_min_minute * 60 or self.finished):
+            return
+        if team.side in self.controllers and not self._urgent_need(team) and self._tactical_substitution(team):
             return
         losing = team.goals < self.teams[1 - team.side].goals
         worst: tuple[float, OnField, str] | None = None
@@ -470,6 +566,10 @@ class MatchSimulation:
             replacement = self._best_replacement(team, slot)
         if replacement is not None:
             self._substitute(team, pl, replacement, reason)
+
+    def _urgent_need(self, team: TeamState) -> bool:
+        """Há atleta exausto (abaixo do limiar de condição)? Então a troca por desgaste tem prioridade."""
+        return any(p.condition < self.p.sub_condition_threshold for p in team.on_field())
 
     # ================================================================ oportunidades
     def _corner(self, att: TeamState, opp: TeamState) -> None:
@@ -661,5 +761,6 @@ class MatchSimulation:
         return None
 
 
-def simulate(match: MatchInput, params: MatchParams = DEFAULT_PARAMS, decisions: Iterable[PostureChange] = ()) -> MatchResult:
-    return MatchSimulation(match, params, decisions).run()
+def simulate(match: MatchInput, params: MatchParams = DEFAULT_PARAMS, decisions: Iterable[PostureChange] = (),
+             controllers: Mapping[int, TacticalController] | None = None) -> MatchResult:
+    return MatchSimulation(match, params, decisions, controllers).run()

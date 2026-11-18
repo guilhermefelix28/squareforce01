@@ -10,7 +10,8 @@ Orientar o serviço `services/bot_ai`. **Leilão implementado** (Entrega 3): `ev
 formação via algoritmo húngaro; ganho 0,8/0,2) e `auction_bot.py` (decisão de lance). Parâmetros das
 personalidades pendentes (PB-01, via `AuctionModel.bot_profile`). **Mercado implementado** (Entrega 4):
 `trade_bot.py` (`evaluate_offer` com proteção contra exploração; `choose_proposal`), parâmetros PB-02 pendentes.
-Partidas: entrega futura.
+**Tática implementada** (Entrega 6): `tactics.py` (`choose_lineup`, `TacticalBot`, `CompetitionSituation`,
+`PreMatchContext`), parâmetros provisórios em `tactics_params.py` (PB-03). Ver `docs/architecture/ia-tatica.md`.
 
 ## Quando utilizar
 Implementação/revisão de qualquer decisão automática de bot (leilão, mercado, escalação, postura).
@@ -30,12 +31,16 @@ Entrada: `BotAuctionView` (somente informação pública + próprio lance). Saí
 valida e aplica; decisão inválida é descartada mantendo o lance anterior. Determinismo: RNG e relógio do motor.
 
 ## Procedimentos recomendados
-1. Construir a visão pública explicitamente (whitelist de campos) e passá-la ao bot.
-2. Toda aleatoriedade via RNG semeado recebido.
-3. Parâmetros de personalidade em um único módulo, nunca expostos pela API.
+1. Construir a visão pública explicitamente (whitelist de campos) e passá-la ao bot (`BotAuctionView`,
+   `TacticalObservation`, `PreMatchContext`).
+2. Decisões táticas determinísticas e SEM o RNG do motor; uma instância de `TacticalBot` por partida.
+3. Parâmetros em um único módulo, nunca expostos pela API; multiplicadores de postura MEDIDOS no motor
+   (medir de novo se `MatchParams` mudar).
+4. Antes de alterar a IA: rodar `scripts/tactics_report.py` e `tests/simulation/test_tactics_batches.py`.
 
 ## Restrições e comportamentos proibidos
-Ler ofertas adversárias, estado futuro, outros jogos simultâneos ou dados privados; expor personalidade; inventar pesos não aprovados.
+Ler ofertas adversárias, estado futuro, outros jogos simultâneos, decisões futuras do usuário, atributos do adversário
+ou o RNG/semente do motor; expor personalidade; dar bônus de atributos; inventar pesos sem registrá-los como provisórios.
 
 ## Critérios de teste
 Teste de "vazamento" (visão pública não contém campos privados); determinismo por semente; coerência por personalidade em simulações em lote.
@@ -43,3 +48,4 @@ Teste de "vazamento" (visão pública não contém campos privados); determinism
 ## Referências
 - [Game Design §6, §8, §15](../../../docs/game-design/game-design-v5.2.md)
 - [README do serviço](../../../services/bot_ai/README.md)
+- [IA tática](../../../docs/architecture/ia-tatica.md) · [lotes de comportamento](../../../docs/architecture/ia-tatica-lotes.md)

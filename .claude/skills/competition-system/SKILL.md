@@ -31,6 +31,8 @@ Formatos; participantes; calendário/chave; disparo paralelo das partidas; conso
 - Porta: `CompetitionPlanner` = `plan_competition(config, eligible, rng) -> (participants, structure)`, injetada na sessão (ADR-09).
 - Elegíveis: `DataService.eligible_clubs()` → `list[EligibleClub]` (clubes importados com divisão).
 - IDs estáveis: `L-R{rodada:02}-M{jogo:02}` e `C-R{fase}-M{jogo:02}`.
+- Para a IA tática (Entrega 6): fornecer `CompetitionSituation` (Liga/precisa vencer/evitar derrota/Copa) e
+  `OpponentHistory` a partir do estado PÚBLICO no início da rodada (nunca de jogos em andamento).
 
 ## Procedimentos recomendados
 1. Constantes de formato só em `domain/competition.py` (usadas por sessão e opções).

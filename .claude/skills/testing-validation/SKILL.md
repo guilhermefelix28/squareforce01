@@ -66,6 +66,10 @@ conservação do dinheiro total.
 mesmos eventos; etapas e velocidades equivalentes); estatísticas derivadas; xG sem dupla contagem; lotes
 exploratórios com base real (`-m simulation`). Nunca afirmar calibração sem referências aprovadas.
 
+**Entrega 6:** situações táticas obrigatórias, determinismo, estabilidade (sem trocas excessivas), personalidades
+moderadas, ausência de trapaça (observação limitada, controlador passivo = motor intacto) e regressão do motor
+por hashes; lotes de comportamento (`tests/simulation/test_tactics_batches.py`).
+
 ## Referências
 - [Matriz de testes da Entrega 1](../../../docs/architecture/matriz-de-testes.md)
 - [Especificação técnica §8–9](../../../docs/architecture/especificacao-tecnica-v5.2.md)

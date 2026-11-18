@@ -102,3 +102,23 @@
 | 0 × 0, goleadas e resultados inesperados | `test_nil_nil_and_thrashings_are_possible` · `test_stronger_team_wins_more_but_upsets_happen` · `test_score_is_not_predetermined` |
 | Lote exploratório na base real | `tests/simulation/test_match_batches.py` · relatório `scripts/match_engine_report.py` |
 | Pênaltis da Copa (sem prorrogação, fora do placar e da artilharia) | `test_knockout_draw_goes_to_penalties_recorded_separately` · `test_league_draw_has_no_penalties` |
+
+## Entrega 6 — IA tática
+
+| Requisito | Testes (`tests/unit/test_tactics.py`, salvo indicação) |
+|---|---|
+| Time perdendo perto do final | `test_losing_near_the_end_goes_on_the_attack` · lote: `late_trailing_attacking_share` |
+| Time vencendo com vantagem mínima | `test_winning_by_minimum_margin_late_protects_the_lead` · lote: `late_leading_defending_share` |
+| Time com jogador expulso | `test_red_card_makes_the_team_more_cautious_when_ahead` · `test_opportunist_presses_against_ten_men` |
+| Forte desgaste | `test_heavy_fatigue_penalizes_intense_postures` |
+| Precisa vencer (título) / evitar derrota | `test_must_win_title_race_attacks_when_drawing` · `test_avoid_defeat_protects_the_draw` · `test_league_situation_rule` |
+| Copa com risco de eliminação | `test_cup_elimination_risk_trailing_attacks` · `test_cup_draw_superior_presses_inferior_waits_for_penalties` |
+| Equipe muito superior / muito inferior | `test_much_stronger_and_much_weaker_teams_choose_different_starts` |
+| Repetição determinística | `test_decisions_are_deterministic` |
+| Sem mudanças excessivas | `test_stability_interval_and_decisive_exceptions` · `test_small_gains_do_not_trigger_changes` · `test_hysteresis_makes_reverting_harder` · `test_no_excessive_changes_and_valid_matches_with_bots` · lote `test_changes_are_not_excessive` |
+| Personalidades moderadas | `test_personality_moderately_shifts_risk_appetite` |
+| Informação permitida / sem trapaça | `test_observation_exposes_only_own_team_and_this_match` · `test_bot_cannot_see_user_future_decisions` · `test_passive_controller_does_not_touch_engine_probabilities` · lote `test_ai_has_no_artificial_advantage_but_is_not_worse_than_static` |
+| Substituições legais | `test_tactical_substitutions_are_legal` |
+| Formação e escalação | `test_lineup_excludes_unavailable_and_respects_formation` · `test_lineup_prefers_positional_fit_over_raw_attributes` · `test_recent_performance_breaks_ties` · `test_reference_formation_and_opponent_history_shape_the_choice` · `test_emergency_players_only_below_eleven_available` · `test_no_formations_is_an_explicit_error` |
+| Regressão do motor | `tests/unit/test_match_engine_regression.py` (8 hashes da Entrega 5) + suíte do motor |
+| Lotes de comportamento | `tests/simulation/test_tactics_batches.py` · relatório `scripts/tactics_report.py` |

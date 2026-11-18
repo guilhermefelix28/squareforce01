@@ -125,3 +125,41 @@ class MatchResult:
     final_postures: tuple[str, str]
     shootout: tuple[int, int] | None = None  # pênaltis registrados à parte (não são gols da partida)
     winner_side: int | None = None  # vencedor oficial (inclui pênaltis); None = empate
+
+
+@dataclass(frozen=True)
+class OwnPlayerState:
+    unique_id: int
+    slot: Position
+    condition: float
+    yellow_cards: int
+    player: MatchPlayer  # atributos do PRÓPRIO elenco (permitidos ao próprio clube)
+
+
+@dataclass(frozen=True)
+class TacticalObservation:
+    """Tudo o que um controlador tático pode ver durante a partida (GDD §15).
+
+    Somente: a própria equipe (atletas, condição, cartões, banco), o placar, o tempo, o número de jogadores
+    em campo de cada lado, as posturas observáveis e as estatísticas/acontecimentos DESTA partida até agora.
+    NÃO contém: gerador aleatório, eventos futuros, outros jogos, decisões futuras do usuário, atributos do
+    adversário.
+    """
+
+    side: int
+    second: float
+    period: int
+    remaining_fraction: float  # fração do tempo nominal restante (0..1)
+    goals_for: int
+    goals_against: int
+    players_for: int
+    players_against: int
+    own_posture: str
+    opponent_posture: str
+    own_players: tuple[OwnPlayerState, ...]
+    bench: tuple[MatchPlayer, ...]
+    substitutions_left: int
+    stats_for: Mapping[str, Any]
+    stats_against: Mapping[str, Any]
+    triggers: tuple[str, ...]  # acontecimentos desde a última avaliação: goal_for, goal_against, red_own, red_opp...
+    knockout: bool

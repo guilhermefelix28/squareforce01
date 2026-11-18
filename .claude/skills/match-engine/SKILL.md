@@ -32,7 +32,9 @@ Simular uma partida a partir de um estado inicial imutável e produzir eventos, 
 - Invariantes: `validation.validate_result` (usar em TODO teste e lote).
 - Entre partidas: `availability.AvailabilityLedger.record_match`; escalação: `lineup.build_team_sheet` (emergenciais).
 - Apresentação: `presentation.LivePresentation` (15 s, 30 s, 60 s, instantânea).
-- Decisões táticas dos bots: Entrega 6 (`bot-intelligence`), aplicadas por `PostureChange`.
+- Decisões táticas dos bots: `simulate(..., controllers={lado: TacticalController})`; o controlador recebe só
+  `TacticalObservation` e devolve posturas (viram `PostureChange`). Sem controlador o motor é bit a bit o da
+  Entrega 5 (`tests/unit/test_match_engine_regression.py`).
 
 ## Procedimentos recomendados
 1. RNG único semeado por partida; nenhum uso de relógio de parede ou estado global; ordem de iteração fixa.

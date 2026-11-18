@@ -73,6 +73,9 @@ Legenda: **P** = regra pendente · **D** = decisão técnica provisória (confir
 | PM-02 | P | **Referências estatísticas oficiais e calibração** do motor. Todos os números de `services/match_engine/params.py` são provisórios; lotes exploratórios em `docs/architecture/motor-calibracao-exploratoria.md` (dentro de faixas PRELIMINARES não aprovadas; grandes chances observadas ≈ 0,5 por time, possivelmente baixas). |
 | PM-03 | P | Métrica de "**impacto das ações decisivas**" (desempate do Craque da Partida). |
 | PG-01 | P | **Requisitos de desempenho** (GDD §26) não quantificados. (Observado: ~45 ms por partida instantânea.) |
+| PB-03 | P | **Parâmetros da IA tática** (`services/bot_ai/tactics_params.py`): ganho mínimo, histerese, estabilidade, intervalos, aversão à perda por personalidade, custos de desgaste, pesos de escalação/formação. Os multiplicadores das posturas foram MEDIDOS no motor (e suavizados). |
+| PB-04 | D | **Valores dos resultados por situação** (Liga 3/1/0; precisa vencer 3/0,4/0; evitar derrota 3/2,4/−1; Copa 1/0,5/0) e regra `league_situation` (poucas rodadas, distância do líder ou da zona de perigo). A Entrega 7 fornecerá a classificação. |
+| PB-05 | P | **Formação de referência escolhida antes do leilão** pelos bots: o GDD prevê, mas não define como é escolhida (entrada de `choose_lineup`). |
 | MD-01 | P | **Duração da suspensão por vermelho** (provisório: 1 jogo na mesma competição) e **suspensão por acúmulo de amarelos** (desligada até definição). |
 | MD-02 | D | Lesão de **0 jogos** retira o atleta da partida atual, sem afastamento nas seguintes. |
 | MD-03 | D | Craque da Partida: após nota exibida, precisão interna e impacto decisivo, o último desempate é o menor ID. |

@@ -29,10 +29,11 @@ Consulte a Skill correspondente **antes** de alterar um módulo. `game-design-ru
 | `testing-validation` | testes obrigatórios e critérios de aceitação |
 
 ## Escopo atual
-**Entregas 1 a 5** (infraestrutura, dados, sessão; competições; leilão; mercado; motor esportivo). O leilão está implementado mas
+**Entregas 1 a 6** (infraestrutura, dados, sessão; competições; leilão; mercado; motor esportivo; IA tática). O leilão está implementado mas
 **bloqueado até o `AuctionModel` aprovado** (fórmulas pendentes — `docs/architecture/leilao.md`); nunca invente
 essas fórmulas. Os números do motor são provisórios (`services/match_engine/params.py`) — nunca os declare calibrados.
-Não implemente a IA tática dos bots, a interface de partidas ou a execução de rodadas sem autorização
+Parâmetros da IA tática também são provisórios (`services/bot_ai/tactics_params.py`).
+Não implemente a execução das competições (Entrega 7), a interface de partidas ou novas entregas sem autorização
 explícita do usuário para a entrega correspondente.
 
 ## Comandos
