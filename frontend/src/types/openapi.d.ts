@@ -123,6 +123,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/sessions/{session_id}/competition": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Competition
+         * @description Estrutura da competição da sessão: calendário da Liga ou chaveamento da Copa.
+         */
+        get: operations["get_competition_api_sessions__session_id__competition_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/sessions/{session_id}/close": {
         parameters: {
             query?: never;
@@ -223,6 +243,11 @@ export interface components {
             nation_id: number;
             /** Player Count */
             player_count: number;
+            /**
+             * Division
+             * @description Série A ou B (temporada de referência). null = clube sem divisão: não elegível.
+             */
+            division?: ("A" | "B") | null;
         };
         /** ClubPage */
         ClubPage: {
@@ -263,6 +288,18 @@ export interface components {
             /** Available Clubs */
             available_clubs: number;
             /**
+             * Eligible Clubs
+             * @description Clubes importados com divisão (A/B) definida.
+             */
+            eligible_clubs: number;
+            /**
+             * Division Counts
+             * @description Clubes elegíveis por divisão, ex.: {'A': 20, 'B': 20}.
+             */
+            division_counts: {
+                [key: string]: number;
+            };
+            /**
              * Catalog Ready
              * @description Há clubes e jogadores importados para iniciar uma sessão.
              */
@@ -273,10 +310,117 @@ export interface components {
              */
             imports_blocked: boolean;
         };
+        /** CompetitionOut */
+        CompetitionOut: {
+            /** Session Id */
+            session_id: string;
+            /** Version */
+            version: number;
+            format: components["schemas"]["CompetitionFormat"];
+            /** User Club Uid */
+            user_club_uid: number;
+            /** Structure */
+            structure: components["schemas"]["LeagueSchedule"] | components["schemas"]["CupBracket"];
+        };
+        /** CupBracket */
+        CupBracket: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "cup";
+            /** Participants */
+            participants: number[];
+            rules?: components["schemas"]["CupRules"];
+            /** Rounds */
+            rounds: components["schemas"]["CupRound"][];
+            /** Total Rounds */
+            total_rounds: number;
+            /** Total Matches */
+            total_matches: number;
+            /** Champion Club Uid */
+            champion_club_uid?: number | null;
+        };
+        /** CupMatch */
+        CupMatch: {
+            /**
+             * Id
+             * @description Identificador estável: C-R{fase}-M{jogo:02}.
+             */
+            id: string;
+            /** Round */
+            round: number;
+            /**
+             * Slot
+             * @description Posição do confronto na fase (1..n).
+             */
+            slot: number;
+            /**
+             * Club A Uid
+             * @description Definido no sorteio (1ª fase) ou pelo vencedor de source_a.
+             */
+            club_a_uid?: number | null;
+            /** Club B Uid */
+            club_b_uid?: number | null;
+            /**
+             * Source A
+             * @description ID do confronto cujo vencedor ocupa club_a.
+             */
+            source_a?: string | null;
+            /** Source B */
+            source_b?: string | null;
+            /**
+             * Next Match Id
+             * @description Confronto para onde avança o vencedor (null na final).
+             */
+            next_match_id?: string | null;
+            /** Winner Club Uid */
+            winner_club_uid?: number | null;
+            /** Decided By */
+            decided_by?: ("regular_time" | "penalties") | null;
+        };
         /** CupOptions */
         CupOptions: {
             /** Allowed Sizes */
             allowed_sizes: number[];
+        };
+        /** CupRound */
+        CupRound: {
+            /** Number */
+            number: number;
+            /** Name */
+            name: string;
+            /** Matches */
+            matches: components["schemas"]["CupMatch"][];
+        };
+        /** CupRules */
+        CupRules: {
+            /**
+             * Single Match
+             * @default true
+             */
+            single_match: boolean;
+            /**
+             * Regulation Minutes
+             * @default 90
+             */
+            regulation_minutes: number;
+            /**
+             * Extra Time
+             * @default false
+             */
+            extra_time: boolean;
+            /**
+             * Draw Decided By
+             * @default penalties
+             * @constant
+             */
+            draw_decided_by: "penalties";
+            /**
+             * Penalties Count As Goals
+             * @default false
+             */
+            penalties_count_as_goals: boolean;
         };
         /** DatabaseHealth */
         DatabaseHealth: {
@@ -415,6 +559,29 @@ export interface components {
              */
             warning_count: number;
         };
+        /** LeagueMatch */
+        LeagueMatch: {
+            /**
+             * Id
+             * @description Identificador estável: L-R{rodada:02}-M{jogo:02}.
+             */
+            id: string;
+            /**
+             * Round
+             * @description Rodada global (1..total).
+             */
+            round: number;
+            /**
+             * Turn
+             * @description 1 = turno, 2 = returno.
+             * @enum {integer}
+             */
+            turn: 1 | 2;
+            /** Home Club Uid */
+            home_club_uid: number;
+            /** Away Club Uid */
+            away_club_uid: number;
+        };
         /** LeagueOptions */
         LeagueOptions: {
             /** Min Clubs */
@@ -424,11 +591,47 @@ export interface components {
             /** Rounds */
             rounds: components["schemas"]["LeagueRounds"][];
         };
+        /** LeagueRound */
+        LeagueRound: {
+            /** Number */
+            number: number;
+            /**
+             * Turn
+             * @enum {integer}
+             */
+            turn: 1 | 2;
+            /** Matches */
+            matches: components["schemas"]["LeagueMatch"][];
+            /**
+             * Bye Club Uid
+             * @description Clube de folga (número ímpar de participantes). Folga não é partida.
+             */
+            bye_club_uid?: number | null;
+        };
         /**
          * LeagueRounds
          * @enum {string}
          */
         LeagueRounds: "single" | "double";
+        /** LeagueSchedule */
+        LeagueSchedule: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "league";
+            rounds_mode: components["schemas"]["LeagueRounds"];
+            /** Participants */
+            participants: number[];
+            /** Rounds */
+            rounds: components["schemas"]["LeagueRound"][];
+            /** Total Rounds */
+            total_rounds: number;
+            /** Total Matches */
+            total_matches: number;
+            /** Matches Per Club */
+            matches_per_club: number;
+        };
         /** PlayerOut */
         PlayerOut: {
             /** Unique Id */
@@ -453,6 +656,12 @@ export interface components {
             natural_positions: components["schemas"]["Position"][];
             /** Accomplished Positions */
             accomplished_positions: components["schemas"]["Position"][];
+            /**
+             * Id Generated
+             * @description True se o ID foi gerado pelo SquadForce (linha sem unique_id).
+             * @default false
+             */
+            id_generated: boolean;
         };
         /** PlayerPage */
         PlayerPage: {
@@ -534,7 +743,7 @@ export interface components {
             closed_at?: string | null;
             /**
              * Participants
-             * @description Clubes participantes. Ainda não definidos: seleção/sorteio pertence ao serviço de competições (entrega futura).
+             * @description club_uid dos participantes (inclui o clube do usuário), na ordem de seleção/sorteio.
              */
             participants?: number[] | null;
         };
@@ -1045,6 +1254,91 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SessionOut"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Request Entity Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unsupported Media Type */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_competition_api_sessions__session_id__competition_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CompetitionOut"];
                 };
             };
             /** @description Bad Request */

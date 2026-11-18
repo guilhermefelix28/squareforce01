@@ -49,6 +49,10 @@ A planilha real é usada **somente leitura** (`@pytest.mark.real_data`).
 11 preservação da base · 12 criar/encerrar sessão · 13 configurações inválidas · 14 bloqueio de importação ·
 15 comandos duplicados · 16 falhas de comunicação recuperáveis. Mapeamento em `docs/architecture/matriz-de-testes.md`.
 
+**Entrega 2:** Ligas 2, 3, 5, 7, 10, 19, 20 em turno único e returno (partidas, rodadas, folgas, mandos, inclusão
+do usuário, confrontos indevidos); Copas 2, 4, 8, 16, 32 (chaveamento, eliminação, progressão até a final,
+duplicações); cada cenário com várias sementes e conferido de forma independente do validador interno.
+
 ## Referências
 - [Matriz de testes da Entrega 1](../../../docs/architecture/matriz-de-testes.md)
 - [Especificação técnica §8–9](../../../docs/architecture/especificacao-tecnica-v5.2.md)

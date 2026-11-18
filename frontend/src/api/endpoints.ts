@@ -1,5 +1,6 @@
 import type {
   ClubPage,
+  CompetitionOut,
   CompetitionOptions,
   Health,
   ImportBase,
@@ -35,6 +36,9 @@ export const createSession = (body: SessionCreate, idempotencyKey = newIdempoten
   apiRequest<Session>("/api/sessions", { method: "POST", json: body, idempotencyKey });
 
 export const getSession = (id: string) => apiRequest<Session>(`/api/sessions/${encodeURIComponent(id)}`);
+
+export const getCompetition = (id: string) =>
+  apiRequest<CompetitionOut>(`/api/sessions/${encodeURIComponent(id)}/competition`);
 
 export const closeSession = (id: string, expectedVersion?: number, idempotencyKey = newIdempotencyKey()) =>
   apiRequest<Session>(`/api/sessions/${encodeURIComponent(id)}/close`, {

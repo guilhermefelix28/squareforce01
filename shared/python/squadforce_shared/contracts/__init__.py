@@ -7,7 +7,7 @@ do frontend são gerados (frontend/src/types/openapi.d.ts).
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Generic, Literal, TypeVar
+from typing import Annotated, Any, Generic, Literal, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -67,6 +67,9 @@ class ClubOut(_Model):
     short_name: str
     nation_id: int
     player_count: int
+    division: Literal["A", "B"] | None = Field(
+        None, description="Série A ou B (temporada de referência). null = clube sem divisão: não elegível."
+    )
     # club_reputation é armazenada, mas NÃO exposta: GDD seção 2 ("rankings internos ocultos").
 
 
@@ -82,6 +85,7 @@ class PlayerOut(_Model):
     club_short_name: str
     natural_positions: list[Position]
     accomplished_positions: list[Position]
+    id_generated: bool = Field(False, description="True se o ID foi gerado pelo SquadForce (linha sem unique_id).")
     # Atributos e familiaridades são armazenados, mas não expostos no catálogo público
     # (GDD seção 5: overall/atributos ocultos na interface do leilão). Pendência registrada.
 
@@ -154,8 +158,7 @@ class SessionOut(_Model):
     updated_at: datetime
     closed_at: datetime | None = None
     participants: list[int] | None = Field(
-        None,
-        description="Clubes participantes. Ainda não definidos: seleção/sorteio pertence ao serviço de competições (entrega futura).",
+        None, description="club_uid dos participantes (inclui o clube do usuário), na ordem de seleção/sorteio."
     )
 
 
@@ -174,8 +177,87 @@ class CompetitionOptions(_Model):
     league: LeagueOptions
     cup: CupOptions
     available_clubs: int
+    eligible_clubs: int = Field(description="Clubes importados com divisão (A/B) definida.")
+    division_counts: dict[str, int] = Field(description="Clubes elegíveis por divisão, ex.: {'A': 20, 'B': 20}.")
     catalog_ready: bool = Field(description="Há clubes e jogadores importados para iniciar uma sessão.")
     imports_blocked: bool = Field(description="True enquanto houver competição ativa.")
+
+
+# ---------------------------------------------------------------- estrutura da competição (Entrega 2)
+DecidedBy = Literal["regular_time", "penalties"]
+
+
+class LeagueMatch(_Model):
+    id: str = Field(description="Identificador estável: L-R{rodada:02}-M{jogo:02}.")
+    round: int = Field(description="Rodada global (1..total).")
+    turn: Literal[1, 2] = Field(description="1 = turno, 2 = returno.")
+    home_club_uid: int
+    away_club_uid: int
+
+
+class LeagueRound(_Model):
+    number: int
+    turn: Literal[1, 2]
+    matches: list[LeagueMatch]
+    bye_club_uid: int | None = Field(None, description="Clube de folga (número ímpar de participantes). Folga não é partida.")
+
+
+class LeagueSchedule(_Model):
+    kind: Literal["league"] = "league"
+    rounds_mode: LeagueRounds
+    participants: list[int]
+    rounds: list[LeagueRound]
+    total_rounds: int
+    total_matches: int
+    matches_per_club: int
+
+
+class CupRules(_Model):
+    single_match: bool = True
+    regulation_minutes: int = 90
+    extra_time: bool = False
+    draw_decided_by: Literal["penalties"] = "penalties"
+    penalties_count_as_goals: bool = False
+
+
+class CupMatch(_Model):
+    id: str = Field(description="Identificador estável: C-R{fase}-M{jogo:02}.")
+    round: int
+    slot: int = Field(description="Posição do confronto na fase (1..n).")
+    club_a_uid: int | None = Field(None, description="Definido no sorteio (1ª fase) ou pelo vencedor de source_a.")
+    club_b_uid: int | None = None
+    source_a: str | None = Field(None, description="ID do confronto cujo vencedor ocupa club_a.")
+    source_b: str | None = None
+    next_match_id: str | None = Field(None, description="Confronto para onde avança o vencedor (null na final).")
+    winner_club_uid: int | None = None
+    decided_by: DecidedBy | None = None
+
+
+class CupRound(_Model):
+    number: int
+    name: str
+    matches: list[CupMatch]
+
+
+class CupBracket(_Model):
+    kind: Literal["cup"] = "cup"
+    participants: list[int]
+    rules: CupRules = Field(default_factory=CupRules)
+    rounds: list[CupRound]
+    total_rounds: int
+    total_matches: int
+    champion_club_uid: int | None = None
+
+
+CompetitionStructure = Annotated[LeagueSchedule | CupBracket, Field(discriminator="kind")]
+
+
+class CompetitionOut(_Model):
+    session_id: str
+    version: int
+    format: CompetitionFormat
+    user_club_uid: int
+    structure: CompetitionStructure
 
 
 # ---------------------------------------------------------------- websocket

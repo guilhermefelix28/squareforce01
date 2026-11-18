@@ -62,7 +62,7 @@ export function SessionPanel({
         <div><dt>Formato</dt><dd>{cfg.format === "league" ? "Liga" : "Copa"}</dd></div>
         <div><dt>Clubes</dt><dd>{cfg.num_clubs}</dd></div>
         {cfg.format === "league" && (
-          <div><dt>Turnos</dt><dd>{cfg.league_rounds === "double" ? "Ida e volta" : "Único"}</dd></div>
+          <div><dt>Turnos</dt><dd>{cfg.league_rounds === "double" ? "Turno e returno" : "Turno único"}</dd></div>
         )}
         <div><dt>Fase</dt><dd>{session.phase === "setup" ? "Configuração" : session.phase}</dd></div>
         <div><dt>Versão</dt><dd>{session.version}</dd></div>

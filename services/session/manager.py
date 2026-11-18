@@ -2,16 +2,28 @@
 
 from __future__ import annotations
 
+import random
+import secrets
 import threading
 import uuid
 from collections import OrderedDict
 from contextlib import contextmanager
 from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
-from typing import Iterator, Protocol
+from typing import Callable, Iterator, Protocol, Sequence
 
-from squadforce_shared.contracts import CompetitionConfig, SessionOut
-from squadforce_shared.domain.competition import CompetitionConfigError, validate_competition_config
+from squadforce_shared.contracts import (
+    CompetitionConfig,
+    CompetitionOut,
+    CupBracket,
+    LeagueSchedule,
+    SessionOut,
+)
+from squadforce_shared.domain.competition import (
+    CompetitionConfigError,
+    EligibleClub,
+    validate_competition_config,
+)
 from squadforce_shared.errors import AppError, ErrorCode
 
 MAX_CLOSED_TOMBSTONES = 50
@@ -23,6 +35,12 @@ class ClubCatalog(Protocol):
     def club_count(self) -> int: ...
     def club_exists(self, club_uid: int) -> bool: ...
     def catalog_ready(self) -> bool: ...
+    def eligible_clubs(self) -> list[EligibleClub]: ...
+
+
+Structure = LeagueSchedule | CupBracket
+# Porta do serviço de competições: (config, elegíveis, rng) -> (participantes, estrutura validada).
+CompetitionPlanner = Callable[[CompetitionConfig, Sequence[EligibleClub], random.Random], tuple[list[int], Structure]]
 
 
 def _now() -> datetime:
@@ -40,6 +58,18 @@ class SessionState:
     updated_at: datetime
     closed_at: datetime | None = None
     participants: tuple[int, ...] | None = None
+    structure: Structure | None = None
+    seed: int | None = field(default=None, repr=False)  # semente automática (GDD §16); não exposta
+
+    def to_competition_out(self) -> CompetitionOut:
+        assert self.structure is not None
+        return CompetitionOut(
+            session_id=self.id,
+            version=self.version,
+            format=self.config.format,
+            user_club_uid=self.config.user_club_uid,
+            structure=self.structure,
+        )
 
     def to_out(self) -> SessionOut:
         return SessionOut(
@@ -63,8 +93,15 @@ class _Internal:
 
 
 class SessionManager:
-    def __init__(self, catalog: ClubCatalog):
+    def __init__(
+        self,
+        catalog: ClubCatalog,
+        planner: CompetitionPlanner,
+        seed_factory: Callable[[], int] = lambda: secrets.randbits(63),
+    ):
         self._catalog = catalog
+        self._planner = planner
+        self._seed_factory = seed_factory
         self._lock = threading.RLock()
         self._s = _Internal()
 
@@ -105,10 +142,9 @@ class SessionManager:
                     409, ErrorCode.CATALOG_EMPTY,
                     "Importe as bases de clubes e jogadores antes de iniciar uma competição.",
                 )
+            eligible = self._catalog.eligible_clubs()
             try:
-                validate_competition_config(
-                    config.format, config.num_clubs, config.league_rounds, self._catalog.club_count()
-                )
+                validate_competition_config(config.format, config.num_clubs, config.league_rounds, len(eligible))
             except CompetitionConfigError as exc:
                 raise AppError(
                     422, ErrorCode.INVALID_COMPETITION_CONFIG, str(exc), details={"field": exc.field}
@@ -119,6 +155,20 @@ class SessionManager:
                     f"O clube {config.user_club_uid} não existe no catálogo importado.",
                     details={"field": "user_club_uid"},
                 )
+            if all(c.club_uid != config.user_club_uid for c in eligible):
+                raise AppError(
+                    422, ErrorCode.CLUB_NOT_ELIGIBLE,
+                    f"O clube {config.user_club_uid} não tem divisão (Série A/B) definida e não é elegível.",
+                    details={"field": "user_club_uid"},
+                )
+            seed = self._seed_factory()
+            try:
+                participants, structure = self._planner(config, eligible, random.Random(seed))
+            except ValueError as exc:  # PlanningError: invariante violada => nada é criado
+                raise AppError(
+                    500, ErrorCode.COMPETITION_PLANNING_FAILED,
+                    f"Falha ao gerar a competição: {exc}", retryable=True,
+                ) from exc
             if self._s.active is not None:
                 if not confirm_replace:
                     raise AppError(
@@ -137,6 +187,9 @@ class SessionManager:
                 config=config,
                 created_at=now,
                 updated_at=now,
+                participants=tuple(participants),
+                structure=structure,
+                seed=seed,
             )
             self._s.active = state
             return state

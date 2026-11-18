@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import io
+import sqlite3
 import uuid
 from pathlib import Path
 from typing import Any
@@ -112,9 +113,22 @@ def client(settings: Settings):
         yield c
 
 
+TEST_DIVISIONS = {100: "A", 200: "A", 300: "B", 400: "B"}
+
+
+def set_divisions(settings: Settings, divisions: dict[int, str]) -> None:
+    """Divisões de referência para os clubes fictícios dos testes (a migração só traz os 40 reais)."""
+    with sqlite3.connect(settings.db_path) as conn:
+        conn.executemany(
+            "INSERT OR REPLACE INTO club_divisions (club_uid, division, season, label) VALUES (?, ?, 2026, 'teste')",
+            list(divisions.items()),
+        )
+
+
 @pytest.fixture
-def loaded_client(client: TestClient) -> TestClient:
-    """Cliente com 4 clubes e 12 jogadores importados."""
+def loaded_client(client: TestClient, settings: Settings) -> TestClient:
+    """Cliente com 4 clubes (2 da Série A, 2 da B) e 12 jogadores importados."""
+    set_divisions(settings, TEST_DIVISIONS)
     rows = squad()
     assert post_import(client, "clubs", build_xlsx(rows)).status_code == 200
     assert post_import(client, "players", build_xlsx(rows)).status_code == 200

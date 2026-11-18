@@ -1,7 +1,7 @@
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it } from "vitest";
-import { CLUBS, OPTIONS, SESSION, apiError, fakeApi, json } from "../test/fakeApi";
+import { CLUBS, LEAGUE_COMPETITION, OPTIONS, SESSION, apiError, fakeApi, json } from "../test/fakeApi";
 import { App } from "./App";
 
 const HEALTH = {
@@ -43,6 +43,7 @@ describe("App", () => {
       "GET /api/competitions/options": () => json(200, OPTIONS),
       "GET /api/catalog/clubs": () => json(200, { items: CLUBS, total: 2, limit: 200, offset: 0 }),
       "POST /api/sessions": () => json(201, SESSION),
+      "GET /api/sessions/11111111-2222-3333-4444-555555555555/competition": () => json(200, LEAGUE_COMPETITION),
       "POST /api/sessions/11111111-2222-3333-4444-555555555555/close": () => {
         closed = true;
         return json(200, { ...SESSION, status: "closed", version: 2, closed_at: "2026-11-18T12:05:00Z" });
@@ -54,6 +55,7 @@ describe("App", () => {
     await user.selectOptions(await screen.findByLabelText("Seu clube"), "322");
     await user.click(screen.getByRole("button", { name: "Iniciar sessão" }));
     expect(await screen.findByText("Competição ativa")).toBeInTheDocument();
+    expect(await screen.findByText("Calendário da Liga")).toBeInTheDocument();
     const create = calls.find((c) => c.method === "POST" && c.path === "/api/sessions")!;
     expect(JSON.parse(String(create.init.body))).toMatchObject({ format: "league", user_club_uid: 322, league_rounds: "double" });
     expect((create.init.headers as Record<string, string>)["Idempotency-Key"]).toMatch(/^sf-/);

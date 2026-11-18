@@ -9,6 +9,7 @@ from services.gateway.app import create_app
 from squadforce_shared.contracts import (
     ClubPage,
     CompetitionOptions,
+    CompetitionOut,
     ErrorResponse,
     HealthResponse,
     PlayerPage,
@@ -28,6 +29,7 @@ REQUIRED = [
     ("get", "/api/sessions/{session_id}"),
     ("post", "/api/sessions/{session_id}/close"),
     ("get", "/api/competitions/options"),
+    ("get", "/api/sessions/{session_id}/competition"),  # Entrega 2
 ]
 
 
@@ -65,7 +67,8 @@ def test_responses_validate_against_models(loaded_client):
     ClubPage.model_validate(loaded_client.get("/api/catalog/clubs").json())
     PlayerPage.model_validate(loaded_client.get("/api/catalog/players").json())
     CompetitionOptions.model_validate(loaded_client.get("/api/competitions/options").json())
-    SessionOut.model_validate(create_session(loaded_client).json())
+    s = SessionOut.model_validate(create_session(loaded_client).json())
+    CompetitionOut.model_validate(loaded_client.get(f"/api/sessions/{s.id}/competition").json())
     ErrorResponse.model_validate(loaded_client.get("/api/sessions/x").json())
     ErrorResponse.model_validate(loaded_client.get("/api/rota-inexistente").json())
 
@@ -75,3 +78,4 @@ def test_options_contract_matches_game_design(loaded_client):
     assert o["league"] == {"min_clubs": 2, "max_clubs": 20, "rounds": ["single", "double"]}
     assert o["cup"] == {"allowed_sizes": [2, 4, 8, 16, 32]}
     assert o["available_clubs"] == 4 and o["catalog_ready"] is True
+    assert o["eligible_clubs"] == 4 and o["division_counts"] == {"A": 2, "B": 2}

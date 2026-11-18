@@ -29,13 +29,16 @@ export const OPTIONS = {
   league: { min_clubs: 2, max_clubs: 20, rounds: ["single", "double"] },
   cup: { allowed_sizes: [2, 4, 8, 16, 32] },
   available_clubs: 40,
+  eligible_clubs: 40,
+  division_counts: { A: 20, B: 20 },
   catalog_ready: true,
   imports_blocked: false,
 };
 
 export const CLUBS = [
-  { club_uid: 322, name: "Clube de Regatas do Flamengo", short_name: "Flamengo", nation_id: 189, player_count: 40 },
-  { club_uid: 329, name: "Sociedade Esportiva Palmeiras", short_name: "Palmeiras", nation_id: 189, player_count: 40 },
+  { club_uid: 322, name: "Clube de Regatas do Flamengo", short_name: "Flamengo", nation_id: 189, player_count: 40, division: "A" },
+  { club_uid: 329, name: "Sociedade Esportiva Palmeiras", short_name: "Palmeiras", nation_id: 189, player_count: 40, division: "A" },
+  { club_uid: 102496, name: "Goiás Esporte Clube", short_name: "Goiás", nation_id: 189, player_count: 40, division: "B" },
 ];
 
 export const SESSION = {
@@ -47,5 +50,51 @@ export const SESSION = {
   created_at: "2026-11-18T12:00:00Z",
   updated_at: "2026-11-18T12:00:00Z",
   closed_at: null,
-  participants: null,
+  participants: [322, 329, 102496],
+};
+
+const cupMatch = (id: string, round: number, slot: number, a: number | null, b: number | null, sa: string | null, sb: string | null, next: string | null) => ({
+  id, round, slot, club_a_uid: a, club_b_uid: b, source_a: sa, source_b: sb, next_match_id: next, winner_club_uid: null, decided_by: null,
+});
+
+export const LEAGUE_COMPETITION = {
+  session_id: SESSION.id,
+  version: 1,
+  format: "league",
+  user_club_uid: 322,
+  structure: {
+    kind: "league",
+    rounds_mode: "single",
+    participants: [322, 329, 102496],
+    total_rounds: 3,
+    total_matches: 3,
+    matches_per_club: 2,
+    rounds: [
+      { number: 1, turn: 1, bye_club_uid: 102496, matches: [{ id: "L-R01-M01", round: 1, turn: 1, home_club_uid: 322, away_club_uid: 329 }] },
+      { number: 2, turn: 1, bye_club_uid: 322, matches: [{ id: "L-R02-M01", round: 2, turn: 1, home_club_uid: 329, away_club_uid: 102496 }] },
+      { number: 3, turn: 1, bye_club_uid: 329, matches: [{ id: "L-R03-M01", round: 3, turn: 1, home_club_uid: 102496, away_club_uid: 322 }] },
+    ],
+  },
+};
+
+export const CUP_COMPETITION = {
+  session_id: SESSION.id,
+  version: 1,
+  format: "cup",
+  user_club_uid: 322,
+  structure: {
+    kind: "cup",
+    participants: [322, 329, 102496, 316],
+    rules: { single_match: true, regulation_minutes: 90, extra_time: false, draw_decided_by: "penalties", penalties_count_as_goals: false },
+    total_rounds: 2,
+    total_matches: 3,
+    champion_club_uid: null,
+    rounds: [
+      { number: 1, name: "Semifinal", matches: [
+        cupMatch("C-R1-M01", 1, 1, 322, 316, null, null, "C-R2-M01"),
+        cupMatch("C-R1-M02", 1, 2, 329, 102496, null, null, "C-R2-M01"),
+      ] },
+      { number: 2, name: "Final", matches: [cupMatch("C-R2-M01", 2, 1, null, null, "C-R1-M01", "C-R1-M02", null)] },
+    ],
+  },
 };

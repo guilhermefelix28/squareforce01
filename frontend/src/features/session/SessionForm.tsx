@@ -16,7 +16,7 @@ export function SessionForm({
   onCreated: (s: Session) => void;
 }) {
   const [format, setFormat] = useState<CompetitionFormat>("league");
-  const [leagueClubs, setLeagueClubs] = useState(Math.min(20, options.available_clubs || 20));
+  const [leagueClubs, setLeagueClubs] = useState(Math.min(20, options.eligible_clubs || 20));
   const [cupSize, setCupSize] = useState(8);
   const [rounds, setRounds] = useState<LeagueRounds>("double");
   const [userClub, setUserClub] = useState<number | "">("");
@@ -26,7 +26,10 @@ export function SessionForm({
   // Uma chave por intenção do usuário: repetições automáticas reutilizam a mesma chave.
   const keyRef = useRef<string>(newIdempotencyKey());
 
-  const sortedClubs = useMemo(() => [...clubs].sort((a, b) => a.short_name.localeCompare(b.short_name, "pt-BR")), [clubs]);
+  const byDivision = useMemo(() => {
+    const sorted = [...clubs].sort((a, b) => a.short_name.localeCompare(b.short_name, "pt-BR"));
+    return { A: sorted.filter((c) => c.division === "A"), B: sorted.filter((c) => c.division === "B") };
+  }, [clubs]);
 
   const config: SessionCreate = {
     format,
@@ -102,7 +105,7 @@ export function SessionForm({
           <span>Participantes</span>
           <select value={cupSize} onChange={(e) => setCupSize(Number(e.target.value))}>
             {options.cup.allowed_sizes.map((n) => (
-              <option key={n} value={n} disabled={n > options.available_clubs}>
+              <option key={n} value={n} disabled={n > options.eligible_clubs}>
                 {n}
               </option>
             ))}
@@ -114,15 +117,24 @@ export function SessionForm({
         <span>Seu clube</span>
         <select value={userClub} onChange={(e) => setUserClub(e.target.value ? Number(e.target.value) : "")}>
           <option value="">Selecione…</option>
-          {sortedClubs.map((c) => (
-            <option key={c.club_uid} value={c.club_uid}>
-              {c.short_name}
-            </option>
-          ))}
+          {(["A", "B"] as const).map((d) =>
+            byDivision[d].length ? (
+              <optgroup key={d} label={"Série " + d}>
+                {byDivision[d].map((c) => (
+                  <option key={c.club_uid} value={c.club_uid}>
+                    {c.short_name}
+                  </option>
+                ))}
+              </optgroup>
+            ) : null,
+          )}
         </select>
       </label>
       <p className="muted small">
-        Seu clube participa obrigatoriamente. A definição dos demais participantes será feita na etapa de competição.
+        Seu clube participa obrigatoriamente.{" "}
+        {format === "league"
+          ? "Os demais vêm primeiro da Série A e, se faltarem vagas, da Série B."
+          : "Os demais são sorteados entre os " + options.eligible_clubs + " clubes elegíveis (Séries A e B)."}
       </p>
 
       {error && <Notice kind="error">{error}</Notice>}

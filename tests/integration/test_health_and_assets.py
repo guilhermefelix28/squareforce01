@@ -9,7 +9,7 @@ def test_startup_creates_schema_and_reports_services(client, settings):
     assert settings.db_path.exists()
     h = client.get("/api/health").json()
     assert h["status"] == "ok"
-    assert h["database"] == {"status": "ok", "schema_version": 1, "clubs": 0, "players": 0}
+    assert h["database"] == {"status": "ok", "schema_version": 2, "clubs": 0, "players": 0}
     assert h["services"]["data"] == h["services"]["session"] == "ready"
     assert h["services"]["auction"] == "planned"
 

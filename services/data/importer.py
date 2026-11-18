@@ -3,16 +3,18 @@
 Colunas mapeadas a partir dos cabeçalhos REAIS de Dados/jogadores.xlsx (aba "Jogadores",
 83 colunas, inspecionada em 2026-11-18). Ver docs/architecture/importacao-excel.md.
 
-Política de validação (registrada como decisão técnica pendente de confirmação):
+Política de validação (confirmada pelo responsável em 2026-11-18):
 - Erros CRÍTICOS rejeitam a importação inteira (base anterior preservada).
-- Linha de jogador SEM unique_id é descartada com aviso (não pode ser identificada de forma
-  estável; o GDD manda preservar "todos os jogadores válidos").
+- Linha de jogador SEM unique_id recebe um ID genérico ESTÁVEL (derivado do conteúdo da linha) na
+  faixa reservada >= GENERATED_ID_BASE, com aviso GENERATED_ID. O GDD manda preservar "todos os
+  jogadores válidos".
 - Linhas totalmente vazias são ignoradas.
 O arquivo é lido apenas em memória: nenhuma cópia é gravada em disco.
 """
 
 from __future__ import annotations
 
+import hashlib
 import io
 import re
 import zipfile
@@ -33,6 +35,16 @@ from squadforce_shared.domain.positions import (
 
 MAX_ISSUES_LISTED = 200
 MAX_ROWS = 100_000
+# Faixa reservada para IDs gerados (IDs reais da base vão até ~2,0 bilhões; cabe em 2^53 para o JS).
+GENERATED_ID_BASE = 9_000_000_000
+GENERATED_ID_SPAN = 999_999_999
+
+
+def generated_player_id(full_name: object, birth_date: object, club_uid: object, name: object) -> int:
+    """ID genérico estável: mesma linha (nome completo, nascimento, clube, nome) => mesmo ID em toda importação."""
+    key = "|".join(str(v or "").strip().casefold() for v in (full_name, birth_date, club_uid, name))
+    digest = int(hashlib.sha256(key.encode("utf-8")).hexdigest(), 16)
+    return GENERATED_ID_BASE + digest % GENERATED_ID_SPAN
 
 # ------------------------------------------------------------------ esquema das colunas
 CLUB_COLUMNS = ("club_uid", "club_name", "club_short_name", "club_nation_id", "club_reputation")
@@ -123,6 +135,7 @@ class ParsedPlayer:
     accomplished_positions: list[Position]
     attributes: dict[str, int]
     familiarity: dict[Position, int]
+    id_generated: bool = False
 
 
 @dataclass
@@ -350,6 +363,13 @@ def parse_clubs(sheets: list[Sheet], file_name: str) -> tuple[ImportReport, list
     return issues.fill(report), list(clubs.values())
 
 
+def _safe_text(v: Any) -> str | None:
+    try:
+        return to_text(v)
+    except _ValueError:
+        return None
+
+
 # ------------------------------------------------------------------ jogadores
 def parse_players(
     sheets: list[Sheet], file_name: str, known_club_uids: set[int]
@@ -375,6 +395,7 @@ def parse_players(
 
     players: list[ParsedPlayer] = []
     seen: dict[int, int] = {}
+    persons: dict[tuple[str, str], int] = {}
     for idx, raw in enumerate(sheet.rows, start=2):
         if all(_is_blank(v) for v in raw):
             continue
@@ -405,20 +426,30 @@ def parse_players(
         except _ValueError as e:
             issues.error("INVALID_TYPE", f"unique_id: {e}", idx, "unique_id")
             continue
-        if uid is None:
-            report.rows_skipped += 1
+        id_generated = uid is None
+        if id_generated:
+            uid = generated_player_id(row.get("full_name"), row.get("birth_date"), row.get("club_uid"), row.get("name"))
             issues.warn(
-                "ROW_WITHOUT_ID",
-                f"Linha descartada: jogador {to_text(row.get('name'))!r} sem unique_id.",
+                "GENERATED_ID",
+                f"Jogador {_safe_text(row.get('name'))!r} sem unique_id recebeu o ID genérico {uid}.",
                 idx,
                 "unique_id",
             )
-            continue
-        if uid <= 0:
+        elif uid <= 0:
             issues.error("OUT_OF_RANGE", "unique_id deve ser positivo.", idx, "unique_id")
             continue
+        elif uid >= GENERATED_ID_BASE:
+            issues.error(
+                "OUT_OF_RANGE", f"unique_id {uid} está na faixa reservada a IDs gerados (>= {GENERATED_ID_BASE}).",
+                idx, "unique_id",
+            )
+            continue
         if uid in seen:
-            issues.error("DUPLICATE_ID", f"unique_id {uid} repetido (primeira ocorrência na linha {seen[uid]}).", idx, "unique_id")
+            msg = (
+                f"ID genérico {uid} coincide com o da linha {seen[uid]} (linhas idênticas sem unique_id)."
+                if id_generated else f"unique_id {uid} repetido (primeira ocorrência na linha {seen[uid]})."
+            )
+            issues.error("DUPLICATE_ID", msg, idx, "unique_id")
             continue
         seen[uid] = idx
 
@@ -485,8 +516,19 @@ def parse_players(
                 accomplished_positions=[p for p in accomplished if p not in naturals],
                 attributes=attrs,
                 familiarity=fam,
+                id_generated=id_generated,
             )
         )
+        person = (full_name.casefold(), birth_date)
+        if person in persons:
+            issues.warn(
+                "POSSIBLE_DUPLICATE_PERSON",
+                f"{full_name!r} ({birth_date}) também aparece na linha {persons[person]}; ambos foram importados.",
+                idx,
+                "full_name",
+            )
+        else:
+            persons[person] = idx
 
     if not players and not issues.critical_count:
         issues.error("EMPTY_SHEET", "Nenhum jogador válido encontrado na planilha.")

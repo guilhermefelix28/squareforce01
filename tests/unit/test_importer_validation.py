@@ -83,11 +83,39 @@ def test_missing_natural_position_is_critical():
     assert codes(report) == ["MISSING_VALUE"]
 
 
-def test_row_without_id_is_skipped_with_warning():
-    report, players = parse_players([player_row(1), player_row(None)])
+def test_row_without_id_gets_stable_generated_id():
+    report, players = parse_players([player_row(1), player_row(None, 200, full_name="Sem Id", name="Sem")])
     assert report.status == "imported"
-    assert report.rows_skipped == 1 and report.rows_imported == 1
-    assert [w.code for w in report.warnings] == ["ROW_WITHOUT_ID"]
+    assert report.rows_skipped == 0 and report.rows_imported == 2
+    assert [w.code for w in report.warnings] == ["GENERATED_ID"]
+    generated = players[1]
+    assert generated.id_generated and not players[0].id_generated
+    assert generated.unique_id >= importer.GENERATED_ID_BASE
+    # estável: a mesma linha gera o mesmo ID em outra importação
+    _, again = parse_players([player_row(None, 200, full_name="Sem Id", name="Sem")])
+    assert again[0].unique_id == generated.unique_id
+
+
+def test_generated_ids_differ_for_different_rows():
+    _, players = parse_players([player_row(None, 100, full_name="A B"), player_row(None, 100, full_name="C D")])
+    assert players[0].unique_id != players[1].unique_id
+
+
+def test_identical_rows_without_id_are_duplicates():
+    row = player_row(None, 100, full_name="Igual")
+    report, _ = parse_players([row, dict(row)])
+    assert "DUPLICATE_ID" in codes(report)
+
+
+def test_real_id_in_reserved_range_is_rejected():
+    report, _ = parse_players([player_row(importer.GENERATED_ID_BASE + 5)])
+    assert codes(report) == ["OUT_OF_RANGE"]
+
+
+def test_same_person_twice_is_warned():
+    report, players = parse_players([player_row(1, full_name="Fulano"), player_row(None, 200, full_name="Fulano")])
+    assert report.status == "imported" and len(players) == 2
+    assert "POSSIBLE_DUPLICATE_PERSON" in [w.code for w in report.warnings]
 
 
 def test_missing_columns_are_critical():

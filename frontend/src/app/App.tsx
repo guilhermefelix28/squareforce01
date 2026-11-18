@@ -79,7 +79,7 @@ function Shell() {
         {page === "data" && <DataPage importsBlocked={importsBlocked} onDataChanged={refresh} />}
         {page === "session" && <SessionPage onSessionChanged={refresh} />}
       </main>
-      <footer className="footer muted small">SquadForce · Football Strategy Game · Entrega 1</footer>
+      <footer className="footer muted small">SquadForce · Football Strategy Game · Entrega 2</footer>
     </div>
   );
 }

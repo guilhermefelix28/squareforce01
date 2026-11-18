@@ -16,7 +16,7 @@ Qualquer alteração em `frontend/src/**`, estilos, tipos gerados ou testes Vite
 |---|---|
 | `app/` | shell, navegação (hash), tema, `SessionContext` (reconexão WS) |
 | `pages/` | telas: Início, Dados, Competição |
-| `features/` | blocos de domínio: imports, catalog, session |
+| `features/` | blocos de domínio: imports, catalog, session, competition (calendário da Liga, chaveamento da Copa) |
 | `components/` | genéricos: Notice, ConfirmDialog, ClubCrest |
 | `api/` | `client.ts` (erros, retry, idempotência) e `endpoints.ts` |
 | `types/` | `openapi.d.ts` **gerado** + aliases em `api.ts` |

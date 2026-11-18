@@ -8,7 +8,9 @@ O arquivo original nunca é modificado nem copiado (teste `test_real_spreadsheet
 | Achado | Tratamento |
 |---|---|
 | Colunas numéricas com tipos mistos: ~50% das linhas trazem números como texto (`'189'`). | Conversão estrita: aceita inteiro, float integral e texto só de dígitos; rejeita frações, booleanos e textos não numéricos. |
-| 11 linhas sem `unique_id`. | Descartadas com aviso `ROW_WITHOUT_ID` (ver [pendências PD-03](../game-design/pendencias.md)). |
+| 11 linhas sem `unique_id`. | Recebem **ID genérico estável** (aviso `GENERATED_ID`, `players.id_generated = 1`) — ver [PD-03](../game-design/pendencias.md). |
+| 2 pessoas aparecem duas vezes (nome completo + nascimento iguais). | Ambas importadas, aviso `POSSIBLE_DUPLICATE_PERSON` (PD-07). |
+| Não há coluna de divisão. | Tabela de referência `club_divisions` (temporada 2026), migração 0002 (PD-01). |
 | `natural_positions` / `accomplished_positions` já usam códigos internos (GK, DR, DL, DC, DM, MC, STC); um valor por célula. | Normalização aceita também os códigos de exibição (GOL, LD, LE, ZAG, VOL, ME, ATA) e listas separadas por `, ; / \|` ou espaço. |
 | Dados de clube repetidos em cada linha (`club_uid`, `club_name`, `club_short_name`, `club_nation_id`, `club_reputation`); 40 clubes. | Fonte da base de clubes (PD-02). |
 | Datas como texto `AAAA-MM-DD`. | Validadas como datas reais. |
@@ -21,7 +23,8 @@ O arquivo original nunca é modificado nem copiado (teste `test_real_spreadsheet
 | `club_uid` | `clubs.club_uid` (PK) / `players.club_uid` (FK) | inteiro > 0 |
 | `club_name`, `club_short_name` | `clubs.name`, `clubs.short_name` | texto obrigatório |
 | `club_nation_id`, `club_reputation` | `clubs.nation_id`, `clubs.reputation` | inteiro ≥ 0 (reputação nunca exposta) |
-| `unique_id` | `players.unique_id` (PK) | inteiro > 0, único |
+| `unique_id` | `players.unique_id` (PK) | inteiro > 0, único, < 9.000.000.000 (faixa reservada a IDs gerados) |
+| — | `players.id_generated` | 1 se o ID foi gerado: `9.000.000.000 + sha256(nome completo, nascimento, clube, nome) mod 999.999.999` |
 | `name`, `full_name` | `players.name`, `players.full_name` | obrigatórios |
 | `first_name`, `last_name` | idem | opcionais |
 | `birth_date`, `club_join_date` | idem | data ISO (join opcional) |
@@ -36,7 +39,8 @@ O arquivo original nunca é modificado nem copiado (teste `test_real_spreadsheet
 `MISSING_VALUE`, `OUT_OF_RANGE`, `DUPLICATE_ID`, `INVALID_POSITION`, `INVALID_RELATIONSHIP`,
 `INCONSISTENT_CLUB_DATA`, `CLUBS_NOT_IMPORTED`.
 
-**Avisos (não bloqueiam):** `ROW_WITHOUT_ID` (linha descartada), `UNKNOWN_COLUMN` (ignorada).
+**Avisos (não bloqueiam):** `GENERATED_ID` (ID gerado), `POSSIBLE_DUPLICATE_PERSON`, `UNKNOWN_COLUMN` (ignorada),
+`CLUB_WITHOUT_DIVISION` (clube importado sem Série A/B: não elegível).
 
 **Arquivo:** `UNSUPPORTED_FILE` (415), `INVALID_WORKBOOK` (422), `FILE_TOO_LARGE` (413).
 

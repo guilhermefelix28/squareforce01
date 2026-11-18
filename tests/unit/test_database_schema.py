@@ -11,7 +11,7 @@ from services.data.db import apply_migrations, connect
 @pytest.fixture
 def db(tmp_path):
     path = tmp_path / "schema.db"
-    assert apply_migrations(path) == 1
+    assert apply_migrations(path) == 2
     conn = connect(path)
     yield path, conn
     conn.close()
@@ -19,14 +19,15 @@ def db(tmp_path):
 
 def test_migrations_are_idempotent(db):
     path, conn = db
-    assert apply_migrations(path) == 1
-    assert conn.execute("SELECT COUNT(*) FROM schema_migrations").fetchone()[0] == 1
+    assert apply_migrations(path) == 2
+    assert conn.execute("SELECT COUNT(*) FROM schema_migrations").fetchone()[0] == 2
 
 
 def test_expected_tables_and_indexes(db):
     _, conn = db
     names = {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type IN ('table','index')")}
-    assert {"clubs", "players", "player_attributes", "player_positions", "attribute_definitions"} <= names
+    assert {"clubs", "players", "player_attributes", "player_positions", "attribute_definitions",
+            "club_divisions"} <= names
     assert {"idx_players_club", "idx_players_name", "idx_player_positions_natural"} <= names
 
 
@@ -34,6 +35,23 @@ def test_attribute_catalog_matches_importer(db):
     _, conn = db
     codes = {r[0] for r in conn.execute("SELECT code FROM attribute_definitions")}
     assert codes == set(importer.ALL_ATTRIBUTE_COLUMNS)
+
+
+def test_club_divisions_reference_has_20_a_and_20_b(db):
+    _, conn = db
+    rows = dict(conn.execute("SELECT division, COUNT(*) FROM club_divisions GROUP BY division").fetchall())
+    assert rows == {"A": 20, "B": 20}
+    with pytest.raises(sqlite3.IntegrityError):
+        conn.execute("INSERT INTO club_divisions VALUES (1, 'C', 2026, 'X')")
+
+
+def test_generated_id_flag_defaults_to_false(db):
+    _, conn = db
+    _club(conn)
+    _player(conn)
+    assert conn.execute("SELECT id_generated FROM players").fetchone()[0] == 0
+    with pytest.raises(sqlite3.IntegrityError):
+        conn.execute("UPDATE players SET id_generated = 2")
 
 
 def _club(conn, uid=1):

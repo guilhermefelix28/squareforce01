@@ -24,6 +24,7 @@ export function ClubList({
           >
             <ClubCrest clubUid={c.club_uid} name={c.short_name} size={32} />
             <span className="club-chip__name">{c.short_name}</span>
+            {c.division && <span className="tag" title={"Série " + c.division}>{c.division}</span>}
             <span className="club-chip__count">{c.player_count}</span>
           </button>
         </li>

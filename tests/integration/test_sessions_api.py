@@ -11,7 +11,7 @@ def test_create_get_and_close(loaded_client):
     s = r.json()
     assert s["status"] == "active" and s["phase"] == "setup" and s["version"] == 1
     assert s["config"] == {"format": "league", "num_clubs": 4, "user_club_uid": 100, "league_rounds": "single"}
-    assert s["participants"] is None
+    assert s["participants"][0] == 100 and sorted(s["participants"]) == [100, 200, 300, 400]
 
     got = loaded_client.get(f"/api/sessions/{s['id']}")
     assert got.status_code == 200 and got.json() == s

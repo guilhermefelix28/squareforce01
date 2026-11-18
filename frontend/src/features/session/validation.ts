@@ -11,8 +11,8 @@ export function validateSessionConfig(cfg: SessionCreate, opts: CompetitionOptio
     if (!opts.cup.allowed_sizes.includes(cfg.num_clubs))
       return `A Copa aceita ${opts.cup.allowed_sizes.join(", ")} participantes.`;
   }
-  if (cfg.num_clubs > opts.available_clubs)
-    return `Há apenas ${opts.available_clubs} clubes importados.`;
+  if (cfg.num_clubs > opts.eligible_clubs)
+    return `Há apenas ${opts.eligible_clubs} clubes elegíveis (com Série A/B).`;
   if (!cfg.user_club_uid) return "Escolha o seu clube.";
   return null;
 }

@@ -1,12 +1,14 @@
 """Formatos de competição permitidos (Game Design v5.2, seções 2, 17 e 18).
 
-Somente validação de configuração. Calendário, sorteio e chaveamento pertencem ao
-serviço de competições (entregas futuras).
+Validação de configuração e tipos compartilhados. Seleção, calendário e chaveamento ficam em
+services/competition/planner.py (Entrega 2).
 """
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from enum import Enum
+from typing import Literal
 
 
 class CompetitionFormat(str, Enum):
@@ -33,6 +35,14 @@ SESSION_PHASES: tuple[str, ...] = (
     "competition",  # Liga/Copa (Entrega futura)
     "finished",  # Campeão e premiações (Entrega futura)
 )
+
+
+@dataclass(frozen=True)
+class EligibleClub:
+    """Clube elegível para competições: importado e com divisão conhecida (GDD §2)."""
+
+    club_uid: int
+    division: Literal["A", "B"]
 
 
 class CompetitionConfigError(ValueError):
@@ -75,5 +85,5 @@ def validate_competition_config(
     if num_clubs > available_clubs:
         raise CompetitionConfigError(
             "num_clubs",
-            f"Há apenas {available_clubs} clubes importados; não é possível montar {num_clubs} participantes.",
+            f"Há apenas {available_clubs} clubes elegíveis; não é possível montar {num_clubs} participantes.",
         )

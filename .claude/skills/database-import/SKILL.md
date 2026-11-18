@@ -21,13 +21,16 @@ preservação da base anterior em qualquer falha.
 
 ## Regras do Game Design aplicáveis
 - §3: base importada de `jogadores.xlsx`, preservando **todos os jogadores válidos** (inclusive reservas e jovens); normalização GOL=GK, LD=DR, LE=DL, ZAG=DC, VOL=DM, ME=MC, ATA=STC.
+- Linhas sem `unique_id` → ID genérico estável (`generated_player_id`, faixa ≥ 9e9, `id_generated = 1`) — PD-03 confirmada.
+- Divisões (Série A/B 2026) em `club_divisions` (referência, sem FK) — PD-01 confirmada.
 - §24: seleção pelo usuário, sem cópias permanentes do Excel, validar estrutura/valores/IDs, substituir só a base correspondente, transações, preservar em erro, sem backups/versionamento, bloquear com competição ativa.
 - §2: escudos por ID; rankings internos ocultos.
 
 ## Contratos e dependências
 - `POST /api/imports/clubs|players` → `ImportReport` (ver `docs/api/contratos.md`).
 - Trava: `SessionManager.import_guard()` (serviço de sessão) — injetada como `import_guard`.
-- Tabelas: `clubs`, `players`, `attribute_definitions`, `player_attributes`, `player_positions` (STRICT, FKs, índices).
+- Tabelas: `clubs`, `players` (+ `id_generated`), `attribute_definitions`, `player_attributes`, `player_positions`, `club_divisions` (STRICT, FKs, índices).
+- `DataService.eligible_clubs()` alimenta o serviço de competições (porta `ClubCatalog`).
 
 ## Procedimentos recomendados
 1. **Inspecionar a planilha real** antes de mudar mapeamentos (nomes exatos, tipos, nulos, duplicatas). Não inventar colunas.

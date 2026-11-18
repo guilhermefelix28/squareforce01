@@ -4,15 +4,20 @@ import threading
 
 import pytest
 
+from services.competition.planner import plan_competition
 from services.session.manager import SessionManager
 from squadforce_shared.contracts import CompetitionConfig
+from squadforce_shared.domain.competition import EligibleClub
 from squadforce_shared.errors import AppError, ErrorCode
 
 
 class FakeCatalog:
-    def __init__(self, clubs: int = 40, ready: bool = True):
+    """Clubes 1..clubs; metade Série A, metade Série B; `without_division` lista clubes não elegíveis."""
+
+    def __init__(self, clubs: int = 40, ready: bool = True, without_division: tuple[int, ...] = ()):
         self.clubs = clubs
         self.ready = ready
+        self.without_division = set(without_division)
 
     def club_count(self):
         return self.clubs
@@ -23,6 +28,17 @@ class FakeCatalog:
     def catalog_ready(self):
         return self.ready
 
+    def eligible_clubs(self):
+        return [
+            EligibleClub(uid, "A" if uid <= self.clubs // 2 else "B")
+            for uid in range(1, self.clubs + 1)
+            if uid not in self.without_division
+        ]
+
+
+def SessionManager_(catalog):  # noqa: N802 - fábrica com planejador real e semente fixa
+    return SessionManager(catalog, planner=plan_competition, seed_factory=lambda: 1234)
+
 
 def cfg(**kw):
     base = {"format": "league", "num_clubs": 10, "user_club_uid": 1, "league_rounds": "double"}
@@ -32,7 +48,7 @@ def cfg(**kw):
 
 @pytest.fixture
 def mgr():
-    return SessionManager(FakeCatalog())
+    return SessionManager_(FakeCatalog())
 
 
 @pytest.mark.parametrize("n", [2, 3, 11, 19, 20])
@@ -72,7 +88,7 @@ def test_cup_rejects_rounds(mgr):
 
 
 def test_cannot_exceed_available_clubs():
-    m = SessionManager(FakeCatalog(clubs=10))
+    m = SessionManager_(FakeCatalog(clubs=10))
     with pytest.raises(AppError) as e:
         m.create(cfg(format="cup", num_clubs=16, league_rounds=None))
     assert "10 clubes" in e.value.message
@@ -86,7 +102,7 @@ def test_user_club_must_exist(mgr):
 
 def test_requires_imported_catalog():
     with pytest.raises(AppError) as e:
-        SessionManager(FakeCatalog(ready=False)).create(cfg())
+        SessionManager_(FakeCatalog(ready=False)).create(cfg())
     assert e.value.code is ErrorCode.CATALOG_EMPTY
 
 
@@ -163,3 +179,42 @@ def test_concurrent_creation_yields_exactly_one_session(mgr):
     [t.join() for t in threads]
     assert len(results) == 1
     assert errors == [ErrorCode.SESSION_ALREADY_ACTIVE] * 7
+
+
+def test_session_carries_participants_and_structure(mgr):
+    s = mgr.create(cfg(num_clubs=10, user_club_uid=33))  # clube da Série B
+    assert s.participants[0] == 33 and len(set(s.participants)) == 10
+    assert s.structure.kind == "league" and s.structure.total_matches == 90
+    assert s.to_out().participants == list(s.participants)
+    assert s.to_competition_out().structure.participants == list(s.participants)
+
+
+def test_user_club_without_division_is_not_eligible():
+    m = SessionManager_(FakeCatalog(without_division=(7,)))
+    with pytest.raises(AppError) as e:
+        m.create(cfg(user_club_uid=7))
+    assert e.value.code is ErrorCode.CLUB_NOT_ELIGIBLE
+
+
+def test_cup_limited_by_eligible_not_imported_clubs():
+    m = SessionManager_(FakeCatalog(clubs=32, without_division=(32,)))
+    with pytest.raises(AppError) as e:
+        m.create(cfg(format="cup", num_clubs=32, league_rounds=None))
+    assert "31 clubes elegíveis" in e.value.message
+
+
+def test_planning_failure_creates_nothing():
+    def broken(*_):
+        raise ValueError("invariante violada")
+
+    m = SessionManager(FakeCatalog(), planner=broken)
+    with pytest.raises(AppError) as e:
+        m.create(cfg())
+    assert e.value.code is ErrorCode.COMPETITION_PLANNING_FAILED
+    assert not m.has_active
+
+
+def test_same_seed_reproduces_the_same_competition():
+    a = SessionManager_(FakeCatalog()).create(cfg(num_clubs=12))
+    b = SessionManager_(FakeCatalog()).create(cfg(num_clubs=12))
+    assert a.participants == b.participants and a.structure == b.structure

@@ -24,6 +24,6 @@ describe("validateSessionConfig", () => {
     expect(validateSessionConfig({ ...base, league_rounds: null }, opts)).toMatch(/turno/);
   });
   it("respeita os clubes disponíveis", () => {
-    expect(validateSessionConfig({ ...base, format: "cup", league_rounds: null, num_clubs: 32 }, { ...opts, available_clubs: 16 })).toMatch(/16/);
+    expect(validateSessionConfig({ ...base, format: "cup", league_rounds: null, num_clubs: 32 }, { ...opts, eligible_clubs: 16 })).toMatch(/16/);
   });
 });

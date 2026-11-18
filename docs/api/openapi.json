@@ -792,6 +792,109 @@
         }
       }
     },
+    "/api/sessions/{session_id}/competition": {
+      "get": {
+        "tags": [
+          "sessions"
+        ],
+        "summary": "Get Competition",
+        "description": "Estrutura da competição da sessão: calendário da Liga ou chaveamento da Copa.",
+        "operationId": "get_competition_api_sessions__session_id__competition_get",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompetitionOut"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
     "/api/sessions/{session_id}/close": {
       "post": {
         "tags": [
@@ -1104,6 +1207,22 @@
           "player_count": {
             "type": "integer",
             "title": "Player Count"
+          },
+          "division": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "A",
+                  "B"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Division",
+            "description": "Série A ou B (temporada de referência). null = clube sem divisão: não elegível."
           }
         },
         "additionalProperties": false,
@@ -1205,6 +1324,19 @@
             "type": "integer",
             "title": "Available Clubs"
           },
+          "eligible_clubs": {
+            "type": "integer",
+            "title": "Eligible Clubs",
+            "description": "Clubes importados com divisão (A/B) definida."
+          },
+          "division_counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Division Counts",
+            "description": "Clubes elegíveis por divisão, ex.: {'A': 20, 'B': 20}."
+          },
           "catalog_ready": {
             "type": "boolean",
             "title": "Catalog Ready",
@@ -1222,10 +1354,224 @@
           "league",
           "cup",
           "available_clubs",
+          "eligible_clubs",
+          "division_counts",
           "catalog_ready",
           "imports_blocked"
         ],
         "title": "CompetitionOptions"
+      },
+      "CompetitionOut": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version"
+          },
+          "format": {
+            "$ref": "#/components/schemas/CompetitionFormat"
+          },
+          "user_club_uid": {
+            "type": "integer",
+            "title": "User Club Uid"
+          },
+          "structure": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/LeagueSchedule"
+              },
+              {
+                "$ref": "#/components/schemas/CupBracket"
+              }
+            ],
+            "title": "Structure",
+            "discriminator": {
+              "propertyName": "kind",
+              "mapping": {
+                "cup": "#/components/schemas/CupBracket",
+                "league": "#/components/schemas/LeagueSchedule"
+              }
+            }
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "session_id",
+          "version",
+          "format",
+          "user_club_uid",
+          "structure"
+        ],
+        "title": "CompetitionOut"
+      },
+      "CupBracket": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "cup",
+            "title": "Kind",
+            "default": "cup"
+          },
+          "participants": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Participants"
+          },
+          "rules": {
+            "$ref": "#/components/schemas/CupRules"
+          },
+          "rounds": {
+            "items": {
+              "$ref": "#/components/schemas/CupRound"
+            },
+            "type": "array",
+            "title": "Rounds"
+          },
+          "total_rounds": {
+            "type": "integer",
+            "title": "Total Rounds"
+          },
+          "total_matches": {
+            "type": "integer",
+            "title": "Total Matches"
+          },
+          "champion_club_uid": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Champion Club Uid"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "participants",
+          "rounds",
+          "total_rounds",
+          "total_matches"
+        ],
+        "title": "CupBracket"
+      },
+      "CupMatch": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Identificador estável: C-R{fase}-M{jogo:02}."
+          },
+          "round": {
+            "type": "integer",
+            "title": "Round"
+          },
+          "slot": {
+            "type": "integer",
+            "title": "Slot",
+            "description": "Posição do confronto na fase (1..n)."
+          },
+          "club_a_uid": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Club A Uid",
+            "description": "Definido no sorteio (1ª fase) ou pelo vencedor de source_a."
+          },
+          "club_b_uid": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Club B Uid"
+          },
+          "source_a": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source A",
+            "description": "ID do confronto cujo vencedor ocupa club_a."
+          },
+          "source_b": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source B"
+          },
+          "next_match_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Match Id",
+            "description": "Confronto para onde avança o vencedor (null na final)."
+          },
+          "winner_club_uid": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Winner Club Uid"
+          },
+          "decided_by": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "regular_time",
+                  "penalties"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided By"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "round",
+          "slot"
+        ],
+        "title": "CupMatch"
       },
       "CupOptions": {
         "properties": {
@@ -1243,6 +1589,66 @@
           "allowed_sizes"
         ],
         "title": "CupOptions"
+      },
+      "CupRound": {
+        "properties": {
+          "number": {
+            "type": "integer",
+            "title": "Number"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "matches": {
+            "items": {
+              "$ref": "#/components/schemas/CupMatch"
+            },
+            "type": "array",
+            "title": "Matches"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "number",
+          "name",
+          "matches"
+        ],
+        "title": "CupRound"
+      },
+      "CupRules": {
+        "properties": {
+          "single_match": {
+            "type": "boolean",
+            "title": "Single Match",
+            "default": true
+          },
+          "regulation_minutes": {
+            "type": "integer",
+            "title": "Regulation Minutes",
+            "default": 90
+          },
+          "extra_time": {
+            "type": "boolean",
+            "title": "Extra Time",
+            "default": false
+          },
+          "draw_decided_by": {
+            "type": "string",
+            "const": "penalties",
+            "title": "Draw Decided By",
+            "default": "penalties"
+          },
+          "penalties_count_as_goals": {
+            "type": "boolean",
+            "title": "Penalties Count As Goals",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "CupRules"
       },
       "DatabaseHealth": {
         "properties": {
@@ -1538,6 +1944,47 @@
         ],
         "title": "ImportReport"
       },
+      "LeagueMatch": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Identificador estável: L-R{rodada:02}-M{jogo:02}."
+          },
+          "round": {
+            "type": "integer",
+            "title": "Round",
+            "description": "Rodada global (1..total)."
+          },
+          "turn": {
+            "type": "integer",
+            "enum": [
+              1,
+              2
+            ],
+            "title": "Turn",
+            "description": "1 = turno, 2 = returno."
+          },
+          "home_club_uid": {
+            "type": "integer",
+            "title": "Home Club Uid"
+          },
+          "away_club_uid": {
+            "type": "integer",
+            "title": "Away Club Uid"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "round",
+          "turn",
+          "home_club_uid",
+          "away_club_uid"
+        ],
+        "title": "LeagueMatch"
+      },
       "LeagueOptions": {
         "properties": {
           "min_clubs": {
@@ -1565,6 +2012,49 @@
         ],
         "title": "LeagueOptions"
       },
+      "LeagueRound": {
+        "properties": {
+          "number": {
+            "type": "integer",
+            "title": "Number"
+          },
+          "turn": {
+            "type": "integer",
+            "enum": [
+              1,
+              2
+            ],
+            "title": "Turn"
+          },
+          "matches": {
+            "items": {
+              "$ref": "#/components/schemas/LeagueMatch"
+            },
+            "type": "array",
+            "title": "Matches"
+          },
+          "bye_club_uid": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bye Club Uid",
+            "description": "Clube de folga (número ímpar de participantes). Folga não é partida."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "number",
+          "turn",
+          "matches"
+        ],
+        "title": "LeagueRound"
+      },
       "LeagueRounds": {
         "type": "string",
         "enum": [
@@ -1572,6 +2062,56 @@
           "double"
         ],
         "title": "LeagueRounds"
+      },
+      "LeagueSchedule": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "league",
+            "title": "Kind",
+            "default": "league"
+          },
+          "rounds_mode": {
+            "$ref": "#/components/schemas/LeagueRounds"
+          },
+          "participants": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Participants"
+          },
+          "rounds": {
+            "items": {
+              "$ref": "#/components/schemas/LeagueRound"
+            },
+            "type": "array",
+            "title": "Rounds"
+          },
+          "total_rounds": {
+            "type": "integer",
+            "title": "Total Rounds"
+          },
+          "total_matches": {
+            "type": "integer",
+            "title": "Total Matches"
+          },
+          "matches_per_club": {
+            "type": "integer",
+            "title": "Matches Per Club"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "rounds_mode",
+          "participants",
+          "rounds",
+          "total_rounds",
+          "total_matches",
+          "matches_per_club"
+        ],
+        "title": "LeagueSchedule"
       },
       "PlayerOut": {
         "properties": {
@@ -1624,6 +2164,12 @@
             },
             "type": "array",
             "title": "Accomplished Positions"
+          },
+          "id_generated": {
+            "type": "boolean",
+            "title": "Id Generated",
+            "description": "True se o ID foi gerado pelo SquadForce (linha sem unique_id).",
+            "default": false
           }
         },
         "additionalProperties": false,
@@ -1818,7 +2364,7 @@
               }
             ],
             "title": "Participants",
-            "description": "Clubes participantes. Ainda não definidos: seleção/sorteio pertence ao serviço de competições (entrega futura)."
+            "description": "club_uid dos participantes (inclui o clube do usuário), na ordem de seleção/sorteio."
           }
         },
         "additionalProperties": false,

@@ -14,7 +14,8 @@ Gerenciar a única competição ativa com estado autoritativo no servidor, sem n
 
 ## Responsabilidades
 - Uma sessão ativa por servidor; `id` UUID; `version` incrementada a cada transição.
-- Validar configuração (via `squadforce_shared.domain.competition`) e existência do clube do usuário.
+- Validar configuração (via `squadforce_shared.domain.competition`) contra os clubes **elegíveis**, existência e elegibilidade do clube do usuário.
+- Na criação, chamar o `CompetitionPlanner` injetado com semente automática; guardar `participants`, `structure` e `seed` (privada) no `SessionState`. Falha de planejamento → nada é criado.
 - `import_guard()`: bloqueia importações com sessão ativa e serializa importações.
 - Encerramento explícito, idempotente, com `expected_version` opcional (concorrência otimista).
 - Tombstones de sessões encerradas (memória, limitados) para consulta pós-encerramento.
@@ -26,7 +27,9 @@ Gerenciar a única competição ativa com estado autoritativo no servidor, sem n
 
 ## Contratos e dependências
 - `SessionCreateRequest` / `SessionOut` / `SessionCloseRequest` (`squadforce_shared.contracts`).
-- Porta `ClubCatalog` (implementada pelo `DataService`).
+- Porta `ClubCatalog` (implementada pelo `DataService`): `club_count`, `club_exists`, `catalog_ready`, `eligible_clubs`.
+- Porta `CompetitionPlanner` (implementada por `services/competition/planner.py`).
+- `GET /api/sessions/{id}/competition` → `SessionState.to_competition_out()`.
 - WebSocket: `session.snapshot`, `session.closed`, `pong`, `error`; recusa com código 4404.
 
 ## Procedimentos recomendados

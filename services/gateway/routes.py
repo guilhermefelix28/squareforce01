@@ -14,6 +14,7 @@ from squadforce_shared.contracts import (
     ClubPage,
     CompetitionConfig,
     CompetitionOptions,
+    CompetitionOut,
     DatabaseHealth,
     ErrorResponse,
     HealthResponse,
@@ -148,6 +149,12 @@ def get_session(c: C, session_id: str) -> SessionOut:
     return c.sessions.get(session_id).to_out()
 
 
+@router.get("/sessions/{session_id}/competition", response_model=CompetitionOut, responses=ERR, tags=["sessions"])
+def get_competition(c: C, session_id: str) -> CompetitionOut:
+    """Estrutura da competição da sessão: calendário da Liga ou chaveamento da Copa."""
+    return c.sessions.get(session_id).to_competition_out()
+
+
 @router.post("/sessions/{session_id}/close", response_model=SessionOut, responses=ERR, tags=["sessions"])
 async def close_session(
     c: C, request: Request, session_id: str, body: SessionCloseRequest | None = None, idempotency_key: IdemKey = None
@@ -172,7 +179,9 @@ async def close_session(
 # ------------------------------------------------------------------ competições
 @router.get("/competitions/options", response_model=CompetitionOptions, tags=["competitions"])
 def options(c: C) -> CompetitionOptions:
-    return competition_options(c.data.club_count(), c.data.catalog_ready(), c.sessions.has_active)
+    return competition_options(
+        c.data.club_count(), c.data.eligible_clubs(), c.data.catalog_ready(), c.sessions.has_active
+    )
 
 
 # ------------------------------------------------------------------ imagens (escudos e fotos por identificador)

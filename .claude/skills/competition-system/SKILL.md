@@ -6,8 +6,10 @@ description: Liga e Copa do SquadForce — opções de formato, seleção e sort
 # competition-system
 
 ## Finalidade
-Orientar `services/competition`. **Entrega 1:** somente `options.py` (formatos válidos) e a validação em
-`shared/python/squadforce_shared/domain/competition.py`. O restante é de entregas futuras.
+Orientar `services/competition`. **Implementado (Entregas 1–2):** `options.py` (formatos), `planner.py`
+(seleção de participantes, calendário da Liga, chaveamento da Copa, validadores e progressão estrutural) e a
+validação em `shared/python/squadforce_shared/domain/competition.py`. **Futuro:** execução das rodadas,
+consolidação paralela, classificação, estatísticas.
 
 ## Quando utilizar
 - Alterar formatos/limites, `GET /api/competitions/options` ou a validação de configuração.
@@ -17,27 +19,35 @@ Orientar `services/competition`. **Entrega 1:** somente `options.py` (formatos v
 Formatos; participantes; calendário/chave; disparo paralelo das partidas; consolidação atômica de rodada; classificação e históricos.
 
 ## Regras do Game Design aplicáveis
-- §2: Liga 2–20 (Série A tem prioridade na seleção — **pendência PD-01**: divisão não está na planilha); Copa 2/4/8/16/32 sorteada entre elegíveis sem repetição; clube do usuário obrigatório.
+- §2: Liga 2–20 com prioridade da Série A e depois Série B (divisões 2026 em `club_divisions`, PD-01 resolvida); Copa 2/4/8/16/32 sorteada entre os 40 elegíveis sem repetição (PC-02); clube do usuário obrigatório e primeiro em `participants`.
 - §17: turno único ou turno e returno; todos-contra-todos sem duplicações; mandos equilibrados; número ímpar → um clube de folga por rodada (sem partida e sem reduzir afastamentos); classificação atualizada após a rodada completa.
 - §18: jogo único, 90 min, pênaltis no empate, sem prorrogação; eliminado o usuário, a Copa segue até a final com avanço controlado pelo usuário.
 - §19: partidas da rodada em paralelo, estado inicial imutável, sem acesso cruzado; consolidação só após todas validarem; falha crítica impede consolidação parcial.
 - §20–21: central com 4 abas; média de notas exige ≥ 50% (arredondado para cima) das partidas da equipe; botão manual *Próximo confronto*.
 
 ## Contratos e dependências
-`CompetitionOptions`, `CompetitionConfig` (`squadforce_shared.contracts`); motor via `match-engine`; estado na sessão.
+- Contratos: `CompetitionOptions`, `CompetitionConfig`, `CompetitionOut`, `LeagueSchedule`/`LeagueRound`/`LeagueMatch`, `CupBracket`/`CupRound`/`CupMatch`/`CupRules` (`squadforce_shared.contracts`).
+- Endpoint: `GET /api/sessions/{id}/competition`.
+- Porta: `CompetitionPlanner` = `plan_competition(config, eligible, rng) -> (participants, structure)`, injetada na sessão (ADR-09).
+- Elegíveis: `DataService.eligible_clubs()` → `list[EligibleClub]` (clubes importados com divisão).
+- IDs estáveis: `L-R{rodada:02}-M{jogo:02}` e `C-R{fase}-M{jogo:02}`.
 
 ## Procedimentos recomendados
 1. Constantes de formato só em `domain/competition.py` (usadas por sessão e opções).
-2. Algoritmo de calendário determinístico (método do círculo) com teste de pares únicos e mandos.
-3. Consolidação: aplicar todos os resultados em uma única mutação de estado com `version + 1`.
+2. Toda aleatoriedade pelo `random.Random` recebido; nunca `random` global (determinismo).
+3. Calendário: método do círculo (Berger) com slots sorteados; returno = espelho com mandos invertidos.
+4. Toda estrutura nova passa por `validate_league_schedule`/`validate_cup_bracket` antes de ser aceita.
+5. Progressão da Copa só por `register_cup_winner` (retorna cópia; empate → `decided_by="penalties"`).
+6. Consolidação futura: aplicar todos os resultados em uma única mutação de estado com `version + 1`.
 
 ## Restrições e comportamentos proibidos
-Inventar critérios de desempate (PC-01) ou de elegibilidade (PC-02); consolidar rodada parcialmente; persistir progresso.
+Inventar critérios de desempate (PC-01) ou efeito de mando (PC-03); atribuir mando na Copa (PC-05); expor a semente; consolidar rodada parcialmente; persistir progresso; expor `register_cup_winner` por API antes do motor de partidas.
 
 ## Critérios de teste
-E1: `tests/unit/test_session_manager.py`, `test_options_contract_matches_game_design`. Futuro: pares únicos, folgas, mandos, chave 2–32, pênaltis fora da artilharia, consolidação atômica.
+`tests/unit/test_competition_planner.py` (Ligas 2/3/5/7/10/19/20 × turnos × sementes; Copas 2–32; corrupções; determinismo), `tests/integration/test_competition_api.py`, `test_session_manager.py`, `CompetitionView.test.tsx`. Futuro: pênaltis fora da artilharia, consolidação atômica, classificação.
 
 ## Referências
 - [Game Design §2, §17–21](../../../docs/game-design/game-design-v5.2.md)
 - [Pendências PC-*, PD-01](../../../docs/game-design/pendencias.md)
+- [Matriz de testes](../../../docs/architecture/matriz-de-testes.md)
 - [Contratos](../../../docs/api/contratos.md)

@@ -48,7 +48,7 @@ Game Design v5.2 e que lacunas sejam registradas — nunca inventadas. As demais
 ## Restrições e comportamentos proibidos
 - Inventar fórmulas, pesos, limites, listas de formações, critérios de desempate ou divisões de clubes.
 - Alterar uma regra aprovada para facilitar implementação ou fazer testes passarem.
-- Inferir a divisão Série A/B a partir de `club_reputation` (pendência PD-01).
+- Inferir a divisão Série A/B a partir de `club_reputation`: a fonte é `club_divisions` (temporada 2026, PD-01).
 - Expor informações declaradas ocultas (overall, atributos no leilão, reputação, personalidade dos bots).
 - Persistir progresso de competição.
 

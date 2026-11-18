@@ -6,6 +6,7 @@ from dataclasses import dataclass
 
 from fastapi import Request
 
+from services.competition.planner import plan_competition
 from services.data.service import DataService
 from services.session.manager import SessionManager
 
@@ -31,7 +32,7 @@ def build_container(settings: Settings) -> Container:
         import_guard=lambda: holder["sessions"].import_guard(),
         max_upload_bytes=settings.max_upload_mb * 1024 * 1024,
     )
-    sessions = SessionManager(catalog=data)
+    sessions = SessionManager(catalog=data, planner=plan_competition)
     holder["sessions"] = sessions
     return Container(
         settings=settings,

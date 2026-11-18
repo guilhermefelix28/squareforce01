@@ -18,7 +18,8 @@ from pathlib import Path
 from typing import Callable
 
 from squadforce_shared.contracts import ClubOut, ClubPage, ImportReport, PlayerOut, PlayerPage
-from squadforce_shared.domain.positions import Position, normalize_position, InvalidPositionError
+from squadforce_shared.domain.competition import EligibleClub
+from squadforce_shared.domain.positions import InvalidPositionError, Position, normalize_position
 from squadforce_shared.errors import AppError, ErrorCode
 
 from . import importer
@@ -46,11 +47,11 @@ def _upsert_clubs(conn: sqlite3.Connection, clubs: list[importer.ParsedClub]) ->
 def _insert_players(conn: sqlite3.Connection, players: list[importer.ParsedPlayer]) -> None:
     conn.executemany(
         "INSERT INTO players (unique_id, name, first_name, last_name, full_name, birth_date, age, nation_id,"
-        " height_cm, club_uid, club_join_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        " height_cm, club_uid, club_join_date, id_generated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         [
             (
                 p.unique_id, p.name, p.first_name, p.last_name, p.full_name, p.birth_date, p.age,
-                p.nation_id, p.height_cm, p.club_uid, p.club_join_date,
+                p.nation_id, p.height_cm, p.club_uid, p.club_join_date, int(p.id_generated),
             )
             for p in players
         ],
@@ -150,6 +151,7 @@ class DataService:
                     _upsert_clubs(conn, clubs)
                     placeholders = ",".join("?" * len(new_ids))
                     conn.execute(f"DELETE FROM clubs WHERE club_uid NOT IN ({placeholders})", tuple(new_ids))
+                    divisions = {r[0] for r in conn.execute("SELECT club_uid FROM club_divisions")}
                     conn.execute("COMMIT")
                 except AppError:
                     raise
@@ -162,6 +164,14 @@ class DataService:
                         "Falha ao gravar a base de clubes. Nenhuma alteração foi aplicada.",
                         retryable=True, details={"reason": type(exc).__name__},
                     ) from exc
+            for c in sorted(clubs, key=lambda c: c.club_uid):
+                if c.club_uid not in divisions:
+                    report.warning_count += 1
+                    if len(report.warnings) < importer.MAX_ISSUES_LISTED:
+                        report.warnings.append(importer.ImportIssue(
+                            code="CLUB_WITHOUT_DIVISION", column="club_uid",
+                            message=f"Clube {c.club_uid} ({c.short_name}) sem divisão Série A/B: não será elegível para competições.",
+                        ))
             return report
 
     def import_players(self, content: bytes, file_name: str) -> ImportReport:
@@ -202,6 +212,15 @@ class DataService:
         with connection(self.db_path) as conn:
             return conn.execute("SELECT 1 FROM clubs WHERE club_uid = ?", (club_uid,)).fetchone() is not None
 
+    def eligible_clubs(self) -> list[EligibleClub]:
+        """Clubes importados com divisão conhecida (elegíveis para Liga e Copa)."""
+        with connection(self.db_path) as conn:
+            rows = conn.execute(
+                "SELECT c.club_uid, d.division FROM clubs c JOIN club_divisions d ON d.club_uid = c.club_uid"
+                " ORDER BY c.club_uid"
+            ).fetchall()
+        return [EligibleClub(r[0], r[1]) for r in rows]
+
     def catalog_ready(self) -> bool:
         with connection(self.db_path) as conn:
             clubs = conn.execute("SELECT COUNT(*) FROM clubs").fetchone()[0]
@@ -216,9 +235,10 @@ class DataService:
         with connection(self.db_path) as conn:
             total = conn.execute(f"SELECT COUNT(*) FROM clubs c {where}", params).fetchone()[0]
             rows = conn.execute(
-                f"SELECT c.club_uid, c.name, c.short_name, c.nation_id,"
+                f"SELECT c.club_uid, c.name, c.short_name, c.nation_id, d.division,"
                 f" (SELECT COUNT(*) FROM players p WHERE p.club_uid = c.club_uid) AS player_count"
-                f" FROM clubs c {where} ORDER BY c.short_name COLLATE NOCASE LIMIT ? OFFSET ?",
+                f" FROM clubs c LEFT JOIN club_divisions d ON d.club_uid = c.club_uid"
+                f" {where} ORDER BY c.short_name COLLATE NOCASE LIMIT ? OFFSET ?",
                 [*params, limit, offset],
             ).fetchall()
         return ClubPage(items=[ClubOut(**dict(r)) for r in rows], total=total, limit=limit, offset=offset)
@@ -248,7 +268,7 @@ class DataService:
             total = conn.execute(f"SELECT COUNT(*) FROM players p {where}", params).fetchone()[0]
             rows = conn.execute(
                 f"SELECT p.unique_id, p.name, p.full_name, p.birth_date, p.age, p.nation_id, p.height_cm,"
-                f" p.club_uid, c.short_name AS club_short_name FROM players p JOIN clubs c ON c.club_uid = p.club_uid"
+                f" p.club_uid, c.short_name AS club_short_name, p.id_generated FROM players p JOIN clubs c ON c.club_uid = p.club_uid"
                 f" {where} ORDER BY p.name COLLATE NOCASE, p.unique_id LIMIT ? OFFSET ?",
                 [*params, limit, offset],
             ).fetchall()
@@ -264,7 +284,7 @@ class DataService:
                     nat, acc = positions[r["player_id"]]
                     (nat if r["is_natural"] else acc).append(Position(r["position"]))
         items = [
-            PlayerOut(**dict(r), natural_positions=positions[r["unique_id"]][0],
+            PlayerOut(**{**dict(r), "id_generated": bool(r["id_generated"])}, natural_positions=positions[r["unique_id"]][0],
                       accomplished_positions=positions[r["unique_id"]][1])
             for r in rows
         ]

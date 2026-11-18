@@ -21,6 +21,14 @@ export type ErrorBody = S["ErrorBody"];
 export type Position = S["Position"];
 export type CompetitionFormat = S["CompetitionFormat"];
 export type LeagueRounds = S["LeagueRounds"];
+export type CompetitionOut = S["CompetitionOut"];
+export type LeagueSchedule = S["LeagueSchedule"];
+export type LeagueRound = S["LeagueRound"];
+export type LeagueMatch = S["LeagueMatch"];
+export type CupBracket = S["CupBracket"];
+export type CupRound = S["CupRound"];
+export type CupMatch = S["CupMatch"];
+export type Division = "A" | "B";
 
 export type ImportBase = "clubs" | "players";
 

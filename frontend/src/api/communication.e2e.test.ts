@@ -9,6 +9,7 @@ import { ApiError, configureApi, newIdempotencyKey } from "./client";
 import {
   closeSession,
   createSession,
+  getCompetition,
   getCompetitionOptions,
   getHealth,
   getSession,
@@ -31,7 +32,7 @@ describe("frontend <-> backend real", () => {
   it("consulta o health check", async () => {
     const h = await getHealth();
     expect(h.status).toBe("ok");
-    expect(h.database.schema_version).toBe(1);
+    expect(h.database.schema_version).toBe(2);
   });
 
   it("recebe erro padronizado em sessão inexistente", async () => {
@@ -44,11 +45,14 @@ describe("frontend <-> backend real", () => {
     const clubs = await importBase("clubs", xlsx());
     expect(clubs.rows_imported).toBe(40);
     const players = await importBase("players", xlsx());
-    expect(players.rows_imported).toBe(1574);
+    expect(players.rows_imported).toBe(1585);
+    expect(players.warnings?.filter((w) => w.code === "GENERATED_ID")).toHaveLength(11);
     expect((await listClubs()).total).toBe(40);
     const goalkeepers = await listPlayers({ position: "GOL", limit: 5 });
     expect(goalkeepers.items.every((p) => p.natural_positions.includes("GK"))).toBe(true);
-    expect((await getCompetitionOptions()).catalog_ready).toBe(true);
+    const opts = await getCompetitionOptions();
+    expect(opts.catalog_ready).toBe(true);
+    expect(opts.division_counts).toEqual({ A: 20, B: 20 });
   });
 
   it.runIf(hasReal)("cria sessão, bloqueia importação, notifica via WebSocket e encerra", async () => {
@@ -57,6 +61,12 @@ describe("frontend <-> backend real", () => {
     const s = await createSession(cfg, key);
     // repetição do mesmo comando (ex.: resposta perdida) devolve a mesma sessão
     expect((await createSession(cfg, key)).id).toBe(s.id);
+
+    const comp = await getCompetition(s.id);
+    expect(comp.structure.kind).toBe("cup");
+    expect(comp.structure.participants[0]).toBe(322);
+    expect(comp.structure.participants).toEqual(s.participants);
+    expect(comp.structure.total_matches).toBe(15);
 
     const blocked = await importBase("players", xlsx()).catch((e) => e);
     expect(blocked.code).toBe("IMPORT_BLOCKED_ACTIVE_COMPETITION");

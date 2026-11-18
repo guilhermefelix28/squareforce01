@@ -29,8 +29,9 @@ Consulte a Skill correspondente **antes** de alterar um módulo. `game-design-ru
 | `testing-validation` | testes obrigatórios e critérios de aceitação |
 
 ## Escopo atual
-**Entrega 1 concluída** (infraestrutura, dados, importação, sessão). Não implemente leilão, mercado, IA,
-motor ou competições sem autorização explícita do usuário para a entrega correspondente.
+**Entregas 1 e 2 concluídas** (infraestrutura, dados, importação, sessão; configuração de competições,
+seleção de clubes, calendário da Liga e chaveamento da Copa). Não implemente leilão, mercado, IA, motor de
+partidas ou execução de rodadas sem autorização explícita do usuário para a entrega correspondente.
 
 ## Comandos
 ```bash
@@ -44,7 +45,8 @@ npm install && npm run dev                                  # http://localhost:5
 npm test && npm run test:e2e && npm run build
 npm run gen:api                                             # após exportar o OpenAPI
 ```
-Python 3.12 está em `%LOCALAPPDATA%\Programs\Python\Python312` (fora do PATH); use sempre o `.venv`.
+Use sempre o `.venv` do projeto (Python 3.12). Terminais abertos antes da inclusão do Python no PATH podem
+resolver `python` para o atalho da Microsoft Store.
 
 ## Regras de trabalho
 - Estado de competição **somente em memória**; SQLite só para bases de clubes/jogadores.

@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { ApiError } from "../api/client";
-import { getCompetitionOptions, listClubs } from "../api/endpoints";
+import { getCompetition, getCompetitionOptions, listClubs } from "../api/endpoints";
 import { useSession } from "../app/SessionContext";
 import { Notice } from "../components/Notice";
+import { CompetitionView } from "../features/competition/CompetitionView";
 import { SessionForm } from "../features/session/SessionForm";
 import { SessionPanel } from "../features/session/SessionPanel";
-import type { Club, CompetitionOptions } from "../types/api";
+import type { Club, CompetitionOptions, CompetitionOut } from "../types/api";
 
 export function SessionPage({ onSessionChanged }: { onSessionChanged: () => void }) {
   const { session, setSession, lostMessage, live, restoring } = useSession();
@@ -13,6 +14,16 @@ export function SessionPage({ onSessionChanged }: { onSessionChanged: () => void
   const [clubs, setClubs] = useState<Club[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [competition, setCompetition] = useState<CompetitionOut | null>(null);
+
+  const sessionId = session?.id;
+  useEffect(() => {
+    setCompetition(null);
+    if (!sessionId) return;
+    getCompetition(sessionId)
+      .then(setCompetition)
+      .catch((e) => setError(e instanceof ApiError ? e.message : "Erro ao carregar a competição."));
+  }, [sessionId]);
 
   useEffect(() => {
     Promise.all([getCompetitionOptions(), listClubs()])
@@ -53,7 +64,7 @@ export function SessionPage({ onSessionChanged }: { onSessionChanged: () => void
               onCreated={(s) => {
                 setSession(s);
                 onSessionChanged();
-                setSuccess("Sessão iniciada. Leilão e partidas serão habilitados nas próximas entregas.");
+                setSuccess("Competição criada: participantes definidos e calendário gerado. Leilão e partidas chegam nas próximas entregas.");
               }}
             />
           ) : (
@@ -63,6 +74,7 @@ export function SessionPage({ onSessionChanged }: { onSessionChanged: () => void
           )
         )}
       </div>
+      {active && competition && <CompetitionView competition={competition} clubs={clubs} />}
     </div>
   );
 }
