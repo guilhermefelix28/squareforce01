@@ -135,7 +135,7 @@ function CupView({ b, clubs, user }: { b: CupBracket; clubs: ClubMap; user: numb
         <div><dt>Formato</dt><dd>Jogo único</dd></div>
       </dl>
       <p className="muted small">
-        90 minutos, sem prorrogação. Empate decidido nos pênaltis (não contam na artilharia). Se o seu clube for
+        Mando neutro. 90 minutos, sem prorrogação. Empate decidido nos pênaltis (não contam na artilharia). Se o seu clube for
         eliminado, a Copa continua até a final.
       </p>
       <Participants ids={b.participants} clubs={clubs} user={user} />

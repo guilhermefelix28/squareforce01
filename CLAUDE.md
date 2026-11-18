@@ -29,9 +29,10 @@ Consulte a Skill correspondente **antes** de alterar um módulo. `game-design-ru
 | `testing-validation` | testes obrigatórios e critérios de aceitação |
 
 ## Escopo atual
-**Entregas 1 e 2 concluídas** (infraestrutura, dados, importação, sessão; configuração de competições,
-seleção de clubes, calendário da Liga e chaveamento da Copa). Não implemente leilão, mercado, IA, motor de
-partidas ou execução de rodadas sem autorização explícita do usuário para a entrega correspondente.
+**Entregas 1 a 3** (infraestrutura, dados, sessão; competições; leilão). O leilão está implementado mas
+**bloqueado até o `AuctionModel` aprovado** (fórmulas pendentes — `docs/architecture/leilao.md`); nunca invente
+essas fórmulas. Não implemente mercado de negociações, motor de partidas ou execução de rodadas sem autorização
+explícita do usuário para a entrega correspondente.
 
 ## Comandos
 ```bash

@@ -6,7 +6,8 @@ description: Implementar e revisar o leilão de jogadores do SquadForce — ofer
 # auction-system
 
 ## Finalidade
-Orientar o serviço `services/auction` (ainda **não implementado**; estrutura em `services/auction/README.md`).
+Orientar o serviço `services/auction`. **Implementado na Entrega 3** (motor, regras, complementação, API e tela),
+**bloqueado até o `AuctionModel` aprovado** — as fórmulas não podem ser inventadas (ver `docs/architecture/leilao.md`).
 
 ## Quando utilizar
 - Entrega do leilão autorizada pelo usuário.
@@ -28,16 +29,23 @@ antecipado, complementação automática e resumo final de elencos e saldos.
 - Complementação: exatamente **18** (11 + 7); limite de melhorias = `min(18 − C, floor(C / 4))`; no máximo 1 destaque (percentil ≥ 85 do overall calibrado); preço = média entre valor de mercado e lance mínimo; sem compensação por mau desempenho.
 
 ## Contratos e dependências
-- Catálogo via serviço de dados; decisões de bots via `bot-intelligence`; estado na sessão (`session-management`).
-- Comandos idempotentes; eventos no canal `/ws/sessions/{id}` (nomes a definir na entrega).
+- Regras aprovadas: `services/auction/rules.py` (única fonte das constantes do GDD).
+- Fórmulas pendentes: `services/auction/model.py::AuctionModel` (carregado por `SQUADFORCE_AUCTION_MODEL`).
+- Motor: `engine.py` (`AuctionEngine.start/tick/place_bid`), complementação `completion.py`, visões `service.py`.
+- API: `POST /auction/start`, `GET /auction`, `POST /auction/bids` (Idempotency-Key = op_id), `GET /auction/summary`.
+- Eventos WS: `auction.started`, `auction.round_started`, `auction.round_closed`, `auction.finished`.
+- Atletas: `DataService.load_player_profiles()` → `PlayerProfile` (atributos só no servidor).
+- Bots: `services/bot_ai/auction_bot.decide_bid(BotAuctionView, model, BotProfile)`.
 
 ## Procedimentos recomendados
-1. Confirmar pendências PE-01…PE-05 (overall, valor, lance mínimo, reservas, pesos do sorteio) antes de codificar.
-2. Relógio e timestamps exclusivamente do servidor (monotônico); cliente só exibe.
-3. Aceitação de lances serializada com número de sequência para o desempate.
+1. Nunca colocar números de calibração no motor: novas fórmulas entram SOMENTE pelo `AuctionModel`.
+2. Toda saída nova do modelo deve ser validada contra o GDD em `AuctionEngine._validate_model_outputs`/`completion`.
+3. Relógio só do servidor (`clock` injetado); toda mutação dentro de `engine.lock`.
+4. Testes com `tests/support/fake_auction_model.py` (falso, só para testes) e `ManualClock`.
+5. Ao receber as fórmulas reais: implementar o modelo, rodar `tests/simulation` com ele e calibrar (mediana 70, >90 raro).
 
 ## Restrições e comportamentos proibidos
-- Inventar fórmulas econômicas ou pesos pendentes.
+- Inventar fórmulas econômicas, pesos ou perfis pendentes; usar o modelo falso fora dos testes.
 - Revelar ofertas de outros clubes ou dados ocultos a qualquer cliente.
 - Pausar o relógio por desconexão.
 
@@ -49,3 +57,5 @@ limite de complementação; determinismo com relógio simulado; concorrência de
 - [Game Design §4, §5, §7](../../../docs/game-design/game-design-v5.2.md)
 - [Pendências PE-*](../../../docs/game-design/pendencias.md)
 - [README do serviço](../../../services/auction/README.md)
+- [Leilão: regras implementadas e fórmulas pendentes](../../../docs/architecture/leilao.md)
+- [Matriz de testes](../../../docs/architecture/matriz-de-testes.md)

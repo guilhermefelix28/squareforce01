@@ -211,10 +211,294 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/sessions/{session_id}/auction/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start Auction */
+        post: operations["start_auction_api_sessions__session_id__auction_start_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sessions/{session_id}/auction": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Auction */
+        get: operations["get_auction_api_sessions__session_id__auction_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sessions/{session_id}/auction/bids": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Place Bid
+         * @description Lance do usuário. A Idempotency-Key é também o identificador da operação no motor.
+         */
+        post: operations["place_bid_api_sessions__session_id__auction_bids_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sessions/{session_id}/auction/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Auction Summary */
+        get: operations["auction_summary_api_sessions__session_id__auction_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AuctionBidAck */
+        AuctionBidAck: {
+            /** Round */
+            round: number;
+            /** Player Id */
+            player_id: number;
+            /** Amount */
+            amount: number;
+            /** Seq */
+            seq: number;
+            /**
+             * Replaced Player Id
+             * @description Alvo anterior, quando o lance trocou de atleta.
+             */
+            replaced_player_id?: number | null;
+            /**
+             * Replayed
+             * @default false
+             */
+            replayed: boolean;
+        };
+        /** AuctionBidOut */
+        AuctionBidOut: {
+            /** Round */
+            round: number;
+            /** Player Id */
+            player_id: number;
+            /** Amount */
+            amount: number;
+            /**
+             * Seq
+             * @description Ordem de aceitação no servidor (desempate).
+             */
+            seq: number;
+        };
+        /** AuctionBidRequest */
+        AuctionBidRequest: {
+            /** Player Id */
+            player_id: number;
+            /**
+             * Amount
+             * @description Valor em R$ (inteiro).
+             */
+            amount: number;
+            /**
+             * Round Number
+             * @description Rodada visível ao usuário; recusado se já encerrada.
+             */
+            round_number?: number | null;
+        };
+        /**
+         * AuctionClubOut
+         * @description Informação pública de cada clube (elenco e saldo são públicos; lances não).
+         */
+        AuctionClubOut: {
+            /** Club Uid */
+            club_uid: number;
+            /** Is User */
+            is_user: boolean;
+            /** Squad Count */
+            squad_count: number;
+            /** Budget */
+            budget: number;
+        };
+        /** AuctionContractOut */
+        AuctionContractOut: {
+            /** Player Id */
+            player_id: number;
+            /** Name */
+            name: string;
+            position: components["schemas"]["Position"];
+            /** Age */
+            age: number;
+            /** Price */
+            price: number;
+            /**
+             * Source
+             * @enum {string}
+             */
+            source: "auction" | "improvement" | "basic";
+            /** Round */
+            round?: number | null;
+        };
+        /** AuctionPlayerOut */
+        AuctionPlayerOut: {
+            /** Unique Id */
+            unique_id: number;
+            /** Name */
+            name: string;
+            /** Age */
+            age: number;
+            /**
+             * Club Short Name
+             * @description Clube de origem do atleta (base importada).
+             */
+            club_short_name: string;
+            /** @description Posição principal. */
+            position: components["schemas"]["Position"];
+            /** Minimum Bid */
+            minimum_bid: number;
+            /**
+             * Has Photo
+             * @description Há foto em /api/assets/players/{unique_id}.
+             * @default false
+             */
+            has_photo: boolean;
+        };
+        /** AuctionRoundOut */
+        AuctionRoundOut: {
+            /** Number */
+            number: number;
+            position: components["schemas"]["Position"];
+            /** Players */
+            players: components["schemas"]["AuctionPlayerOut"][];
+            /**
+             * Remaining Ms
+             * @description Tempo restante da rodada no relógio do servidor.
+             */
+            remaining_ms: number;
+            /** Duration Ms */
+            duration_ms: number;
+        };
+        /** AuctionRoundResultOut */
+        AuctionRoundResultOut: {
+            /** Number */
+            number: number;
+            position: components["schemas"]["Position"];
+            /** Sales */
+            sales: components["schemas"]["AuctionSaleOut"][];
+            /** Unsold Player Ids */
+            unsold_player_ids: number[];
+        };
+        /** AuctionSaleOut */
+        AuctionSaleOut: {
+            /** Player Id */
+            player_id: number;
+            /** Player Name */
+            player_name: string;
+            /** Club Uid */
+            club_uid: number;
+            /** Price */
+            price: number;
+        };
+        /** AuctionSquadOut */
+        AuctionSquadOut: {
+            /** Club Uid */
+            club_uid: number;
+            /** Is User */
+            is_user: boolean;
+            /** Budget */
+            budget: number;
+            /** Spent */
+            spent: number;
+            /** Auction Signings */
+            auction_signings: number;
+            /** Improvement Limit */
+            improvement_limit: number;
+            /** Contracts */
+            contracts: components["schemas"]["AuctionContractOut"][];
+        };
+        /** AuctionStateOut */
+        AuctionStateOut: {
+            /** Session Id */
+            session_id: string;
+            /**
+             * Phase
+             * @enum {string}
+             */
+            phase: "pending" | "running" | "completed";
+            /** Global Remaining Ms */
+            global_remaining_ms: number;
+            /** Global Duration Ms */
+            global_duration_ms: number;
+            round?: components["schemas"]["AuctionRoundOut"] | null;
+            /** User Club Uid */
+            user_club_uid: number;
+            /** Budget */
+            budget: number;
+            /**
+             * Max Bid
+             * @description Maior lance permitido agora (saldo − R$ 500 mil por vaga que restará).
+             */
+            max_bid: number;
+            /** Open Slots */
+            open_slots: number;
+            active_bid?: components["schemas"]["AuctionBidOut"] | null;
+            /** Squad */
+            squad: components["schemas"]["AuctionContractOut"][];
+            /** Clubs */
+            clubs: components["schemas"]["AuctionClubOut"][];
+            /**
+             * Recent Results
+             * @description Últimas rodadas encerradas (mais recente primeiro).
+             */
+            recent_results: components["schemas"]["AuctionRoundResultOut"][];
+            /** Rounds Completed */
+            rounds_completed: number;
+            /** Finish Reason */
+            finish_reason?: ("all_squads_complete" | "time_up" | "no_eligible_players") | null;
+            /** Bid Increments */
+            bid_increments: number[];
+        };
+        /** AuctionSummaryOut */
+        AuctionSummaryOut: {
+            /** Session Id */
+            session_id: string;
+            /** Finish Reason */
+            finish_reason: string;
+            /** Rounds Completed */
+            rounds_completed: number;
+            /** Squads */
+            squads: components["schemas"]["AuctionSquadOut"][];
+        };
         /** Body_import_clubs_api_imports_clubs_post */
         Body_import_clubs_api_imports_clubs_post: {
             /**
@@ -400,6 +684,12 @@ export interface components {
              * @default true
              */
             single_match: boolean;
+            /**
+             * Neutral Venue
+             * @description Mando neutro em todos os confrontos da Copa (decisão de 2026-11-18).
+             * @default true
+             */
+            neutral_venue: boolean;
             /**
              * Regulation Minutes
              * @default 90
@@ -1594,6 +1884,356 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    start_auction_api_sessions__session_id__auction_start_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Obrigatório: identificador único do comando (8–128 caracteres). */
+                "Idempotency-Key"?: string | null;
+            };
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuctionStateOut"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Request Entity Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unsupported Media Type */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_auction_api_sessions__session_id__auction_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuctionStateOut"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Request Entity Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unsupported Media Type */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    place_bid_api_sessions__session_id__auction_bids_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Obrigatório: identificador único do comando (8–128 caracteres). */
+                "Idempotency-Key"?: string | null;
+            };
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AuctionBidRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuctionBidAck"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Request Entity Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unsupported Media Type */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    auction_summary_api_sessions__session_id__auction_summary_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuctionSummaryOut"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Request Entity Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unsupported Media Type */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
         };

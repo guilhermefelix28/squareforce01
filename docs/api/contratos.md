@@ -92,3 +92,18 @@ Seleção: usuário + (n−1) clubes, primeiro da Série A e, faltando vagas, da
 
 A progressão estrutural (`register_cup_winner`) existe no serviço de competições e é testada, mas **não** é
 exposta pela API: os resultados virão do motor de partidas (entrega futura).
+
+## Leilão (Entrega 3)
+
+Detalhes, erros e eventos em [leilão](../architecture/leilao.md). Resumo:
+
+| Método | Rota | Resposta | Erros principais |
+|---|---|---|---|
+| POST | `/api/sessions/{id}/auction/start` | `AuctionStateOut` (201) | 409 `AUCTION_MODEL_NOT_CONFIGURED` / `INVALID_PHASE`, 500 `AUCTION_REJECTED` |
+| GET | `/api/sessions/{id}/auction` | `AuctionStateOut` | 404 `AUCTION_NOT_FOUND` |
+| POST | `/api/sessions/{id}/auction/bids` | `AuctionBidAck` | 422 `BELOW_MINIMUM_BID` / `INSUFFICIENT_FUNDS` / `BID_NOT_INCREASED` / `PLAYER_NOT_IN_ROUND` / `SQUAD_FULL`, 409 `STALE_ROUND` / `ROUND_CLOSED` / `AUCTION_NOT_RUNNING` / `OPERATION_ID_REUSED` |
+| GET | `/api/sessions/{id}/auction/summary` | `AuctionSummaryOut` | 409 `AUCTION_NOT_FINISHED` |
+
+Fases da sessão: `setup` → `auction` (início do leilão) → `squad_completion` (leilão + complementação concluídos).
+Nenhum contrato do leilão expõe overall, atributos, valor de mercado, personalidade, reputação ou lances de
+outros clubes (teste `test_auction_contracts_never_expose_hidden_fields`).

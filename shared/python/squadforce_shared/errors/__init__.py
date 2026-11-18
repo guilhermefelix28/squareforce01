@@ -33,6 +33,12 @@ class ErrorCode(str, Enum):
     CLUB_NOT_ELIGIBLE = "CLUB_NOT_ELIGIBLE"
     COMPETITION_PLANNING_FAILED = "COMPETITION_PLANNING_FAILED"
     CATALOG_EMPTY = "CATALOG_EMPTY"
+    # Leilão
+    AUCTION_MODEL_NOT_CONFIGURED = "AUCTION_MODEL_NOT_CONFIGURED"
+    INVALID_PHASE = "INVALID_PHASE"
+    AUCTION_NOT_FOUND = "AUCTION_NOT_FOUND"
+    AUCTION_NOT_FINISHED = "AUCTION_NOT_FINISHED"
+    AUCTION_REJECTED = "AUCTION_REJECTED"
 
 
 class AppError(Exception):
@@ -41,7 +47,7 @@ class AppError(Exception):
     def __init__(
         self,
         status_code: int,
-        code: ErrorCode,
+        code: ErrorCode | str,
         message: str,
         *,
         retryable: bool = False,
@@ -57,7 +63,7 @@ class AppError(Exception):
     def to_body(self) -> dict[str, Any]:
         return {
             "error": {
-                "code": self.code.value,
+                "code": self.code.value if isinstance(self.code, ErrorCode) else self.code,
                 "message": self.message,
                 "retryable": self.retryable,
                 "details": self.details,

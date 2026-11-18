@@ -270,8 +270,8 @@ def validate_cup_bracket(b: CupBracket) -> None:
     by_id = {m.id: m for m in all_matches}
     if len(by_id) != len(all_matches):
         raise PlanningError("Identificadores de confronto duplicados.")
-    if not b.rules.single_match or b.rules.extra_time or b.rules.regulation_minutes != 90:
-        raise PlanningError("Regras da Copa divergem do GDD (jogo único, 90 min, sem prorrogação).")
+    if not b.rules.single_match or b.rules.extra_time or b.rules.regulation_minutes != 90 or not b.rules.neutral_venue:
+        raise PlanningError("Regras da Copa divergem do GDD (jogo único, 90 min, sem prorrogação, mando neutro).")
 
     first = b.rounds[0].matches
     entrants = [c for m in first for c in (m.club_a_uid, m.club_b_uid)]

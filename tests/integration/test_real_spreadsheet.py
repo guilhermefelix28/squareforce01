@@ -26,13 +26,19 @@ def test_real_file_imports_and_is_not_modified(client, settings):
     assert players.status_code == 200, body
     assert body["critical_error_count"] == 0
     assert body["rows_read"] == 1585
-    assert body["rows_skipped"] == 0
-    assert body["rows_imported"] == 1585  # 11 linhas sem unique_id recebem ID genérico estável
+    # 11 linhas sem unique_id recebem ID genérico estável; 2 delas repetem atletas com ID real
+    # (Larson e Samuel) e são descartadas: fica somente um registro por pessoa.
+    assert body["rows_skipped"] == 2
+    assert body["rows_imported"] == 1583
     codes = [w["code"] for w in body["warnings"]]
     assert codes.count("GENERATED_ID") == 11
-    assert codes.count("POSSIBLE_DUPLICATE_PERSON") == 2  # Larson e Samuel aparecem em 2 clubes
+    assert codes.count("DUPLICATE_PERSON_REMOVED") == 2
+    removed = [w for w in body["warnings"] if w["code"] == "DUPLICATE_PERSON_REMOVED"]
+    assert sorted(w["row"] for w in removed) == [864, 1146]
 
-    assert client.get("/api/catalog/players").json()["total"] == 1585
+    assert client.get("/api/catalog/players").json()["total"] == 1583
+    names = client.get("/api/catalog/players", params={"search": "Larson", "limit": 10}).json()["items"]
+    assert [(p["unique_id"], p["club_short_name"]) for p in names] == [(2000351881, "Palmeiras")]
     gk = client.get("/api/catalog/players", params={"position": "GOL"}).json()["total"]
     assert gk > 0
     # nenhum arquivo foi copiado para o projeto e o original permanece idêntico
@@ -57,12 +63,12 @@ def test_generated_ids_are_stable_across_reimports(client):
 
     def generated():
         items = []
-        for offset in range(0, 1585, 200):
+        for offset in range(0, 1600, 200):
             page = client.get("/api/catalog/players", params={"limit": 200, "offset": offset}).json()
             items += [p["unique_id"] for p in page["items"] if p["id_generated"]]
         return sorted(items)
 
     first = generated()
-    assert len(first) == 11
+    assert len(first) == 9  # 11 gerados - 2 duplicatas removidas
     post_import(client, "players", content)
     assert generated() == first

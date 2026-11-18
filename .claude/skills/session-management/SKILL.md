@@ -19,6 +19,8 @@ Gerenciar a única competição ativa com estado autoritativo no servidor, sem n
 - `import_guard()`: bloqueia importações com sessão ativa e serializa importações.
 - Encerramento explícito, idempotente, com `expected_version` opcional (concorrência otimista).
 - Tombstones de sessões encerradas (memória, limitados) para consulta pós-encerramento.
+- Fases: `setup` → `auction` → `squad_completion` via `SessionManager.transition(id, de, para)` (versão + 1).
+  Encerrar ou substituir a sessão descarta o leilão em memória (`AuctionService.discard`).
 
 ## Regras do Game Design aplicáveis
 - §23: uma competição ativa; encerrar/substituir exige **confirmação**; sem salvamento, backup ou restauração; reconexão automática enquanto o estado existir; relógios não pausam por desconexões individuais.

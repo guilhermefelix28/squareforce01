@@ -395,7 +395,8 @@ def parse_players(
 
     players: list[ParsedPlayer] = []
     seen: dict[int, int] = {}
-    persons: dict[tuple[str, str], int] = {}
+    persons: dict[tuple[str, str], list[ParsedPlayer]] = {}
+    rows_of: dict[int, int] = {}
     for idx, raw in enumerate(sheet.rows, start=2):
         if all(_is_blank(v) for v in raw):
             continue
@@ -420,7 +421,7 @@ def parse_players(
                     return None
             return v
 
-        # Identificador: ausente -> linha descartada com aviso; inválido -> crítico.
+        # Identificador: ausente -> ID genérico estável; inválido -> crítico.
         try:
             uid = to_int(row["unique_id"])
         except _ValueError as e:
@@ -519,16 +520,30 @@ def parse_players(
                 id_generated=id_generated,
             )
         )
-        person = (full_name.casefold(), birth_date)
-        if person in persons:
+        rows_of[uid] = idx
+        persons.setdefault((full_name.casefold(), birth_date), []).append(players[-1])
+
+    # Mesma pessoa (nome completo + nascimento) mais de uma vez: mantém SOMENTE um registro
+    # (decisão do responsável, 2026-11-18): prefere ID real ao gerado; depois, a primeira linha.
+    dropped: set[int] = set()
+    for (_, birth), same in persons.items():
+        if len(same) < 2:
+            continue
+        keep = sorted(same, key=lambda pl: (pl.id_generated, rows_of[pl.unique_id]))[0]
+        for pl in same:
+            if pl is keep:
+                continue
+            dropped.add(pl.unique_id)
+            report.rows_skipped += 1
             issues.warn(
-                "POSSIBLE_DUPLICATE_PERSON",
-                f"{full_name!r} ({birth_date}) também aparece na linha {persons[person]}; ambos foram importados.",
-                idx,
+                "DUPLICATE_PERSON_REMOVED",
+                f"{pl.full_name!r} ({birth}) repetido: mantido o registro {keep.unique_id} "
+                f"(linha {rows_of[keep.unique_id]}); esta linha foi descartada.",
+                rows_of[pl.unique_id],
                 "full_name",
             )
-        else:
-            persons[person] = idx
+    if dropped:
+        players = [pl for pl in players if pl.unique_id not in dropped]
 
     if not players and not issues.critical_count:
         issues.error("EMPTY_SHEET", "Nenhum jogador válido encontrado na planilha.")

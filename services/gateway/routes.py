@@ -2,15 +2,22 @@
 
 from __future__ import annotations
 
+import asyncio
+import logging
 from datetime import datetime, timezone
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, File, Header, Query, Request, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse, JSONResponse
 
+from services.auction.engine import AuctionError
 from services.competition.options import competition_options
 from squadforce_shared import __version__
 from squadforce_shared.contracts import (
+    AuctionBidAck,
+    AuctionBidRequest,
+    AuctionStateOut,
+    AuctionSummaryOut,
     ClubPage,
     CompetitionConfig,
     CompetitionOptions,
@@ -62,7 +69,7 @@ def health(c: C) -> HealthResponse:
             "session": "ready",
             "data": "ready",
             "competition": "ready",
-            "auction": "planned",
+            "auction": "ready" if c.auction_model is not None else "planned",
             "trading": "planned",
             "bot_ai": "planned",
             "match_engine": "planned",
@@ -130,6 +137,8 @@ async def create_session(c: C, request: Request, body: SessionCreateRequest, ide
     def run() -> tuple[int, dict[str, Any]]:
         cfg = body.model_dump(exclude={"confirm_replace"})
         state = c.sessions.create(CompetitionConfig(**cfg), confirm_replace=body.confirm_replace)
+        if previous is not None and previous.id != state.id:
+            c.auctions.discard(previous.id)
         return 201, state.to_out().model_dump(mode="json")
 
     status, out, replayed = c.idempotency.execute("sessions:create", key, fingerprint(raw), run)
@@ -164,7 +173,9 @@ async def close_session(
     expected = body.expected_version if body else None
 
     def run() -> tuple[int, dict[str, Any]]:
-        return 200, c.sessions.close(session_id, expected).to_out().model_dump(mode="json")
+        out = c.sessions.close(session_id, expected).to_out().model_dump(mode="json")
+        c.auctions.discard(session_id)  # estado do leilão some com a sessão (sem persistência)
+        return 200, out
 
     status, out, replayed = c.idempotency.execute(f"sessions:close:{session_id}", key, fingerprint(raw), run)
     if not replayed:
@@ -238,3 +249,112 @@ async def session_socket(ws: WebSocket, session_id: str) -> None:
         pass
     finally:
         await c.hub.leave(session_id, ws)
+
+
+# ------------------------------------------------------------------ leilão (Entrega 3)
+def _auction_error(exc: AuctionError) -> AppError:
+    return AppError(exc.status, exc.code, exc.message, retryable=exc.retryable, details=exc.details)
+
+
+def _engine(c: Container, session_id: str):
+    c.sessions.get(session_id)  # 404 se a sessão não existe
+    engine = c.auctions.get(session_id)
+    if engine is None:
+        raise AppError(404, ErrorCode.AUCTION_NOT_FOUND, "O leilão desta sessão ainda não foi iniciado.")
+    return engine
+
+
+def _sync_phase(c: Container, session_id: str, engine) -> None:
+    """Leilão concluído (com complementação) => sessão avança para 'squad_completion'."""
+    if engine.phase == "completed":
+        state = c.sessions.active()
+        if state is not None and state.id == session_id and state.phase == "auction":
+            c.sessions.transition(session_id, "auction", "squad_completion")
+
+
+@router.post("/sessions/{session_id}/auction/start", response_model=AuctionStateOut, status_code=201, responses=ERR, tags=["auction"])
+async def start_auction(c: C, request: Request, session_id: str, idempotency_key: IdemKey = None):
+    key = validate_key(idempotency_key)
+    raw = await request.body()
+
+    def run() -> tuple[int, dict[str, Any]]:
+        state = c.sessions.get(session_id)
+        if c.auction_model is None:
+            raise AppError(
+                409, ErrorCode.AUCTION_MODEL_NOT_CONFIGURED,
+                "O leilão depende das fórmulas de overall, valor de mercado, lance mínimo, reservas, pesos de "
+                "posição, formações e perfis dos bots, ainda não aprovadas (pendências PE-01…PE-05, PM-01).",
+            )
+        if state.phase != "setup" or state.status != "active":
+            raise AppError(409, ErrorCode.INVALID_PHASE, f"O leilão só pode começar na fase de configuração (atual: {state.phase}).")
+        pool = c.data.load_player_profiles()
+        c.sessions.transition(session_id, "setup", "auction")
+        try:
+            engine = c.auctions.create(
+                session_id, state.config, list(state.participants or ()), pool, c.auction_model,
+                seed=(state.seed or 0) + 1,
+            )
+        except (ValueError, AuctionError) as exc:
+            c.sessions.transition(session_id, "auction", "setup")
+            c.auctions.discard(session_id)
+            raise AppError(500, ErrorCode.AUCTION_REJECTED, f"Não foi possível iniciar o leilão: {exc}") from exc
+        return 201, c.auctions.state(session_id, engine).model_dump(mode="json")
+
+    status, out, replayed = c.idempotency.execute(f"auction:start:{session_id}", key, fingerprint(raw), run)
+    if not replayed:
+        await c.hub.broadcast(session_id, WsEnvelope(type="auction.started", session_id=session_id))
+    return _respond(status, out, replayed)
+
+
+@router.get("/sessions/{session_id}/auction", response_model=AuctionStateOut, responses=ERR, tags=["auction"])
+def get_auction(c: C, session_id: str) -> AuctionStateOut:
+    engine = _engine(c, session_id)
+    out = c.auctions.state(session_id, engine)
+    _sync_phase(c, session_id, engine)
+    return out
+
+
+@router.post("/sessions/{session_id}/auction/bids", response_model=AuctionBidAck, responses=ERR, tags=["auction"])
+async def place_bid(c: C, request: Request, session_id: str, body: AuctionBidRequest, idempotency_key: IdemKey = None):
+    """Lance do usuário. A Idempotency-Key é também o identificador da operação no motor."""
+    key = validate_key(idempotency_key)
+    raw = await request.body()
+    engine = _engine(c, session_id)
+
+    def run() -> tuple[int, dict[str, Any]]:
+        try:
+            ack = engine.place_bid(engine.user_club_uid, body.player_id, body.amount, key, body.round_number)
+        except AuctionError as exc:
+            raise _auction_error(exc) from exc
+        return 200, AuctionBidAck(
+            round=ack.round, player_id=ack.player_id, amount=ack.amount, seq=ack.seq,
+            replaced_player_id=ack.replaced_player_id, replayed=ack.replayed,
+        ).model_dump(mode="json")
+
+    status, out, replayed = c.idempotency.execute(f"auction:bid:{session_id}", key, fingerprint(raw), run)
+    return _respond(status, out, replayed)
+
+
+@router.get("/sessions/{session_id}/auction/summary", response_model=AuctionSummaryOut, responses=ERR, tags=["auction"])
+def auction_summary(c: C, session_id: str) -> AuctionSummaryOut:
+    engine = _engine(c, session_id)
+    c.auctions.state(session_id, engine)  # avança o relógio
+    _sync_phase(c, session_id, engine)
+    if engine.phase != "completed":
+        raise AppError(409, ErrorCode.AUCTION_NOT_FINISHED, "O resumo fica disponível após o leilão e a complementação.")
+    return c.auctions.summary(session_id, engine)
+
+
+async def auction_clock(container: Container, interval: float) -> None:
+    """Relógio autoritativo: avança os leilões em andamento e publica eventos (sem dados sigilosos)."""
+    while True:
+        await asyncio.sleep(interval)
+        for sid, engine in container.auctions.running():
+            try:
+                events = engine.tick()
+                _sync_phase(container, sid, engine)
+            except Exception:  # um leilão com erro não derruba o relógio dos demais
+                logging.getLogger("squadforce.auction").exception("falha no relógio do leilão %s", sid)
+                continue
+            for ev in events:
+                await container.hub.broadcast(sid, WsEnvelope(type=ev["type"], session_id=sid, data=ev))

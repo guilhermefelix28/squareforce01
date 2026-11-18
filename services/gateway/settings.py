@@ -28,3 +28,5 @@ class Settings:
         )
     )
     idempotency_ttl_seconds: int = 3600
+    auction_tick_seconds: float = 0.1  # frequência do relógio do leilão no servidor
+    auction_ticker: bool = True  # testes desligam e avançam o relógio manualmente

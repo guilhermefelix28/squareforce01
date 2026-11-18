@@ -53,6 +53,11 @@ A planilha real é usada **somente leitura** (`@pytest.mark.real_data`).
 do usuário, confrontos indevidos); Copas 2, 4, 8, 16, 32 (chaveamento, eliminação, progressão até a final,
 duplicações); cada cenário com várias sementes e conferido de forma independente do validador interno.
 
+**Entrega 3:** concorrência de ofertas (threads + relógio, vencedores recalculados), empates por timestamp e
+sequência, orçamento e reserva por vaga, fechamento de prazos, reconexão, idempotência, carga de lances e de
+relógio, simulações completas com Liga de 20 e Copa de 32 na base real (todo clube com 18). Marcador
+`simulation` para os testes mais lentos (`pytest -m "not simulation"` para rodadas rápidas).
+
 ## Referências
 - [Matriz de testes da Entrega 1](../../../docs/architecture/matriz-de-testes.md)
 - [Especificação técnica §8–9](../../../docs/architecture/especificacao-tecnica-v5.2.md)

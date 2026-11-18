@@ -112,10 +112,21 @@ def test_real_id_in_reserved_range_is_rejected():
     assert codes(report) == ["OUT_OF_RANGE"]
 
 
-def test_same_person_twice_is_warned():
-    report, players = parse_players([player_row(1, full_name="Fulano"), player_row(None, 200, full_name="Fulano")])
-    assert report.status == "imported" and len(players) == 2
-    assert "POSSIBLE_DUPLICATE_PERSON" in [w.code for w in report.warnings]
+def test_same_person_twice_keeps_only_the_real_id():
+    report, players = parse_players([player_row(None, 200, full_name="Fulano"), player_row(1, full_name="Fulano")])
+    assert report.status == "imported" and [p.unique_id for p in players] == [1]
+    assert report.rows_skipped == 1 and report.rows_imported == 1
+    assert "DUPLICATE_PERSON_REMOVED" in [w.code for w in report.warnings]
+
+
+def test_same_person_twice_with_real_ids_keeps_the_first_row():
+    report, players = parse_players([player_row(7, full_name="Ciclano"), player_row(8, 200, full_name="Ciclano")])
+    assert [p.unique_id for p in players] == [7] and report.rows_skipped == 1
+
+
+def test_homonyms_with_different_birth_dates_are_kept():
+    _, players = parse_players([player_row(1, full_name="Beltrano"), player_row(2, full_name="Beltrano", birth_date="1999-05-05")])
+    assert len(players) == 2
 
 
 def test_missing_columns_are_critical():

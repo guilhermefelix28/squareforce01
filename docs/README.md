@@ -13,7 +13,8 @@
 - [Especificação técnica v5.2](architecture/especificacao-tecnica-v5.2.md)
 - [Arquitetura e ADRs](architecture/arquitetura.md)
 - [Importação Excel → SQLite](architecture/importacao-excel.md)
-- [Matriz de testes da Entrega 1](architecture/matriz-de-testes.md)
+- [Leilão e fórmulas pendentes](architecture/leilao.md)
+- [Matriz de testes](architecture/matriz-de-testes.md)
 
 ## API
 - [Contratos (REST + WebSocket)](api/contratos.md)

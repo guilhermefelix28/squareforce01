@@ -35,3 +35,27 @@
 | Contratos | `test_openapi_contract.py` (endpoint `/competition`) · `test_responses_validate_against_models` · `test_competition_api.py` |
 | IDs gerados estáveis | `test_row_without_id_gets_stable_generated_id` · `test_generated_ids_are_stable_across_reimports` |
 | Frontend | `CompetitionView.test.tsx` · `App.test.tsx` · `communication.e2e.test.ts` (Copa 16 real) |
+
+## Entrega 3 — leilão
+
+| Requisito | Testes |
+|---|---|
+| Regras/constantes do GDD, durações, limite de melhorias, reserva por vaga | `tests/unit/test_auction_rules.py` |
+| Rodada (5 da mesma posição, 10 s), relógio contíguo, fim global, independência da frequência do relógio | `test_round_shape_and_global_clock` · `test_rounds_are_contiguous_and_never_exceed_global_end` · `test_tick_frequency_does_not_change_the_outcome` |
+| Validações (mínimo, saldo/reserva exata, atleta fora da rodada, prazo, rodada obsoleta, reduzir/repetir) | `test_invalid_bids_are_rejected` · `test_reserve_boundary_is_exact` · `test_reserve_rule_with_partial_squad` · `test_closed_round_and_stale_round` · `test_bid_at_last_instant_*` · `test_raise_allowed_reduce_and_repeat_forbidden` |
+| Troca de alvo atômica, um lance ativo | `test_change_target_is_atomic_and_failure_keeps_previous` · `test_each_club_wins_at_most_one_player_per_round` |
+| Maior lance e desempate (timestamp do valor final, sequência) | `test_highest_bid_wins` · `test_tie_goes_to_whoever_reached_the_final_value_first` · `test_same_timestamp_tie_uses_acceptance_sequence` |
+| Idempotência (op_id e Idempotency-Key) | `test_operation_id_prevents_duplicate_bids` · `test_bid_flow_errors_and_idempotency` · `test_start_is_idempotent_and_cannot_restart` |
+| Encerramento antecipado, elenco cheio | `test_full_squad_cannot_bid_and_early_finish_when_all_full` |
+| Regra das 14 rodadas, elegibilidade (≥ 5), vendidos não voltam | `test_every_eligible_position_appears_in_every_window_of_14_rounds` · `test_position_with_fewer_than_five_players_is_not_eligible` · `test_sold_players_never_return_and_unsold_are_counted` |
+| Validação das saídas do modelo | `test_invalid_model_outputs_are_rejected` · `test_invalid_reserves_are_rejected` |
+| Sigilo (bots e API) | `test_bot_view_has_no_rival_bids` · `test_bot_decision_does_not_depend_on_rival_secret_bids` · `test_hidden_information_never_leaves_the_server` · `test_auction_contracts_never_expose_hidden_fields` |
+| Avaliação 80/20 e escalação ótima | `test_marginal_gain_is_80_percent_starters_20_percent_reserves` · `test_hungarian_matches_brute_force` · `test_squad_quality_uses_best_formation_*` |
+| Bots (personalidades, limites) | `test_aggressive_bids_at_least_as_much_as_conservative` · `test_bot_bids_respect_minimum_and_reserve_rule` · `test_personalities_are_hidden_*` |
+| Complementação (18, limite, 1 destaque, preços, justiça, sem compensação) | `test_completion_rules` · `test_completion_order_has_no_fixed_priority` · `test_highlight_threshold_is_85th_percentile_of_full_base` |
+| Concorrência e carga | `tests/simulation/test_auction_load_and_simulation.py`: 16 threads de lances + relógio (vencedores recalculados de forma independente), ticks concorrentes, 2000 lances < 2 s |
+| Base real: Liga 2/11/20 e Copa 16/32 terminam com 18 por clube | `test_real_base_full_auction_every_club_ends_with_18` |
+| Reconexão e relógio sem pausa | `test_reconnection_sees_authoritative_clock_and_own_bid` |
+| Bloqueio sem fórmulas | `test_auction_is_blocked_without_approved_model` · `AuctionBoard.test.tsx` (AuctionPage) |
+| WebSocket e relógio real | `test_server_clock_publishes_round_events_over_websocket` · `communication.e2e.test.ts` (rodada real de 10 s) |
+| Interface | `AuctionBoard.test.tsx` · `AuctionSummaryView.test.tsx` |

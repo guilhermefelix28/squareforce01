@@ -24,7 +24,8 @@ describe("App", () => {
     render(<App />);
     expect(await screen.findByText("Servidor online")).toBeInTheDocument();
     expect(screen.getByText("1574")).toBeInTheDocument();
-    expect(screen.getByText("Leilão")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Leilão" })).toBeInTheDocument();
+    expect(screen.getAllByText("Leilão")).toHaveLength(2); // aba + lista de serviços
   });
 
   it("informa claramente quando o backend está inacessível", async () => {

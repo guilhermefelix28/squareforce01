@@ -1,4 +1,4 @@
-# Arquitetura — SquadForce (Entregas 1 e 2)
+# Arquitetura — SquadForce (Entregas 1 a 3)
 
 ## Visão geral
 
@@ -11,9 +11,9 @@
         ├── services/session      estado da competição em memória, versão, trava de importação
         ├── services/data         ÚNICO acesso ao SQLite: migrações, importação Excel, catálogo
         ├── services/competition  opções de formato; planner: seleção, calendário, chaveamento
-        ├── services/auction      planejado
+        ├── services/auction      leilão: motor, regras, complementação (modelo de fórmulas pendente)
         ├── services/trading      planejado
-        ├── services/bot_ai       planejado
+        ├── services/bot_ai       avaliação 80/20 e decisões de lance dos bots
         └── services/match_engine planejado
 ```
 
@@ -31,6 +31,9 @@
 | ADR-08 | SQLite em modo **WAL**, `foreign_keys=ON`, tabelas **STRICT**. | Tipos corretos e integridade garantidos pelo próprio banco. |
 | ADR-09 | **Planejador injetado na sessão** (`CompetitionPlanner`): `SessionManager` recebe `plan_competition` via `container.py`; o serviço de sessão não importa o de competições. | Mantém os limites entre serviços e permite testar a sessão com planejadores falsos. |
 | ADR-10 | **Planejamento puro e determinístico:** `services/competition/planner.py` só usa o `random.Random` recebido; semente automática por sessão (`secrets.randbits`), não exposta. Toda estrutura é validada por `validate_league_schedule`/`validate_cup_bracket` antes de ser aceita; violação → `COMPETITION_PLANNING_FAILED`, nada é criado. | GDD §16 (sementes automáticas, reprodutibilidade) e §19 (consolidação só com validação). |
+| ADR-12 | **Fórmulas como ponto de extensão (`AuctionModel`)**: o motor implementa só as regras escritas no GDD; overall, valores, reservas, pesos, formações e perfis vêm de um modelo carregado por `SQUADFORCE_AUCTION_MODEL`. Sem modelo, o leilão é recusado. Toda saída do modelo é validada contra os limites do GDD. | Proibição de inventar fórmulas econômicas (decisão de 2026-11-18). |
+| ADR-13 | **Motor do leilão determinístico e thread-safe**: estado sob uma `RLock`; o relógio é injetado; rodadas contíguas calculadas a partir do fim da anterior; ações dos bots agendadas em tempo de servidor. Uma tarefa asyncio no gateway avança os leilões a cada 100 ms e publica eventos sem dados sigilosos. | Relógio autoritativo, concorrência protegida e testes reprodutíveis (inclusive com saltos de tempo). |
+| ADR-14 | **`PlayerProfile` no domínio compartilhado**: o serviço de dados carrega atributos e familiaridades para uso interno; nenhum contrato público os expõe. | Mantém o leilão sem acesso ao SQLite e preserva a ocultação de dados. |
 | ADR-11 | **Divisões como dados de referência** (`club_divisions`, migração 0002), sem FK para `clubs`. | Reimportar clubes não apaga as divisões; clubes sem divisão ficam inelegíveis. |
 
 ## Limites de responsabilidade

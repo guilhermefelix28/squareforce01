@@ -194,6 +194,22 @@ class SessionManager:
             self._s.active = state
             return state
 
+    def transition(self, session_id: str, from_phase: str, to_phase: str) -> SessionState:
+        """Muda a fase da sessão ativa (versão + 1). Recusa se a fase atual não for `from_phase`."""
+        with self._lock:
+            current = self.get(session_id)
+            if current.status != "active":
+                raise AppError(409, ErrorCode.SESSION_CLOSED, "A sessão está encerrada.")
+            if current.phase != from_phase:
+                raise AppError(
+                    409, ErrorCode.INVALID_PHASE,
+                    f"Operação exige a fase '{from_phase}', mas a sessão está em '{current.phase}'.",
+                    details={"phase": current.phase, "expected": from_phase},
+                )
+            state = replace(current, phase=to_phase, version=current.version + 1, updated_at=_now())
+            self._s.active = state
+            return state
+
     def close(self, session_id: str, expected_version: int | None = None) -> SessionState:
         with self._lock:
             current = self.get(session_id)

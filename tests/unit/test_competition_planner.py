@@ -215,6 +215,7 @@ def test_cup_bracket_structure(n, seed):
     assert b.total_matches == n - 1
     assert b.rounds[-1].name == "Final" and len(b.rounds[-1].matches) == 1
     assert b.rules.single_match and b.rules.regulation_minutes == 90 and not b.rules.extra_time
+    assert b.rules.neutral_venue is True
     assert b.rules.draw_decided_by == "penalties" and b.rules.penalties_count_as_goals is False
 
     first = [c for m in b.rounds[0].matches for c in (m.club_a_uid, m.club_b_uid)]
@@ -286,6 +287,7 @@ def test_invalid_cup_sizes(n):
         lambda b: setattr(b.rounds[1].matches[0], "source_a", b.rounds[1].matches[0].source_b),
         lambda b: b.rounds[0].matches.pop(),
         lambda b: setattr(b.rules, "extra_time", True),
+        lambda b: setattr(b.rules, "neutral_venue", False),
     ],
 )
 def test_cup_validator_rejects_corrupted_brackets(corruption):

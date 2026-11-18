@@ -1,16 +1,18 @@
 import { useEffect, useState } from "react";
 import { useHealth } from "../hooks/useHealth";
+import { AuctionPage } from "../pages/AuctionPage";
 import { DataPage } from "../pages/DataPage";
 import { HomePage } from "../pages/HomePage";
 import { SessionPage } from "../pages/SessionPage";
 import { SessionProvider, useSession } from "./SessionContext";
 import { useTheme } from "./theme";
 
-type Page = "home" | "data" | "session";
+type Page = "home" | "data" | "session" | "auction";
 const PAGES: { id: Page; label: string }[] = [
   { id: "home", label: "Início" },
   { id: "data", label: "Dados" },
   { id: "session", label: "Competição" },
+  { id: "auction", label: "Leilão" },
 ];
 
 function pageFromHash(): Page {
@@ -78,8 +80,9 @@ function Shell() {
         )}
         {page === "data" && <DataPage importsBlocked={importsBlocked} onDataChanged={refresh} />}
         {page === "session" && <SessionPage onSessionChanged={refresh} />}
+        {page === "auction" && <AuctionPage go={(p) => go(p)} />}
       </main>
-      <footer className="footer muted small">SquadForce · Football Strategy Game · Entrega 2</footer>
+      <footer className="footer muted small">SquadForce · Football Strategy Game · Entrega 3</footer>
     </div>
   );
 }

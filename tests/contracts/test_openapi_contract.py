@@ -30,7 +30,18 @@ REQUIRED = [
     ("post", "/api/sessions/{session_id}/close"),
     ("get", "/api/competitions/options"),
     ("get", "/api/sessions/{session_id}/competition"),  # Entrega 2
+    ("post", "/api/sessions/{session_id}/auction/start"),  # Entrega 3
+    ("get", "/api/sessions/{session_id}/auction"),
+    ("post", "/api/sessions/{session_id}/auction/bids"),
+    ("get", "/api/sessions/{session_id}/auction/summary"),
 ]
+
+
+def test_auction_contracts_never_expose_hidden_fields(spec):
+    schemas = spec["components"]["schemas"]
+    for name in ("AuctionPlayerOut", "AuctionStateOut", "AuctionRoundOut", "AuctionClubOut", "AuctionSquadOut"):
+        props = set(schemas[name]["properties"])
+        assert not props & {"overall", "attributes", "market_value", "personality", "bids", "reputation"}, name
 
 
 @pytest.fixture(scope="module")

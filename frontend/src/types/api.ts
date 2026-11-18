@@ -29,6 +29,14 @@ export type CupBracket = S["CupBracket"];
 export type CupRound = S["CupRound"];
 export type CupMatch = S["CupMatch"];
 export type Division = "A" | "B";
+export type AuctionState = S["AuctionStateOut"];
+export type AuctionPlayer = S["AuctionPlayerOut"];
+export type AuctionRound = S["AuctionRoundOut"];
+export type AuctionBidAck = S["AuctionBidAck"];
+export type AuctionBidRequest = S["AuctionBidRequest"];
+export type AuctionSummary = S["AuctionSummaryOut"];
+export type AuctionContract = S["AuctionContractOut"];
+export type AuctionRoundResult = S["AuctionRoundResultOut"];
 
 export type ImportBase = "clubs" | "players";
 

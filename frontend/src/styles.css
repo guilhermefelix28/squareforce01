@@ -237,3 +237,50 @@ tbody tr:last-child td { border-bottom: 0; }
   .field--inline select { min-width: 0; }
   .bracket { grid-auto-columns: minmax(180px, 80%); }
 }
+
+/* ---------- leilão (Entrega 3) ---------- */
+.auction { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 1rem; align-items: start; }
+.auction__clocks { flex-direction: row; justify-content: space-between; align-items: flex-end; }
+.auction__clocks > div:first-child { flex: 1; display: flex; flex-direction: column; gap: 0.25rem; }
+.auction__global { text-align: right; display: flex; flex-direction: column; }
+.clock { font-size: 2.4rem; font-variant-numeric: tabular-nums; line-height: 1; }
+.clock--small { font-size: 1.3rem; }
+.clock--urgent { color: var(--danger); }
+.bar { height: 6px; border-radius: 999px; background: var(--surface-2); overflow: hidden; max-width: 420px; }
+.bar span { display: block; height: 100%; background: var(--accent); transition: width 0.2s linear; }
+.lot-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0.6rem; }
+.lot {
+  width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; gap: 0.3rem; text-align: center;
+  padding: 0.75rem 0.5rem; border-radius: var(--radius); border: 1px solid var(--border); background: var(--surface);
+  color: var(--text); font: inherit; cursor: pointer;
+}
+.lot:hover:not(:disabled) { border-color: var(--muted); }
+.lot.is-selected { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+.lot.is-mine { background: var(--accent-soft); }
+.lot:disabled { opacity: 0.6; cursor: not-allowed; }
+.lot__name { font-weight: 700; line-height: 1.2; }
+.lot__meta { font-size: 0.85rem; }
+.lot__min { font-weight: 700; font-variant-numeric: tabular-nums; }
+.photo { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; background: var(--surface-2); }
+.photo--fallback { display: grid; place-items: center; font-weight: 800; color: var(--accent); background: var(--accent-soft); }
+.bid-panel .quick { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.results { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.6rem; max-height: 360px; overflow: auto; }
+.results li { display: flex; flex-direction: column; gap: 0.15rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); font-size: 0.88rem; }
+.sale.is-user { color: var(--accent); }
+table.compact th, table.compact td { padding: 0.3rem 0.4rem; font-size: 0.85rem; }
+tr.is-user td { font-weight: 700; }
+.mini-squad { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.88rem; }
+.mini-squad li { display: flex; align-items: center; gap: 0.4rem; }
+.mini-squad li .muted { margin-left: auto; }
+.summary-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 0.75rem; align-items: start; }
+.squad summary { display: flex; flex-direction: column; gap: 0.2rem; list-style: none; }
+.squad.is-user { border-color: var(--accent); }
+@media (max-width: 1000px) {
+  .auction { grid-template-columns: 1fr; }
+  .lot-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) {
+  .lot-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .clock { font-size: 2rem; }
+  .tabs a { padding: 0.45rem 0.3rem; font-size: 0.9rem; }
+}

@@ -85,7 +85,7 @@ export const CUP_COMPETITION = {
   structure: {
     kind: "cup",
     participants: [322, 329, 102496, 316],
-    rules: { single_match: true, regulation_minutes: 90, extra_time: false, draw_decided_by: "penalties", penalties_count_as_goals: false },
+    rules: { single_match: true, neutral_venue: true, regulation_minutes: 90, extra_time: false, draw_decided_by: "penalties", penalties_count_as_goals: false },
     total_rounds: 2,
     total_matches: 3,
     champion_club_uid: null,

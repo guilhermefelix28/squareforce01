@@ -42,7 +42,14 @@ export async function setup(project: TestProject) {
   tmp = mkdtempSync(join(tmpdir(), "squadforce-e2e-"));
   proc = spawn(pythonPath(), ["-m", "services.gateway", "--port", String(port)], {
     cwd: ROOT,
-    env: { ...process.env, SQUADFORCE_DB_PATH: join(tmp, "e2e.db"), SQUADFORCE_GRAPHICS_DIR: join(ROOT, "Graphics") },
+    env: {
+      ...process.env,
+      SQUADFORCE_DB_PATH: join(tmp, "e2e.db"),
+      SQUADFORCE_GRAPHICS_DIR: join(ROOT, "Graphics"),
+      // MODELO FALSO, somente para o teste e2e exercitar o leilão (fórmulas reais pendentes)
+      SQUADFORCE_AUCTION_MODEL: "support.fake_auction_model:FakeAuctionModel",
+      PYTHONPATH: join(ROOT, "tests"),
+    },
     stdio: "pipe",
   });
   let log = "";

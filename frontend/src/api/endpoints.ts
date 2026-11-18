@@ -1,4 +1,8 @@
 import type {
+  AuctionBidAck,
+  AuctionBidRequest,
+  AuctionState,
+  AuctionSummary,
   ClubPage,
   CompetitionOut,
   CompetitionOptions,
@@ -39,6 +43,18 @@ export const getSession = (id: string) => apiRequest<Session>(`/api/sessions/${e
 
 export const getCompetition = (id: string) =>
   apiRequest<CompetitionOut>(`/api/sessions/${encodeURIComponent(id)}/competition`);
+
+const sid = (id: string) => `/api/sessions/${encodeURIComponent(id)}`;
+
+export const startAuction = (id: string, idempotencyKey = newIdempotencyKey()) =>
+  apiRequest<AuctionState>(`${sid(id)}/auction/start`, { method: "POST", json: {}, idempotencyKey });
+
+export const getAuction = (id: string) => apiRequest<AuctionState>(`${sid(id)}/auction`, { retries: 1 });
+
+export const placeBid = (id: string, body: AuctionBidRequest, idempotencyKey = newIdempotencyKey()) =>
+  apiRequest<AuctionBidAck>(`${sid(id)}/auction/bids`, { method: "POST", json: body, idempotencyKey, retries: 1 });
+
+export const getAuctionSummary = (id: string) => apiRequest<AuctionSummary>(`${sid(id)}/auction/summary`);
 
 export const closeSession = (id: string, expectedVersion?: number, idempotencyKey = newIdempotencyKey()) =>
   apiRequest<Session>(`/api/sessions/${encodeURIComponent(id)}/close`, {

@@ -1152,10 +1152,1012 @@
           }
         }
       }
+    },
+    "/api/sessions/{session_id}/auction/start": {
+      "post": {
+        "tags": [
+          "auction"
+        ],
+        "summary": "Start Auction",
+        "operationId": "start_auction_api_sessions__session_id__auction_start_post",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Obrigatório: identificador único do comando (8–128 caracteres).",
+              "title": "Idempotency-Key"
+            },
+            "description": "Obrigatório: identificador único do comando (8–128 caracteres)."
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuctionStateOut"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/sessions/{session_id}/auction": {
+      "get": {
+        "tags": [
+          "auction"
+        ],
+        "summary": "Get Auction",
+        "operationId": "get_auction_api_sessions__session_id__auction_get",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuctionStateOut"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/sessions/{session_id}/auction/bids": {
+      "post": {
+        "tags": [
+          "auction"
+        ],
+        "summary": "Place Bid",
+        "description": "Lance do usuário. A Idempotency-Key é também o identificador da operação no motor.",
+        "operationId": "place_bid_api_sessions__session_id__auction_bids_post",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Obrigatório: identificador único do comando (8–128 caracteres).",
+              "title": "Idempotency-Key"
+            },
+            "description": "Obrigatório: identificador único do comando (8–128 caracteres)."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuctionBidRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuctionBidAck"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/sessions/{session_id}/auction/summary": {
+      "get": {
+        "tags": [
+          "auction"
+        ],
+        "summary": "Auction Summary",
+        "operationId": "auction_summary_api_sessions__session_id__auction_summary_get",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuctionSummaryOut"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "AuctionBidAck": {
+        "properties": {
+          "round": {
+            "type": "integer",
+            "title": "Round"
+          },
+          "player_id": {
+            "type": "integer",
+            "title": "Player Id"
+          },
+          "amount": {
+            "type": "integer",
+            "title": "Amount"
+          },
+          "seq": {
+            "type": "integer",
+            "title": "Seq"
+          },
+          "replaced_player_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Replaced Player Id",
+            "description": "Alvo anterior, quando o lance trocou de atleta."
+          },
+          "replayed": {
+            "type": "boolean",
+            "title": "Replayed",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "round",
+          "player_id",
+          "amount",
+          "seq"
+        ],
+        "title": "AuctionBidAck"
+      },
+      "AuctionBidOut": {
+        "properties": {
+          "round": {
+            "type": "integer",
+            "title": "Round"
+          },
+          "player_id": {
+            "type": "integer",
+            "title": "Player Id"
+          },
+          "amount": {
+            "type": "integer",
+            "title": "Amount"
+          },
+          "seq": {
+            "type": "integer",
+            "title": "Seq",
+            "description": "Ordem de aceitação no servidor (desempate)."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "round",
+          "player_id",
+          "amount",
+          "seq"
+        ],
+        "title": "AuctionBidOut"
+      },
+      "AuctionBidRequest": {
+        "properties": {
+          "player_id": {
+            "type": "integer",
+            "title": "Player Id"
+          },
+          "amount": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Amount",
+            "description": "Valor em R$ (inteiro)."
+          },
+          "round_number": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Round Number",
+            "description": "Rodada visível ao usuário; recusado se já encerrada."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "player_id",
+          "amount"
+        ],
+        "title": "AuctionBidRequest"
+      },
+      "AuctionClubOut": {
+        "properties": {
+          "club_uid": {
+            "type": "integer",
+            "title": "Club Uid"
+          },
+          "is_user": {
+            "type": "boolean",
+            "title": "Is User"
+          },
+          "squad_count": {
+            "type": "integer",
+            "title": "Squad Count"
+          },
+          "budget": {
+            "type": "integer",
+            "title": "Budget"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "club_uid",
+          "is_user",
+          "squad_count",
+          "budget"
+        ],
+        "title": "AuctionClubOut",
+        "description": "Informação pública de cada clube (elenco e saldo são públicos; lances não)."
+      },
+      "AuctionContractOut": {
+        "properties": {
+          "player_id": {
+            "type": "integer",
+            "title": "Player Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "position": {
+            "$ref": "#/components/schemas/Position"
+          },
+          "age": {
+            "type": "integer",
+            "title": "Age"
+          },
+          "price": {
+            "type": "integer",
+            "title": "Price"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "auction",
+              "improvement",
+              "basic"
+            ],
+            "title": "Source"
+          },
+          "round": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Round"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "player_id",
+          "name",
+          "position",
+          "age",
+          "price",
+          "source"
+        ],
+        "title": "AuctionContractOut"
+      },
+      "AuctionPlayerOut": {
+        "properties": {
+          "unique_id": {
+            "type": "integer",
+            "title": "Unique Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "age": {
+            "type": "integer",
+            "title": "Age"
+          },
+          "club_short_name": {
+            "type": "string",
+            "title": "Club Short Name",
+            "description": "Clube de origem do atleta (base importada)."
+          },
+          "position": {
+            "$ref": "#/components/schemas/Position",
+            "description": "Posição principal."
+          },
+          "minimum_bid": {
+            "type": "integer",
+            "title": "Minimum Bid"
+          },
+          "has_photo": {
+            "type": "boolean",
+            "title": "Has Photo",
+            "description": "Há foto em /api/assets/players/{unique_id}.",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "unique_id",
+          "name",
+          "age",
+          "club_short_name",
+          "position",
+          "minimum_bid"
+        ],
+        "title": "AuctionPlayerOut"
+      },
+      "AuctionRoundOut": {
+        "properties": {
+          "number": {
+            "type": "integer",
+            "title": "Number"
+          },
+          "position": {
+            "$ref": "#/components/schemas/Position"
+          },
+          "players": {
+            "items": {
+              "$ref": "#/components/schemas/AuctionPlayerOut"
+            },
+            "type": "array",
+            "title": "Players"
+          },
+          "remaining_ms": {
+            "type": "integer",
+            "title": "Remaining Ms",
+            "description": "Tempo restante da rodada no relógio do servidor."
+          },
+          "duration_ms": {
+            "type": "integer",
+            "title": "Duration Ms"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "number",
+          "position",
+          "players",
+          "remaining_ms",
+          "duration_ms"
+        ],
+        "title": "AuctionRoundOut"
+      },
+      "AuctionRoundResultOut": {
+        "properties": {
+          "number": {
+            "type": "integer",
+            "title": "Number"
+          },
+          "position": {
+            "$ref": "#/components/schemas/Position"
+          },
+          "sales": {
+            "items": {
+              "$ref": "#/components/schemas/AuctionSaleOut"
+            },
+            "type": "array",
+            "title": "Sales"
+          },
+          "unsold_player_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Unsold Player Ids"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "number",
+          "position",
+          "sales",
+          "unsold_player_ids"
+        ],
+        "title": "AuctionRoundResultOut"
+      },
+      "AuctionSaleOut": {
+        "properties": {
+          "player_id": {
+            "type": "integer",
+            "title": "Player Id"
+          },
+          "player_name": {
+            "type": "string",
+            "title": "Player Name"
+          },
+          "club_uid": {
+            "type": "integer",
+            "title": "Club Uid"
+          },
+          "price": {
+            "type": "integer",
+            "title": "Price"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "player_id",
+          "player_name",
+          "club_uid",
+          "price"
+        ],
+        "title": "AuctionSaleOut"
+      },
+      "AuctionSquadOut": {
+        "properties": {
+          "club_uid": {
+            "type": "integer",
+            "title": "Club Uid"
+          },
+          "is_user": {
+            "type": "boolean",
+            "title": "Is User"
+          },
+          "budget": {
+            "type": "integer",
+            "title": "Budget"
+          },
+          "spent": {
+            "type": "integer",
+            "title": "Spent"
+          },
+          "auction_signings": {
+            "type": "integer",
+            "title": "Auction Signings"
+          },
+          "improvement_limit": {
+            "type": "integer",
+            "title": "Improvement Limit"
+          },
+          "contracts": {
+            "items": {
+              "$ref": "#/components/schemas/AuctionContractOut"
+            },
+            "type": "array",
+            "title": "Contracts"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "club_uid",
+          "is_user",
+          "budget",
+          "spent",
+          "auction_signings",
+          "improvement_limit",
+          "contracts"
+        ],
+        "title": "AuctionSquadOut"
+      },
+      "AuctionStateOut": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "phase": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "running",
+              "completed"
+            ],
+            "title": "Phase"
+          },
+          "global_remaining_ms": {
+            "type": "integer",
+            "title": "Global Remaining Ms"
+          },
+          "global_duration_ms": {
+            "type": "integer",
+            "title": "Global Duration Ms"
+          },
+          "round": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AuctionRoundOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "user_club_uid": {
+            "type": "integer",
+            "title": "User Club Uid"
+          },
+          "budget": {
+            "type": "integer",
+            "title": "Budget"
+          },
+          "max_bid": {
+            "type": "integer",
+            "title": "Max Bid",
+            "description": "Maior lance permitido agora (saldo − R$ 500 mil por vaga que restará)."
+          },
+          "open_slots": {
+            "type": "integer",
+            "title": "Open Slots"
+          },
+          "active_bid": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AuctionBidOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "squad": {
+            "items": {
+              "$ref": "#/components/schemas/AuctionContractOut"
+            },
+            "type": "array",
+            "title": "Squad"
+          },
+          "clubs": {
+            "items": {
+              "$ref": "#/components/schemas/AuctionClubOut"
+            },
+            "type": "array",
+            "title": "Clubs"
+          },
+          "recent_results": {
+            "items": {
+              "$ref": "#/components/schemas/AuctionRoundResultOut"
+            },
+            "type": "array",
+            "title": "Recent Results",
+            "description": "Últimas rodadas encerradas (mais recente primeiro)."
+          },
+          "rounds_completed": {
+            "type": "integer",
+            "title": "Rounds Completed"
+          },
+          "finish_reason": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "all_squads_complete",
+                  "time_up",
+                  "no_eligible_players"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finish Reason"
+          },
+          "bid_increments": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Bid Increments"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "session_id",
+          "phase",
+          "global_remaining_ms",
+          "global_duration_ms",
+          "user_club_uid",
+          "budget",
+          "max_bid",
+          "open_slots",
+          "squad",
+          "clubs",
+          "recent_results",
+          "rounds_completed",
+          "bid_increments"
+        ],
+        "title": "AuctionStateOut"
+      },
+      "AuctionSummaryOut": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "finish_reason": {
+            "type": "string",
+            "title": "Finish Reason"
+          },
+          "rounds_completed": {
+            "type": "integer",
+            "title": "Rounds Completed"
+          },
+          "squads": {
+            "items": {
+              "$ref": "#/components/schemas/AuctionSquadOut"
+            },
+            "type": "array",
+            "title": "Squads"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "session_id",
+          "finish_reason",
+          "rounds_completed",
+          "squads"
+        ],
+        "title": "AuctionSummaryOut"
+      },
       "Body_import_clubs_api_imports_clubs_post": {
         "properties": {
           "file": {
@@ -1622,6 +2624,12 @@
           "single_match": {
             "type": "boolean",
             "title": "Single Match",
+            "default": true
+          },
+          "neutral_venue": {
+            "type": "boolean",
+            "title": "Neutral Venue",
+            "description": "Mando neutro em todos os confrontos da Copa (decisão de 2026-11-18).",
             "default": true
           },
           "regulation_minutes": {

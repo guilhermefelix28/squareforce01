@@ -21,6 +21,7 @@ addopts = "-ra --strict-markers"
 markers = [
     "real_data: usa a planilha real Dados/jogadores.xlsx somente para leitura (pulado se ausente)",
     "e2e: inicia o servidor uvicorn real em processo separado",
+    "simulation: simulações completas, carga e concorrência (mais lentas)",
 ]
 filterwarnings = [
     "ignore:Using `httpx` with `starlette.testclient` is deprecated",

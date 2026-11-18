@@ -19,6 +19,7 @@ from typing import Callable
 
 from squadforce_shared.contracts import ClubOut, ClubPage, ImportReport, PlayerOut, PlayerPage
 from squadforce_shared.domain.competition import EligibleClub
+from squadforce_shared.domain.players import PlayerProfile
 from squadforce_shared.domain.positions import InvalidPositionError, Position, normalize_position
 from squadforce_shared.errors import AppError, ErrorCode
 
@@ -220,6 +221,35 @@ class DataService:
                 " ORDER BY c.club_uid"
             ).fetchall()
         return [EligibleClub(r[0], r[1]) for r in rows]
+
+    def load_player_profiles(self) -> list[PlayerProfile]:
+        """Todos os atletas com posições, familiaridades e atributos (uso interno do leilão; nunca exposto)."""
+        with connection(self.db_path) as conn:
+            base = conn.execute(
+                "SELECT p.unique_id, p.name, p.age, p.club_uid, c.short_name FROM players p"
+                " JOIN clubs c ON c.club_uid = p.club_uid ORDER BY p.unique_id"
+            ).fetchall()
+            pos: dict[int, list] = {}
+            for r in conn.execute("SELECT player_id, position, familiarity, is_natural, is_accomplished FROM player_positions"):
+                pos.setdefault(r[0], []).append(r)
+            attrs: dict[int, dict[str, int]] = {}
+            for r in conn.execute("SELECT player_id, attribute, value FROM player_attributes"):
+                attrs.setdefault(r[0], {})[r[1]] = r[2]
+        order = {p: i for i, p in enumerate(Position)}
+        out = []
+        for uid, name, age, club_uid, short in base:
+            rows = pos.get(uid, [])
+            naturals = tuple(sorted((Position(r[1]) for r in rows if r[3]), key=order.get))
+            if not naturals:
+                continue
+            out.append(PlayerProfile(
+                unique_id=uid, name=name, age=age, club_uid=club_uid, club_short_name=short,
+                natural_positions=naturals,
+                accomplished_positions=tuple(Position(r[1]) for r in rows if r[4]),
+                familiarity={Position(r[1]): r[2] for r in rows},
+                attributes=attrs.get(uid, {}),
+            ))
+        return out
 
     def catalog_ready(self) -> bool:
         with connection(self.db_path) as conn:

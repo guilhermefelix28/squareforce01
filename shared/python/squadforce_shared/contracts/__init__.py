@@ -214,6 +214,7 @@ class LeagueSchedule(_Model):
 
 class CupRules(_Model):
     single_match: bool = True
+    neutral_venue: bool = Field(True, description="Mando neutro em todos os confrontos da Copa (decisão de 2026-11-18).")
     regulation_minutes: int = 90
     extra_time: bool = False
     draw_decided_by: Literal["penalties"] = "penalties"
@@ -258,6 +259,118 @@ class CompetitionOut(_Model):
     format: CompetitionFormat
     user_club_uid: int
     structure: CompetitionStructure
+
+
+# ---------------------------------------------------------------- leilão (Entrega 3)
+# Regra de visibilidade (GDD §5): NUNCA expor overall, atributos, valor de mercado interno, perfis
+# dos bots nem ofertas de outros clubes. Somente dados públicos + o lance do próprio usuário.
+class AuctionPlayerOut(_Model):
+    unique_id: int
+    name: str
+    age: int
+    club_short_name: str = Field(description="Clube de origem do atleta (base importada).")
+    position: Position = Field(description="Posição principal.")
+    minimum_bid: int
+    has_photo: bool = Field(False, description="Há foto em /api/assets/players/{unique_id}.")
+
+
+class AuctionRoundOut(_Model):
+    number: int
+    position: Position
+    players: list[AuctionPlayerOut]
+    remaining_ms: int = Field(description="Tempo restante da rodada no relógio do servidor.")
+    duration_ms: int
+
+
+class AuctionBidOut(_Model):
+    round: int
+    player_id: int
+    amount: int
+    seq: int = Field(description="Ordem de aceitação no servidor (desempate).")
+
+
+class AuctionContractOut(_Model):
+    player_id: int
+    name: str
+    position: Position
+    age: int
+    price: int
+    source: Literal["auction", "improvement", "basic"]
+    round: int | None = None
+
+
+class AuctionSaleOut(_Model):
+    player_id: int
+    player_name: str
+    club_uid: int
+    price: int
+
+
+class AuctionRoundResultOut(_Model):
+    number: int
+    position: Position
+    sales: list[AuctionSaleOut]
+    unsold_player_ids: list[int]
+
+
+class AuctionClubOut(_Model):
+    """Informação pública de cada clube (elenco e saldo são públicos; lances não)."""
+
+    club_uid: int
+    is_user: bool
+    squad_count: int
+    budget: int
+
+
+class AuctionStateOut(_Model):
+    session_id: str
+    phase: Literal["pending", "running", "completed"]
+    global_remaining_ms: int
+    global_duration_ms: int
+    round: AuctionRoundOut | None = None
+    user_club_uid: int
+    budget: int
+    max_bid: int = Field(description="Maior lance permitido agora (saldo − R$ 500 mil por vaga que restará).")
+    open_slots: int
+    active_bid: AuctionBidOut | None = None
+    squad: list[AuctionContractOut]
+    clubs: list[AuctionClubOut]
+    recent_results: list[AuctionRoundResultOut] = Field(description="Últimas rodadas encerradas (mais recente primeiro).")
+    rounds_completed: int
+    finish_reason: Literal["all_squads_complete", "time_up", "no_eligible_players"] | None = None
+    bid_increments: list[int]
+
+
+class AuctionBidRequest(_Model):
+    player_id: int
+    amount: int = Field(gt=0, description="Valor em R$ (inteiro).")
+    round_number: int | None = Field(None, description="Rodada visível ao usuário; recusado se já encerrada.")
+
+
+class AuctionBidAck(_Model):
+    round: int
+    player_id: int
+    amount: int
+    seq: int
+    replaced_player_id: int | None = Field(None, description="Alvo anterior, quando o lance trocou de atleta.")
+    replayed: bool = False
+
+
+class AuctionSquadOut(_Model):
+    club_uid: int
+    is_user: bool
+    budget: int
+    spent: int
+    auction_signings: int
+    improvement_limit: int
+    contracts: list[AuctionContractOut]
+
+
+class AuctionSummaryOut(_Model):
+    session_id: str
+    finish_reason: str
+    rounds_completed: int
+    squads: list[AuctionSquadOut]
 
 
 # ---------------------------------------------------------------- websocket

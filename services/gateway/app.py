@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
-from contextlib import asynccontextmanager
+import time
+from contextlib import asynccontextmanager, suppress
+from typing import Callable
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -13,19 +16,30 @@ from squadforce_shared import __version__
 
 from .container import build_container
 from .errors import install_error_handlers
-from .routes import router, ws_router
+from .routes import auction_clock, router, ws_router
 from .settings import Settings
 
 
-def create_app(settings: Settings | None = None) -> FastAPI:
+_UNSET = object()
+
+
+def create_app(
+    settings: Settings | None = None, *, clock: Callable[[], float] = time.monotonic, auction_model: object = _UNSET
+) -> FastAPI:
     settings = settings or Settings()
-    container = build_container(settings)
+    kwargs = {} if auction_model is _UNSET else {"auction_model": auction_model}
+    container = build_container(settings, clock=clock, **kwargs)
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         version = container.data.initialize()
         logging.getLogger("squadforce").info("SQLite pronto em %s (schema v%s)", settings.db_path, version)
+        task = asyncio.create_task(auction_clock(container, settings.auction_tick_seconds)) if settings.auction_ticker else None
         yield
+        if task:
+            task.cancel()
+            with suppress(asyncio.CancelledError):
+                await task
 
     app = FastAPI(
         title="SquadForce API",

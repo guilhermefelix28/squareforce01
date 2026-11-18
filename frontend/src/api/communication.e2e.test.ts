@@ -9,8 +9,12 @@ import { ApiError, configureApi, newIdempotencyKey } from "./client";
 import {
   closeSession,
   createSession,
+  getAuction,
+  getAuctionSummary,
   getCompetition,
   getCompetitionOptions,
+  placeBid,
+  startAuction,
   getHealth,
   getSession,
   importBase,
@@ -45,7 +49,7 @@ describe("frontend <-> backend real", () => {
     const clubs = await importBase("clubs", xlsx());
     expect(clubs.rows_imported).toBe(40);
     const players = await importBase("players", xlsx());
-    expect(players.rows_imported).toBe(1585);
+    expect(players.rows_imported).toBe(1583);
     expect(players.warnings?.filter((w) => w.code === "GENERATED_ID")).toHaveLength(11);
     expect((await listClubs()).total).toBe(40);
     const goalkeepers = await listPlayers({ position: "GOL", limit: 5 });
@@ -89,5 +93,39 @@ describe("frontend <-> backend real", () => {
     await closedEvt;
     expect(messages.at(-1)).toMatchObject({ type: "session.closed", version: 2 });
     ws.close();
+  });
+
+  it.runIf(hasReal)("leilão com relógio real: lance, resultado da rodada via WebSocket e sigilo", async () => {
+    const s = await createSession({ format: "cup", num_clubs: 2, user_club_uid: 322, league_rounds: null, confirm_replace: true });
+    const ws = new WebSocket(sessionSocketUrl(s.id));
+    const types: string[] = [];
+    const roundClosed = new Promise<void>((ok) => {
+      ws.onmessage = (ev) => {
+        const m = JSON.parse(String(ev.data));
+        types.push(m.type);
+        if (m.type === "auction.round_closed") ok();
+      };
+    });
+    await new Promise<void>((ok) => (ws.onopen = () => ok()));
+
+    const st = await startAuction(s.id);
+    expect(st.phase).toBe("running");
+    expect(st.round!.players).toHaveLength(5);
+    const target = st.round!.players[0];
+    const ack = await placeBid(s.id, { player_id: target.unique_id, amount: target.minimum_bid, round_number: st.round!.number });
+    expect(ack.amount).toBe(target.minimum_bid);
+    const view = await getAuction(s.id);
+    expect(view.active_bid?.player_id).toBe(target.unique_id);
+    expect(JSON.stringify(view)).not.toMatch(/overall|market_value|personality|"bids"/);
+
+    await roundClosed; // relógio do servidor fecha a rodada sozinho (~10 s)
+    const after = await getAuction(s.id);
+    expect(after.rounds_completed).toBeGreaterThanOrEqual(1);
+    const sale = after.recent_results.at(-1)!.sales.find((x) => x.player_id === target.unique_id);
+    if (sale) expect(sale.price).toBeGreaterThanOrEqual(target.minimum_bid);
+    expect(types).toContain("auction.round_started");
+    await expect(getAuctionSummary(s.id)).rejects.toMatchObject({ code: "AUCTION_NOT_FINISHED" });
+    ws.close();
+    await closeSession(s.id);
   });
 });
