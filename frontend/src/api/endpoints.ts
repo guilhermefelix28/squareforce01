@@ -4,6 +4,10 @@ import type {
   AuctionState,
   AuctionSummary,
   ClubPage,
+  Proposal,
+  ProposalCreate,
+  TradingSquad,
+  TradingState,
   CompetitionOut,
   CompetitionOptions,
   Health,
@@ -55,6 +59,20 @@ export const placeBid = (id: string, body: AuctionBidRequest, idempotencyKey = n
   apiRequest<AuctionBidAck>(`${sid(id)}/auction/bids`, { method: "POST", json: body, idempotencyKey, retries: 1 });
 
 export const getAuctionSummary = (id: string) => apiRequest<AuctionSummary>(`${sid(id)}/auction/summary`);
+
+export const startTrading = (id: string, idempotencyKey = newIdempotencyKey()) =>
+  apiRequest<TradingState>(`${sid(id)}/trading/start`, { method: "POST", json: {}, idempotencyKey });
+
+export const getTrading = (id: string) => apiRequest<TradingState>(`${sid(id)}/trading`, { retries: 1 });
+
+export const getTradingSquads = (id: string, params: { search?: string; club_uid?: number; position?: string } = {}) =>
+  apiRequest<TradingSquad[]>(`${sid(id)}/trading/squads`, { query: params });
+
+export const createProposal = (id: string, body: ProposalCreate, idempotencyKey = newIdempotencyKey()) =>
+  apiRequest<Proposal>(`${sid(id)}/trading/proposals`, { method: "POST", json: body, idempotencyKey, retries: 1 });
+
+export const actOnProposal = (id: string, proposalId: string, action: "accept" | "reject" | "cancel", idempotencyKey = newIdempotencyKey()) =>
+  apiRequest<Proposal>(`${sid(id)}/trading/proposals/${encodeURIComponent(proposalId)}/${action}`, { method: "POST", json: {}, idempotencyKey, retries: 1 });
 
 export const closeSession = (id: string, expectedVersion?: number, idempotencyKey = newIdempotencyKey()) =>
   apiRequest<Session>(`/api/sessions/${encodeURIComponent(id)}/close`, {

@@ -37,7 +37,8 @@ interface `services/auction/model.py::AuctionModel` e aponte a variável de ambi
 | `position_weights(...)` | PE-05 | Pesos do sorteio da posição (necessidade coletiva, disponibilidade, histórico, aleatoriedade). | pesos ≥ 0, soma > 0 |
 | `pick_round_players(...)` | §5 | Escolha dos 5 com variedade de qualidade e limite de repetição de não vendidos. | 5 distintos, disponíveis, da posição |
 | `build_reserves(...)` | PE-04 | Reserva básica (suficiente para todas as vagas) e complementar (intermediários e destaques). | disjuntas, só não vendidos, básica ≥ vagas |
-| `bot_profile(personalidade)` | PB-01 | Parâmetros de Agressivo, Conservador, Equilibrado e Oportunista (ver `BotProfile`). | tempos dentro da rodada de 10 s |
+| `bot_profile(personalidade)` | PB-01 | Parâmetros de Agressivo, Conservador, Equilibrado e Oportunista no leilão (ver `BotProfile`). | tempos dentro da rodada de 10 s |
+| `trade_profile(personalidade)` | PB-02 | Parâmetros de negociação das personalidades (ver `TradeProfile` e [mercado](mercado.md)). | resposta < 10 s; intervalo > 0 |
 
 Os testes usam `tests/support/fake_auction_model.py`, um modelo **falso e arbitrário**, nunca usado em produção.
 

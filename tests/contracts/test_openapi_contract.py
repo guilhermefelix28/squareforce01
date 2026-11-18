@@ -34,12 +34,18 @@ REQUIRED = [
     ("get", "/api/sessions/{session_id}/auction"),
     ("post", "/api/sessions/{session_id}/auction/bids"),
     ("get", "/api/sessions/{session_id}/auction/summary"),
+    ("post", "/api/sessions/{session_id}/trading/start"),  # Entrega 4
+    ("get", "/api/sessions/{session_id}/trading"),
+    ("get", "/api/sessions/{session_id}/trading/squads"),
+    ("post", "/api/sessions/{session_id}/trading/proposals"),
+    ("post", "/api/sessions/{session_id}/trading/proposals/{proposal_id}/{action}"),
 ]
 
 
 def test_auction_contracts_never_expose_hidden_fields(spec):
     schemas = spec["components"]["schemas"]
-    for name in ("AuctionPlayerOut", "AuctionStateOut", "AuctionRoundOut", "AuctionClubOut", "AuctionSquadOut"):
+    for name in ("AuctionPlayerOut", "AuctionStateOut", "AuctionRoundOut", "AuctionClubOut", "AuctionSquadOut",
+                 "TradingPlayerOut", "TradingClubOut", "TradingSquadOut", "ProposalOut", "TradingStateOut", "TradeRecordOut"):
         props = set(schemas[name]["properties"])
         assert not props & {"overall", "attributes", "market_value", "personality", "bids", "reputation"}, name
 

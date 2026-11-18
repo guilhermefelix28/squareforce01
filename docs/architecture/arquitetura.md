@@ -1,4 +1,4 @@
-# Arquitetura — SquadForce (Entregas 1 a 3)
+# Arquitetura — SquadForce (Entregas 1 a 4)
 
 ## Visão geral
 
@@ -12,7 +12,7 @@
         ├── services/data         ÚNICO acesso ao SQLite: migrações, importação Excel, catálogo
         ├── services/competition  opções de formato; planner: seleção, calendário, chaveamento
         ├── services/auction      leilão: motor, regras, complementação (modelo de fórmulas pendente)
-        ├── services/trading      planejado
+        ├── services/trading      mercado: propostas, decisões únicas, trocas atômicas
         ├── services/bot_ai       avaliação 80/20 e decisões de lance dos bots
         └── services/match_engine planejado
 ```
@@ -34,6 +34,7 @@
 | ADR-12 | **Fórmulas como ponto de extensão (`AuctionModel`)**: o motor implementa só as regras escritas no GDD; overall, valores, reservas, pesos, formações e perfis vêm de um modelo carregado por `SQUADFORCE_AUCTION_MODEL`. Sem modelo, o leilão é recusado. Toda saída do modelo é validada contra os limites do GDD. | Proibição de inventar fórmulas econômicas (decisão de 2026-11-18). |
 | ADR-13 | **Motor do leilão determinístico e thread-safe**: estado sob uma `RLock`; o relógio é injetado; rodadas contíguas calculadas a partir do fim da anterior; ações dos bots agendadas em tempo de servidor. Uma tarefa asyncio no gateway avança os leilões a cada 100 ms e publica eventos sem dados sigilosos. | Relógio autoritativo, concorrência protegida e testes reprodutíveis (inclusive com saltos de tempo). |
 | ADR-14 | **`PlayerProfile` no domínio compartilhado**: o serviço de dados carrega atributos e familiaridades para uso interno; nenhum contrato público os expõe. | Mantém o leilão sem acesso ao SQLite e preserva a ocultação de dados. |
+| ADR-15 | **Mercado com decisão única e cópia-e-confirmação**: uma `RLock` por mercado; cada proposta tem exatamente uma decisão final; a troca monta e valida o novo estado (18, sem duplicação, saldo ≥ 0) antes de aplicá-lo; idempotência no gateway e no motor (inclusive para erros definitivos). Linha do tempo (expirações, bots, fechamento) processada em ordem de tempo do servidor. | Aceite/cancelamento/expiração concorrentes e comandos duplicados nunca produzem duas trocas nem estado parcial. |
 | ADR-11 | **Divisões como dados de referência** (`club_divisions`, migração 0002), sem FK para `clubs`. | Reimportar clubes não apaga as divisões; clubes sem divisão ficam inelegíveis. |
 
 ## Limites de responsabilidade

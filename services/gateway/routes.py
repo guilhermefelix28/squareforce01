@@ -5,12 +5,13 @@ from __future__ import annotations
 import asyncio
 import logging
 from datetime import datetime, timezone
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, Depends, File, Header, Query, Request, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse, JSONResponse
 
 from services.auction.engine import AuctionError
+from services.trading.engine import TradingError
 from services.competition.options import competition_options
 from squadforce_shared import __version__
 from squadforce_shared.contracts import (
@@ -18,6 +19,10 @@ from squadforce_shared.contracts import (
     AuctionBidRequest,
     AuctionStateOut,
     AuctionSummaryOut,
+    ProposalCreate,
+    ProposalOut,
+    TradingSquadOut,
+    TradingStateOut,
     ClubPage,
     CompetitionConfig,
     CompetitionOptions,
@@ -70,7 +75,7 @@ def health(c: C) -> HealthResponse:
             "data": "ready",
             "competition": "ready",
             "auction": "ready" if c.auction_model is not None else "planned",
-            "trading": "planned",
+            "trading": "ready" if c.auction_model is not None else "planned",
             "bot_ai": "planned",
             "match_engine": "planned",
         },
@@ -139,6 +144,7 @@ async def create_session(c: C, request: Request, body: SessionCreateRequest, ide
         state = c.sessions.create(CompetitionConfig(**cfg), confirm_replace=body.confirm_replace)
         if previous is not None and previous.id != state.id:
             c.auctions.discard(previous.id)
+            c.trading.discard(previous.id)
         return 201, state.to_out().model_dump(mode="json")
 
     status, out, replayed = c.idempotency.execute("sessions:create", key, fingerprint(raw), run)
@@ -174,7 +180,8 @@ async def close_session(
 
     def run() -> tuple[int, dict[str, Any]]:
         out = c.sessions.close(session_id, expected).to_out().model_dump(mode="json")
-        c.auctions.discard(session_id)  # estado do leilão some com a sessão (sem persistência)
+        c.auctions.discard(session_id)  # estado do leilão e do mercado some com a sessão (sem persistência)
+        c.trading.discard(session_id)
         return 200, out
 
     status, out, replayed = c.idempotency.execute(f"sessions:close:{session_id}", key, fingerprint(raw), run)
@@ -346,9 +353,18 @@ def auction_summary(c: C, session_id: str) -> AuctionSummaryOut:
 
 
 async def auction_clock(container: Container, interval: float) -> None:
-    """Relógio autoritativo: avança os leilões em andamento e publica eventos (sem dados sigilosos)."""
+    """Relógio autoritativo: avança leilões e mercados em andamento e publica eventos (sem dados sigilosos)."""
     while True:
         await asyncio.sleep(interval)
+        for sid, market in container.trading.running():
+            try:
+                events = market.tick()
+                _sync_trading_phase(container, sid, market)
+            except Exception:
+                logging.getLogger("squadforce.trading").exception("falha no relógio do mercado %s", sid)
+                continue
+            for ev in events:
+                await container.hub.broadcast(sid, WsEnvelope(type=ev["type"], session_id=sid, data=ev))
         for sid, engine in container.auctions.running():
             try:
                 events = engine.tick()
@@ -358,3 +374,123 @@ async def auction_clock(container: Container, interval: float) -> None:
                 continue
             for ev in events:
                 await container.hub.broadcast(sid, WsEnvelope(type=ev["type"], session_id=sid, data=ev))
+
+
+# ------------------------------------------------------------------ mercado de negociações (Entrega 4)
+def _trading_error(exc: TradingError) -> AppError:
+    return AppError(exc.status, exc.code, exc.message, retryable=exc.retryable, details=exc.details)
+
+
+def _market(c: Container, session_id: str):
+    c.sessions.get(session_id)
+    market = c.trading.get(session_id)
+    if market is None:
+        raise AppError(404, ErrorCode.MARKET_NOT_FOUND, "O mercado de negociações desta sessão ainda não foi iniciado.")
+    return market
+
+
+def _sync_trading_phase(c: Container, session_id: str, market) -> None:
+    """Mercado encerrado => sessão avança para 'competition' (preparação das partidas, entrega futura)."""
+    if market.phase == "finished":
+        state = c.sessions.active()
+        if state is not None and state.id == session_id and state.phase == "trading":
+            c.sessions.transition(session_id, "trading", "competition")
+
+
+@router.post("/sessions/{session_id}/trading/start", response_model=TradingStateOut, status_code=201, responses=ERR, tags=["trading"])
+async def start_trading(c: C, request: Request, session_id: str, idempotency_key: IdemKey = None):
+    """Inicia o mercado (somente por ação do usuário). Exige leilão e complementação concluídos."""
+    key = validate_key(idempotency_key)
+    raw = await request.body()
+
+    def run() -> tuple[int, dict[str, Any]]:
+        state = c.sessions.get(session_id)
+        auction = c.auctions.get(session_id)
+        if auction is not None:
+            c.auctions.state(session_id, auction)  # avança o relógio do leilão
+            _sync_phase(c, session_id, auction)
+            state = c.sessions.get(session_id)
+        if state.status != "active" or state.phase != "squad_completion" or auction is None:
+            raise AppError(409, ErrorCode.INVALID_PHASE,
+                           f"O mercado só abre após o leilão e a complementação (fase atual: {state.phase}).")
+        c.sessions.transition(session_id, "squad_completion", "trading")
+        try:
+            market = c.trading.create(session_id, auction, seed=(state.seed or 0) + 2)
+        except (ValueError, TradingError) as exc:
+            c.sessions.transition(session_id, "trading", "squad_completion")
+            c.trading.discard(session_id)
+            raise AppError(500, ErrorCode.AUCTION_REJECTED, f"Não foi possível abrir o mercado: {exc}") from exc
+        return 201, c.trading.state(session_id, market).model_dump(mode="json")
+
+    status, out, replayed = c.idempotency.execute(f"trading:start:{session_id}", key, fingerprint(raw), run)
+    if not replayed:
+        await c.hub.broadcast(session_id, WsEnvelope(type="trading.started", session_id=session_id))
+    return _respond(status, out, replayed)
+
+
+@router.get("/sessions/{session_id}/trading", response_model=TradingStateOut, responses=ERR, tags=["trading"])
+def get_trading(c: C, session_id: str) -> TradingStateOut:
+    market = _market(c, session_id)
+    out = c.trading.state(session_id, market)
+    _sync_trading_phase(c, session_id, market)
+    return out
+
+
+@router.get("/sessions/{session_id}/trading/squads", response_model=list[TradingSquadOut], responses=ERR, tags=["trading"])
+def trading_squads(
+    c: C,
+    session_id: str,
+    search: Annotated[str | None, Query(max_length=80)] = None,
+    club_uid: int | None = None,
+    position: Annotated[str | None, Query(description="GK... ou GOL...")] = None,
+) -> list[TradingSquadOut]:
+    market = _market(c, session_id)
+    try:
+        return c.trading.squads(market, search, club_uid, position)
+    except ValueError as exc:
+        raise AppError(422, ErrorCode.VALIDATION_ERROR, str(exc), details={"field": "position"}) from exc
+
+
+def _trading_command(c: Container, session_id: str, key: str, raw: bytes, scope: str, action) -> JSONResponse:
+    market = _market(c, session_id)
+
+    def run() -> tuple[int, dict[str, Any]]:
+        try:
+            proposal = action(market)
+        except TradingError as exc:
+            raise _trading_error(exc) from exc
+        with market.lock:
+            out = c.trading.proposal_out(market, proposal, c.trading.clock())
+        _sync_trading_phase(c, session_id, market)
+        return 200, out.model_dump(mode="json")
+
+    status, out, replayed = c.idempotency.execute(f"trading:{scope}:{session_id}", key, fingerprint(scope, raw), run)
+    return _respond(status, out, replayed)
+
+
+@router.post("/sessions/{session_id}/trading/proposals", response_model=ProposalOut, responses=ERR, tags=["trading"])
+async def create_proposal(c: C, request: Request, session_id: str, body: ProposalCreate, idempotency_key: IdemKey = None):
+    key = validate_key(idempotency_key)
+    raw = await request.body()
+    return _trading_command(
+        c, session_id, key, raw, "propose",
+        lambda m: m.propose(m.user_club_uid, body.recipient_club_uid, body.offered_player_id,
+                            body.requested_player_id, body.money, key),
+    )
+
+
+@router.post("/sessions/{session_id}/trading/proposals/{proposal_id}/{action}", response_model=ProposalOut, responses=ERR, tags=["trading"])
+async def act_on_proposal(
+    c: C, request: Request, session_id: str, proposal_id: str, action: Literal["accept", "reject", "cancel"],
+    idempotency_key: IdemKey = None,
+):
+    """accept/reject: destinatário (usuário). cancel: proponente (usuário). Uma única decisão vale."""
+    key = validate_key(idempotency_key)
+    raw = await request.body()
+
+    def act(m):
+        if action == "cancel":
+            return m.cancel(m.user_club_uid, proposal_id, key)
+        return m.respond(m.user_club_uid, proposal_id, action == "accept", key)
+
+    return _trading_command(c, session_id, key, raw + proposal_id.encode() + action.encode(), "act", act)

@@ -373,6 +373,77 @@ class AuctionSummaryOut(_Model):
     squads: list[AuctionSquadOut]
 
 
+# ---------------------------------------------------------------- mercado de negociações (Entrega 4)
+# Visibilidade: elencos, saldos e trocas concluídas são públicos; propostas só aparecem para as duas
+# partes envolvidas. Overall, atributos, valores internos e personalidades nunca são expostos.
+ProposalStatus = Literal["pending", "accepted", "rejected", "cancelled", "expired", "invalidated"]
+
+
+class TradingPlayerOut(_Model):
+    unique_id: int
+    name: str
+    age: int
+    position: Position
+    club_uid: int
+
+
+class TradingClubOut(_Model):
+    club_uid: int
+    is_user: bool
+    budget: int
+    completed_trades: int
+
+
+class TradingSquadOut(TradingClubOut):
+    players: list[TradingPlayerOut]
+
+
+class ProposalOut(_Model):
+    id: str
+    direction: Literal["outgoing", "incoming"]
+    proponent_club_uid: int
+    recipient_club_uid: int
+    offered: TradingPlayerOut = Field(description="Jogador que o proponente entrega.")
+    requested: TradingPlayerOut = Field(description="Jogador que o proponente recebe.")
+    money: int = Field(description="Dinheiro adicional pago pelo proponente (>= 0).")
+    status: ProposalStatus
+    reason: str | None = None
+    remaining_ms: int = Field(description="Tempo restante (0 se decidida).")
+
+
+class TradeRecordOut(_Model):
+    proposal_id: str
+    proponent_club_uid: int
+    recipient_club_uid: int
+    offered: TradingPlayerOut
+    requested: TradingPlayerOut
+    money: int
+    elapsed_ms: int = Field(description="Instante da conclusão desde o início do mercado.")
+
+
+class TradingStateOut(_Model):
+    session_id: str
+    phase: Literal["running", "finished"]
+    remaining_ms: int
+    duration_ms: int
+    user_club_uid: int
+    budget: int
+    completed_trades: int
+    max_trades: int
+    outgoing: ProposalOut | None = Field(None, description="Proposta pendente do usuário (no máximo uma).")
+    incoming: list[ProposalOut] = Field(description="Propostas recebidas pendentes, com contagem regressiva.")
+    recent_decisions: list[ProposalOut] = Field(description="Últimas propostas do usuário já decididas (enviadas ou recebidas).")
+    history: list[TradeRecordOut] = Field(description="Todas as trocas concluídas (públicas), mais recentes primeiro.")
+    clubs: list[TradingClubOut]
+
+
+class ProposalCreate(_Model):
+    recipient_club_uid: int
+    offered_player_id: int
+    requested_player_id: int
+    money: int = Field(0, ge=0, description="Dinheiro adicional opcional pago pelo proponente.")
+
+
 # ---------------------------------------------------------------- websocket
 class WsEnvelope(_Model):
     """Envelope de mensagens WebSocket. Tipos na Entrega 1: session.snapshot, session.closed, pong, error."""

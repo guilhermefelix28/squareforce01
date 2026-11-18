@@ -107,3 +107,17 @@ Detalhes, erros e eventos em [leilão](../architecture/leilao.md). Resumo:
 Fases da sessão: `setup` → `auction` (início do leilão) → `squad_completion` (leilão + complementação concluídos).
 Nenhum contrato do leilão expõe overall, atributos, valor de mercado, personalidade, reputação ou lances de
 outros clubes (teste `test_auction_contracts_never_expose_hidden_fields`).
+
+## Mercado de negociações (Entrega 4)
+
+Detalhes, regras de concorrência, IA e eventos em [mercado](../architecture/mercado.md). Resumo:
+
+| Método | Rota | Resposta | Erros principais |
+|---|---|---|---|
+| POST | `/api/sessions/{id}/trading/start` | `TradingStateOut` (201) | 409 `INVALID_PHASE` |
+| GET | `/api/sessions/{id}/trading` | `TradingStateOut` | 404 `MARKET_NOT_FOUND` |
+| GET | `/api/sessions/{id}/trading/squads` | `TradingSquadOut[]` | 422 posição inválida |
+| POST | `/api/sessions/{id}/trading/proposals` | `ProposalOut` | 409 `PENDING_PROPOSAL_EXISTS` / `MARKET_NOT_RUNNING`, 422 `TRADE_LIMIT_REACHED` / `INSUFFICIENT_FUNDS` / `PLAYER_NOT_OWNED` / `SAME_CLUB` |
+| POST | `/api/sessions/{id}/trading/proposals/{pid}/{accept\|reject\|cancel}` | `ProposalOut` | 403 `NOT_RECIPIENT` / `NOT_PROPONENT`, 409 `PROPOSAL_NOT_PENDING` / `PROPOSAL_INVALIDATED`, 500 `TRADE_FAILED` (repetível) |
+
+Fases da sessão: `squad_completion` → `trading` (clique do usuário) → `competition` (fim dos 3 minutos).

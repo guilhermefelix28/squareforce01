@@ -58,6 +58,10 @@ sequência, orçamento e reserva por vaga, fechamento de prazos, reconexão, ide
 relógio, simulações completas com Liga de 20 e Copa de 32 na base real (todo clube com 18). Marcador
 `simulation` para os testes mais lentos (`pytest -m "not simulation"` para rodadas rápidas).
 
+**Entrega 4:** proposta válida/inválida, saldo insuficiente, limite de três, propostas simultâneas, cancelamento,
+expiração, encerramento, falha na confirmação, bot ↔ bot, dupla aceitação, reconexão e estresse concorrente com
+conservação do dinheiro total.
+
 ## Referências
 - [Matriz de testes da Entrega 1](../../../docs/architecture/matriz-de-testes.md)
 - [Especificação técnica §8–9](../../../docs/architecture/especificacao-tecnica-v5.2.md)

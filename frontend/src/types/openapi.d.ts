@@ -282,6 +282,97 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/sessions/{session_id}/trading/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start Trading
+         * @description Inicia o mercado (somente por ação do usuário). Exige leilão e complementação concluídos.
+         */
+        post: operations["start_trading_api_sessions__session_id__trading_start_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sessions/{session_id}/trading": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Trading */
+        get: operations["get_trading_api_sessions__session_id__trading_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sessions/{session_id}/trading/squads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Trading Squads */
+        get: operations["trading_squads_api_sessions__session_id__trading_squads_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sessions/{session_id}/trading/proposals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Proposal */
+        post: operations["create_proposal_api_sessions__session_id__trading_proposals_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sessions/{session_id}/trading/proposals/{proposal_id}/{action}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Act On Proposal
+         * @description accept/reject: destinatário (usuário). cancel: proponente (usuário). Uma única decisão vale.
+         */
+        post: operations["act_on_proposal_api_sessions__session_id__trading_proposals__proposal_id___action__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -969,6 +1060,56 @@ export interface components {
          * @enum {string}
          */
         Position: "GK" | "DR" | "DL" | "DC" | "DM" | "MC" | "STC";
+        /** ProposalCreate */
+        ProposalCreate: {
+            /** Recipient Club Uid */
+            recipient_club_uid: number;
+            /** Offered Player Id */
+            offered_player_id: number;
+            /** Requested Player Id */
+            requested_player_id: number;
+            /**
+             * Money
+             * @description Dinheiro adicional opcional pago pelo proponente.
+             * @default 0
+             */
+            money: number;
+        };
+        /** ProposalOut */
+        ProposalOut: {
+            /** Id */
+            id: string;
+            /**
+             * Direction
+             * @enum {string}
+             */
+            direction: "outgoing" | "incoming";
+            /** Proponent Club Uid */
+            proponent_club_uid: number;
+            /** Recipient Club Uid */
+            recipient_club_uid: number;
+            /** @description Jogador que o proponente entrega. */
+            offered: components["schemas"]["TradingPlayerOut"];
+            /** @description Jogador que o proponente recebe. */
+            requested: components["schemas"]["TradingPlayerOut"];
+            /**
+             * Money
+             * @description Dinheiro adicional pago pelo proponente (>= 0).
+             */
+            money: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "accepted" | "rejected" | "cancelled" | "expired" | "invalidated";
+            /** Reason */
+            reason?: string | null;
+            /**
+             * Remaining Ms
+             * @description Tempo restante (0 se decidida).
+             */
+            remaining_ms: number;
+        };
         /** SessionCloseRequest */
         SessionCloseRequest: {
             /**
@@ -1036,6 +1177,101 @@ export interface components {
              * @description club_uid dos participantes (inclui o clube do usuário), na ordem de seleção/sorteio.
              */
             participants?: number[] | null;
+        };
+        /** TradeRecordOut */
+        TradeRecordOut: {
+            /** Proposal Id */
+            proposal_id: string;
+            /** Proponent Club Uid */
+            proponent_club_uid: number;
+            /** Recipient Club Uid */
+            recipient_club_uid: number;
+            offered: components["schemas"]["TradingPlayerOut"];
+            requested: components["schemas"]["TradingPlayerOut"];
+            /** Money */
+            money: number;
+            /**
+             * Elapsed Ms
+             * @description Instante da conclusão desde o início do mercado.
+             */
+            elapsed_ms: number;
+        };
+        /** TradingClubOut */
+        TradingClubOut: {
+            /** Club Uid */
+            club_uid: number;
+            /** Is User */
+            is_user: boolean;
+            /** Budget */
+            budget: number;
+            /** Completed Trades */
+            completed_trades: number;
+        };
+        /** TradingPlayerOut */
+        TradingPlayerOut: {
+            /** Unique Id */
+            unique_id: number;
+            /** Name */
+            name: string;
+            /** Age */
+            age: number;
+            position: components["schemas"]["Position"];
+            /** Club Uid */
+            club_uid: number;
+        };
+        /** TradingSquadOut */
+        TradingSquadOut: {
+            /** Club Uid */
+            club_uid: number;
+            /** Is User */
+            is_user: boolean;
+            /** Budget */
+            budget: number;
+            /** Completed Trades */
+            completed_trades: number;
+            /** Players */
+            players: components["schemas"]["TradingPlayerOut"][];
+        };
+        /** TradingStateOut */
+        TradingStateOut: {
+            /** Session Id */
+            session_id: string;
+            /**
+             * Phase
+             * @enum {string}
+             */
+            phase: "running" | "finished";
+            /** Remaining Ms */
+            remaining_ms: number;
+            /** Duration Ms */
+            duration_ms: number;
+            /** User Club Uid */
+            user_club_uid: number;
+            /** Budget */
+            budget: number;
+            /** Completed Trades */
+            completed_trades: number;
+            /** Max Trades */
+            max_trades: number;
+            /** @description Proposta pendente do usuário (no máximo uma). */
+            outgoing?: components["schemas"]["ProposalOut"] | null;
+            /**
+             * Incoming
+             * @description Propostas recebidas pendentes, com contagem regressiva.
+             */
+            incoming: components["schemas"]["ProposalOut"][];
+            /**
+             * Recent Decisions
+             * @description Últimas propostas do usuário já decididas (enviadas ou recebidas).
+             */
+            recent_decisions: components["schemas"]["ProposalOut"][];
+            /**
+             * History
+             * @description Todas as trocas concluídas (públicas), mais recentes primeiro.
+             */
+            history: components["schemas"]["TradeRecordOut"][];
+            /** Clubs */
+            clubs: components["schemas"]["TradingClubOut"][];
         };
         /** ValidationError */
         ValidationError: {
@@ -2171,6 +2407,451 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AuctionSummaryOut"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Request Entity Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unsupported Media Type */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    start_trading_api_sessions__session_id__trading_start_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Obrigatório: identificador único do comando (8–128 caracteres). */
+                "Idempotency-Key"?: string | null;
+            };
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TradingStateOut"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Request Entity Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unsupported Media Type */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_trading_api_sessions__session_id__trading_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TradingStateOut"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Request Entity Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unsupported Media Type */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    trading_squads_api_sessions__session_id__trading_squads_get: {
+        parameters: {
+            query?: {
+                search?: string | null;
+                club_uid?: number | null;
+                /** @description GK... ou GOL... */
+                position?: string | null;
+            };
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TradingSquadOut"][];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Request Entity Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unsupported Media Type */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    create_proposal_api_sessions__session_id__trading_proposals_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Obrigatório: identificador único do comando (8–128 caracteres). */
+                "Idempotency-Key"?: string | null;
+            };
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProposalCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProposalOut"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Request Entity Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unsupported Media Type */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    act_on_proposal_api_sessions__session_id__trading_proposals__proposal_id___action__post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Obrigatório: identificador único do comando (8–128 caracteres). */
+                "Idempotency-Key"?: string | null;
+            };
+            path: {
+                session_id: string;
+                proposal_id: string;
+                action: "accept" | "reject" | "cancel";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProposalOut"];
                 };
             };
             /** @description Bad Request */

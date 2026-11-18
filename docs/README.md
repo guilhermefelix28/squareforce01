@@ -14,6 +14,7 @@
 - [Arquitetura e ADRs](architecture/arquitetura.md)
 - [Importação Excel → SQLite](architecture/importacao-excel.md)
 - [Leilão e fórmulas pendentes](architecture/leilao.md)
+- [Mercado de negociações](architecture/mercado.md)
 - [Matriz de testes](architecture/matriz-de-testes.md)
 
 ## API

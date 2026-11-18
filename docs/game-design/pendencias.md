@@ -54,6 +54,17 @@ Legenda: **P** = regra pendente · **D** = decisão técnica provisória (confir
 | PE-09 | D | Percentil 85 calculado pelo método do posto mais próximo (*nearest-rank*) sobre o overall calibrado de toda a base. |
 | PE-10 | D | Ao fim do leilão sem rodadas possíveis (nenhuma posição com 5 elegíveis), encerra com `no_eligible_players` e segue para a complementação. |
 
+## Mercado de negociações (Entrega 4)
+
+| ID | Tipo | Tema |
+|---|---|---|
+| PB-02 | P | **Parâmetros de negociação das personalidades** (`TradeProfile`): perda esportiva tolerada, R$ exigidos por ponto de qualidade, tolerância de valor, ganho mínimo para propor, fração do saldo oferecível, intervalos de proposta e de resposta. |
+| TR-01 | D | "Uma proposta ativa por clube" = **uma pendente como proponente**; um clube pode **receber** várias (o GDD fala em "propostas recebidas" no plural). |
+| TR-02 | D | Propostas entre bots não aparecem para o usuário; somente as trocas **concluídas** são públicas (histórico). |
+| TR-03 | D | Pendentes que ficam impossíveis após outra troca (jogador já trocado ou limite de 3) são **invalidadas** na hora. |
+| TR-04 | D | Ao fim dos 3 minutos, a sessão passa para a fase `competition`. Não há encerramento antecipado pelo usuário: o GDD diz "sem pausa" e não prevê esse encerramento. |
+| TR-05 | D | Jogador trocado mantém o preço de contratação original (`source = "trade"`) no elenco. |
+
 ## Partidas e bots
 
 | ID | Tipo | Tema |

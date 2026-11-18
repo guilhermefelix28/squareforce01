@@ -10,7 +10,7 @@ from __future__ import annotations
 import random
 from typing import Mapping, Sequence
 
-from services.auction.model import BotProfile, Formation, PlayerProfile, Reserves
+from services.auction.model import BotProfile, Formation, PlayerProfile, Reserves, TradeProfile
 from squadforce_shared.domain.positions import Position
 
 P = Position
@@ -32,7 +32,13 @@ def _round_100k(v: float) -> int:
 class FakeAuctionModel:
     version = "fake-test-only"
 
-    def __init__(self, formations: Sequence[Formation] | None = None, profiles: Mapping[str, BotProfile] | None = None):
+    def __init__(
+        self,
+        formations: Sequence[Formation] | None = None,
+        profiles: Mapping[str, BotProfile] | None = None,
+        trade_profiles: Mapping[str, TradeProfile] | None = None,
+    ):
+        self._trade_profiles = dict(trade_profiles or FAKE_TRADE_PROFILES)
         self._formations = list(formations or [
             Formation("4-3-3", (P.GK, P.DR, P.DL, P.DC, P.DC, P.DM, P.MC, P.MC, P.STC, P.STC, P.STC)),
         ])
@@ -85,10 +91,20 @@ class FakeAuctionModel:
     def bot_profile(self, personality: str) -> BotProfile:
         return self._profiles[personality]
 
+    def trade_profile(self, personality: str) -> TradeProfile:
+        return self._trade_profiles[personality]
+
 
 FAKE_PROFILES = {
     "aggressive": BotProfile(1.6, 0.7, 0.0, 0.1, 1.8, 0.5, (0.5, 3.0), 2.0),
     "conservative": BotProfile(0.9, 0.2, 0.5, 0.6, 1.0, 0.2, (1.0, 5.0), 1.5),
     "balanced": BotProfile(1.2, 0.4, 0.2, 0.3, 1.3, 0.35, (0.5, 4.0), 2.0),
     "opportunist": BotProfile(1.0, 0.1, 0.1, 0.9, 1.2, 0.4, (2.0, 6.0), 3.0),
+}
+
+FAKE_TRADE_PROFILES = {
+    "aggressive": TradeProfile(1.5, 2_000_000, 0.25, 0.3, 0.30, (6.0, 15.0), (1.0, 4.0)),
+    "conservative": TradeProfile(0.5, 4_000_000, 0.05, 1.0, 0.10, (15.0, 30.0), (3.0, 8.0)),
+    "balanced": TradeProfile(1.0, 3_000_000, 0.15, 0.6, 0.20, (10.0, 20.0), (2.0, 6.0)),
+    "opportunist": TradeProfile(0.8, 2_500_000, 0.10, 0.4, 0.25, (5.0, 12.0), (1.0, 5.0)),
 }

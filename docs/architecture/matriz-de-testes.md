@@ -59,3 +59,24 @@
 | Bloqueio sem fórmulas | `test_auction_is_blocked_without_approved_model` · `AuctionBoard.test.tsx` (AuctionPage) |
 | WebSocket e relógio real | `test_server_clock_publishes_round_events_over_websocket` · `communication.e2e.test.ts` (rodada real de 10 s) |
 | Interface | `AuctionBoard.test.tsx` · `AuctionSummaryView.test.tsx` |
+
+## Entrega 4 — mercado de negociações
+
+| Requisito | Testes |
+|---|---|
+| Proposta válida | `test_valid_proposal` · `test_proposal_lifecycle_and_errors` |
+| Proposta inválida (mesmo clube, jogador alheio, clube fora, dinheiro negativo) | `test_invalid_players_and_clubs` · `test_invalid_money` · `test_proposal_lifecycle_and_errors` |
+| Saldo insuficiente | `test_invalid_money[INSUFFICIENT_FUNDS]` · `test_proposal_lifecycle_and_errors` · `TradingBoard.test.tsx` |
+| Limite de três | `test_three_trade_limit_for_proponent_and_recipient` · `test_pending_proposals_are_invalidated_*` |
+| Uma pendente por clube / propostas simultâneas | `test_only_one_pending_proposal_per_proponent` · `test_simultaneous_proposals_from_same_club_only_one_survives` · `test_a_club_may_receive_several_proposals` |
+| Cancelamento | `test_cancel_while_pending` · `test_proposal_lifecycle_and_errors` · `TradingBoard.test.tsx` |
+| Expiração (10 s exatos, limitada ao fim) | `test_expiration_at_exactly_ten_seconds` · `test_accept_after_expiry_is_refused` · `test_deadline_limited_by_market_end_and_market_closes` |
+| Encerramento do mercado | `test_deadline_limited_by_market_end_and_market_closes` · `test_expiration_reconnection_and_market_end` · `test_websocket_events_from_server_clock` |
+| Falha durante a confirmação | `test_failure_during_confirmation_changes_nothing` |
+| Negociação entre bots | `test_bot_to_bot_negotiation_keeps_integrity` · `test_hidden_information_and_privacy_of_proposals` |
+| Dupla aceitação / comando duplicado | `test_double_acceptance_executes_one_trade` · `test_incoming_proposal_accept_executes_trade_once` · `test_proposal_idempotency` |
+| Aceitar × cancelar × expirar concorrentes | `test_concurrent_accept_cancel_and_expiry_yield_one_decision` (20 rodadas) |
+| Reconexão e sincronização | `test_market_does_not_pause_without_requests` · `test_expiration_reconnection_and_market_end` |
+| IA: perda pequena compensada, sem exploração | `test_small_sporting_loss_needs_economic_justification` · `test_bots_cannot_be_systematically_exploited` |
+| Estresse concorrente (12 threads + relógio, 3 sementes): integridade e dinheiro conservado | `tests/simulation/test_trading_stress.py` |
+| Interface | `TradingBoard.test.tsx` (busca e filtros, confirmação, dinheiro acima do saldo, aceitar/rejeitar, cancelar, limite) |

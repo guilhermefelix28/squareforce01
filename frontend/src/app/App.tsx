@@ -4,15 +4,17 @@ import { AuctionPage } from "../pages/AuctionPage";
 import { DataPage } from "../pages/DataPage";
 import { HomePage } from "../pages/HomePage";
 import { SessionPage } from "../pages/SessionPage";
+import { TradingPage } from "../pages/TradingPage";
 import { SessionProvider, useSession } from "./SessionContext";
 import { useTheme } from "./theme";
 
-type Page = "home" | "data" | "session" | "auction";
+type Page = "home" | "data" | "session" | "auction" | "trading";
 const PAGES: { id: Page; label: string }[] = [
   { id: "home", label: "Início" },
   { id: "data", label: "Dados" },
   { id: "session", label: "Competição" },
   { id: "auction", label: "Leilão" },
+  { id: "trading", label: "Mercado" },
 ];
 
 function pageFromHash(): Page {
@@ -81,8 +83,9 @@ function Shell() {
         {page === "data" && <DataPage importsBlocked={importsBlocked} onDataChanged={refresh} />}
         {page === "session" && <SessionPage onSessionChanged={refresh} />}
         {page === "auction" && <AuctionPage go={(p) => go(p)} />}
+        {page === "trading" && <TradingPage go={(p) => go(p)} />}
       </main>
-      <footer className="footer muted small">SquadForce · Football Strategy Game · Entrega 3</footer>
+      <footer className="footer muted small">SquadForce · Football Strategy Game · Entrega 4</footer>
     </div>
   );
 }

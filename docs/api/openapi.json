@@ -1607,6 +1607,660 @@
           }
         }
       }
+    },
+    "/api/sessions/{session_id}/trading/start": {
+      "post": {
+        "tags": [
+          "trading"
+        ],
+        "summary": "Start Trading",
+        "description": "Inicia o mercado (somente por ação do usuário). Exige leilão e complementação concluídos.",
+        "operationId": "start_trading_api_sessions__session_id__trading_start_post",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Obrigatório: identificador único do comando (8–128 caracteres).",
+              "title": "Idempotency-Key"
+            },
+            "description": "Obrigatório: identificador único do comando (8–128 caracteres)."
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TradingStateOut"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/sessions/{session_id}/trading": {
+      "get": {
+        "tags": [
+          "trading"
+        ],
+        "summary": "Get Trading",
+        "operationId": "get_trading_api_sessions__session_id__trading_get",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TradingStateOut"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/sessions/{session_id}/trading/squads": {
+      "get": {
+        "tags": [
+          "trading"
+        ],
+        "summary": "Trading Squads",
+        "operationId": "trading_squads_api_sessions__session_id__trading_squads_get",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 80
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Search"
+            }
+          },
+          {
+            "name": "club_uid",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Club Uid"
+            }
+          },
+          {
+            "name": "position",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "GK... ou GOL...",
+              "title": "Position"
+            },
+            "description": "GK... ou GOL..."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TradingSquadOut"
+                  },
+                  "title": "Response Trading Squads Api Sessions  Session Id  Trading Squads Get"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/sessions/{session_id}/trading/proposals": {
+      "post": {
+        "tags": [
+          "trading"
+        ],
+        "summary": "Create Proposal",
+        "operationId": "create_proposal_api_sessions__session_id__trading_proposals_post",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Obrigatório: identificador único do comando (8–128 caracteres).",
+              "title": "Idempotency-Key"
+            },
+            "description": "Obrigatório: identificador único do comando (8–128 caracteres)."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProposalCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProposalOut"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/sessions/{session_id}/trading/proposals/{proposal_id}/{action}": {
+      "post": {
+        "tags": [
+          "trading"
+        ],
+        "summary": "Act On Proposal",
+        "description": "accept/reject: destinatário (usuário). cancel: proponente (usuário). Uma única decisão vale.",
+        "operationId": "act_on_proposal_api_sessions__session_id__trading_proposals__proposal_id___action__post",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "proposal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Proposal Id"
+            }
+          },
+          {
+            "name": "action",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "enum": [
+                "accept",
+                "reject",
+                "cancel"
+              ],
+              "type": "string",
+              "title": "Action"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Obrigatório: identificador único do comando (8–128 caracteres).",
+              "title": "Idempotency-Key"
+            },
+            "description": "Obrigatório: identificador único do comando (8–128 caracteres)."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProposalOut"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -3242,6 +3896,116 @@
         ],
         "title": "Position"
       },
+      "ProposalCreate": {
+        "properties": {
+          "recipient_club_uid": {
+            "type": "integer",
+            "title": "Recipient Club Uid"
+          },
+          "offered_player_id": {
+            "type": "integer",
+            "title": "Offered Player Id"
+          },
+          "requested_player_id": {
+            "type": "integer",
+            "title": "Requested Player Id"
+          },
+          "money": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Money",
+            "description": "Dinheiro adicional opcional pago pelo proponente.",
+            "default": 0
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "recipient_club_uid",
+          "offered_player_id",
+          "requested_player_id"
+        ],
+        "title": "ProposalCreate"
+      },
+      "ProposalOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "outgoing",
+              "incoming"
+            ],
+            "title": "Direction"
+          },
+          "proponent_club_uid": {
+            "type": "integer",
+            "title": "Proponent Club Uid"
+          },
+          "recipient_club_uid": {
+            "type": "integer",
+            "title": "Recipient Club Uid"
+          },
+          "offered": {
+            "$ref": "#/components/schemas/TradingPlayerOut",
+            "description": "Jogador que o proponente entrega."
+          },
+          "requested": {
+            "$ref": "#/components/schemas/TradingPlayerOut",
+            "description": "Jogador que o proponente recebe."
+          },
+          "money": {
+            "type": "integer",
+            "title": "Money",
+            "description": "Dinheiro adicional pago pelo proponente (>= 0)."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "accepted",
+              "rejected",
+              "cancelled",
+              "expired",
+              "invalidated"
+            ],
+            "title": "Status"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "remaining_ms": {
+            "type": "integer",
+            "title": "Remaining Ms",
+            "description": "Tempo restante (0 se decidida)."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "direction",
+          "proponent_club_uid",
+          "recipient_club_uid",
+          "offered",
+          "requested",
+          "money",
+          "status",
+          "remaining_ms"
+        ],
+        "title": "ProposalOut"
+      },
       "SessionCloseRequest": {
         "properties": {
           "expected_version": {
@@ -3387,6 +4151,247 @@
           "updated_at"
         ],
         "title": "SessionOut"
+      },
+      "TradeRecordOut": {
+        "properties": {
+          "proposal_id": {
+            "type": "string",
+            "title": "Proposal Id"
+          },
+          "proponent_club_uid": {
+            "type": "integer",
+            "title": "Proponent Club Uid"
+          },
+          "recipient_club_uid": {
+            "type": "integer",
+            "title": "Recipient Club Uid"
+          },
+          "offered": {
+            "$ref": "#/components/schemas/TradingPlayerOut"
+          },
+          "requested": {
+            "$ref": "#/components/schemas/TradingPlayerOut"
+          },
+          "money": {
+            "type": "integer",
+            "title": "Money"
+          },
+          "elapsed_ms": {
+            "type": "integer",
+            "title": "Elapsed Ms",
+            "description": "Instante da conclusão desde o início do mercado."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "proposal_id",
+          "proponent_club_uid",
+          "recipient_club_uid",
+          "offered",
+          "requested",
+          "money",
+          "elapsed_ms"
+        ],
+        "title": "TradeRecordOut"
+      },
+      "TradingClubOut": {
+        "properties": {
+          "club_uid": {
+            "type": "integer",
+            "title": "Club Uid"
+          },
+          "is_user": {
+            "type": "boolean",
+            "title": "Is User"
+          },
+          "budget": {
+            "type": "integer",
+            "title": "Budget"
+          },
+          "completed_trades": {
+            "type": "integer",
+            "title": "Completed Trades"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "club_uid",
+          "is_user",
+          "budget",
+          "completed_trades"
+        ],
+        "title": "TradingClubOut"
+      },
+      "TradingPlayerOut": {
+        "properties": {
+          "unique_id": {
+            "type": "integer",
+            "title": "Unique Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "age": {
+            "type": "integer",
+            "title": "Age"
+          },
+          "position": {
+            "$ref": "#/components/schemas/Position"
+          },
+          "club_uid": {
+            "type": "integer",
+            "title": "Club Uid"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "unique_id",
+          "name",
+          "age",
+          "position",
+          "club_uid"
+        ],
+        "title": "TradingPlayerOut"
+      },
+      "TradingSquadOut": {
+        "properties": {
+          "club_uid": {
+            "type": "integer",
+            "title": "Club Uid"
+          },
+          "is_user": {
+            "type": "boolean",
+            "title": "Is User"
+          },
+          "budget": {
+            "type": "integer",
+            "title": "Budget"
+          },
+          "completed_trades": {
+            "type": "integer",
+            "title": "Completed Trades"
+          },
+          "players": {
+            "items": {
+              "$ref": "#/components/schemas/TradingPlayerOut"
+            },
+            "type": "array",
+            "title": "Players"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "club_uid",
+          "is_user",
+          "budget",
+          "completed_trades",
+          "players"
+        ],
+        "title": "TradingSquadOut"
+      },
+      "TradingStateOut": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "phase": {
+            "type": "string",
+            "enum": [
+              "running",
+              "finished"
+            ],
+            "title": "Phase"
+          },
+          "remaining_ms": {
+            "type": "integer",
+            "title": "Remaining Ms"
+          },
+          "duration_ms": {
+            "type": "integer",
+            "title": "Duration Ms"
+          },
+          "user_club_uid": {
+            "type": "integer",
+            "title": "User Club Uid"
+          },
+          "budget": {
+            "type": "integer",
+            "title": "Budget"
+          },
+          "completed_trades": {
+            "type": "integer",
+            "title": "Completed Trades"
+          },
+          "max_trades": {
+            "type": "integer",
+            "title": "Max Trades"
+          },
+          "outgoing": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProposalOut"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Proposta pendente do usuário (no máximo uma)."
+          },
+          "incoming": {
+            "items": {
+              "$ref": "#/components/schemas/ProposalOut"
+            },
+            "type": "array",
+            "title": "Incoming",
+            "description": "Propostas recebidas pendentes, com contagem regressiva."
+          },
+          "recent_decisions": {
+            "items": {
+              "$ref": "#/components/schemas/ProposalOut"
+            },
+            "type": "array",
+            "title": "Recent Decisions",
+            "description": "Últimas propostas do usuário já decididas (enviadas ou recebidas)."
+          },
+          "history": {
+            "items": {
+              "$ref": "#/components/schemas/TradeRecordOut"
+            },
+            "type": "array",
+            "title": "History",
+            "description": "Todas as trocas concluídas (públicas), mais recentes primeiro."
+          },
+          "clubs": {
+            "items": {
+              "$ref": "#/components/schemas/TradingClubOut"
+            },
+            "type": "array",
+            "title": "Clubs"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "session_id",
+          "phase",
+          "remaining_ms",
+          "duration_ms",
+          "user_club_uid",
+          "budget",
+          "completed_trades",
+          "max_trades",
+          "incoming",
+          "recent_decisions",
+          "history",
+          "clubs"
+        ],
+        "title": "TradingStateOut"
       },
       "ValidationError": {
         "properties": {

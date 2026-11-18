@@ -37,6 +37,12 @@ export type AuctionBidRequest = S["AuctionBidRequest"];
 export type AuctionSummary = S["AuctionSummaryOut"];
 export type AuctionContract = S["AuctionContractOut"];
 export type AuctionRoundResult = S["AuctionRoundResultOut"];
+export type TradingState = S["TradingStateOut"];
+export type TradingSquad = S["TradingSquadOut"];
+export type TradingPlayer = S["TradingPlayerOut"];
+export type Proposal = S["ProposalOut"];
+export type ProposalCreate = S["ProposalCreate"];
+export type TradeRecord = S["TradeRecordOut"];
 
 export type ImportBase = "clubs" | "players";
 

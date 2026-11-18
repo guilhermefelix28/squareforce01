@@ -39,6 +39,8 @@ class ErrorCode(str, Enum):
     AUCTION_NOT_FOUND = "AUCTION_NOT_FOUND"
     AUCTION_NOT_FINISHED = "AUCTION_NOT_FINISHED"
     AUCTION_REJECTED = "AUCTION_REJECTED"
+    # Mercado
+    MARKET_NOT_FOUND = "MARKET_NOT_FOUND"
 
 
 class AppError(Exception):

@@ -56,6 +56,29 @@ class BotProfile:
 
 
 @dataclass(frozen=True)
+class TradeProfile:
+    """Parâmetros de negociação de uma personalidade (GDD §8). VALORES pendentes (PB-02).
+
+    - max_sport_loss: maior perda de qualidade (0,8/0,2) aceitável com compensação (tolerância moderada).
+    - money_per_quality: R$ exigidos por ponto de qualidade perdido para aceitar a perda.
+    - value_tolerance: fração do valor de mercado cedido que pode ser "perdida" numa troca com ganho
+      esportivo (proteção contra exploração financeira sistemática).
+    - min_gain_to_propose: ganho mínimo para o bot propor uma troca.
+    - max_money_share: fração máxima do saldo que o bot oferece como dinheiro adicional.
+    - proposal_interval: (mín, máx) segundos entre tentativas de proposta do bot.
+    - response_delay: (mín, máx) segundos para responder a uma proposta recebida (< 10 s).
+    """
+
+    max_sport_loss: float
+    money_per_quality: int
+    value_tolerance: float
+    min_gain_to_propose: float
+    max_money_share: float
+    proposal_interval: tuple[float, float]
+    response_delay: tuple[float, float]
+
+
+@dataclass(frozen=True)
 class Reserves:
     """§7: reserva básica (completa todos os elencos, até R$ 500 mil) e complementar (intermediários e destaques)."""
 
@@ -111,7 +134,10 @@ class AuctionModel(Protocol):
         """PE-04: reservas básica e complementar a partir dos atletas não vendidos."""
 
     def bot_profile(self, personality: str) -> BotProfile:
-        """Parâmetros de cada personalidade (pendentes)."""
+        """Parâmetros de cada personalidade no leilão (pendentes, PB-01)."""
+
+    def trade_profile(self, personality: str) -> TradeProfile:
+        """Parâmetros de cada personalidade no mercado de negociações (pendentes, PB-02)."""
 
 
 class AuctionModelError(ValueError):

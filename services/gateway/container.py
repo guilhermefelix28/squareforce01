@@ -11,6 +11,7 @@ from fastapi import Request
 
 from services.auction.model import AuctionModel, load_auction_model
 from services.auction.service import AuctionService
+from services.trading.service import TradingService
 from services.competition.planner import plan_competition
 from services.data.service import DataService
 from services.session.manager import SessionManager
@@ -28,6 +29,7 @@ class Container:
     idempotency: IdempotencyStore
     hub: SessionHub
     auctions: AuctionService
+    trading: TradingService
     auction_model: AuctionModel | None  # None = fórmulas pendentes: leilão bloqueado
 
 
@@ -59,6 +61,7 @@ def build_container(
         idempotency=IdempotencyStore(ttl_seconds=settings.idempotency_ttl_seconds),
         hub=SessionHub(),
         auctions=AuctionService(clock=clock, has_photo=has_photo),
+        trading=TradingService(clock=clock),
         auction_model=load_auction_model() if auction_model is _UNSET else auction_model,  # type: ignore[arg-type]
     )
 

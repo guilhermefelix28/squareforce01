@@ -8,7 +8,9 @@ description: Decisões dos clubes controlados por IA no SquadForce — personali
 ## Finalidade
 Orientar o serviço `services/bot_ai`. **Leilão implementado** (Entrega 3): `evaluation.py` (escalação ótima por
 formação via algoritmo húngaro; ganho 0,8/0,2) e `auction_bot.py` (decisão de lance). Parâmetros das
-personalidades pendentes (PB-01, via `AuctionModel.bot_profile`). Mercado e partidas: entregas futuras.
+personalidades pendentes (PB-01, via `AuctionModel.bot_profile`). **Mercado implementado** (Entrega 4):
+`trade_bot.py` (`evaluate_offer` com proteção contra exploração; `choose_proposal`), parâmetros PB-02 pendentes.
+Partidas: entrega futura.
 
 ## Quando utilizar
 Implementação/revisão de qualquer decisão automática de bot (leilão, mercado, escalação, postura).

@@ -1,13 +1,14 @@
 # Serviço: trading (mercado de negociações)
 
-**Estado:** planejado — sem implementação na Entrega 1.
-**Skill:** [`trading-system`](../../.claude/skills/trading-system/SKILL.md) · **GDD:** seção 8
+**Estado:** implementado (Entrega 4). Depende do leilão concluído; os parâmetros de negociação das
+personalidades (`TradeProfile`) vêm do `AuctionModel` pendente.
+**Skill:** [`trading-system`](../../.claude/skills/trading-system/SKILL.md) · **Detalhes:** [docs/architecture/mercado.md](../../docs/architecture/mercado.md)
 
-## Responsabilidade
-Mercado de 3 minutos iniciado pelo usuário; trocas 1×1 com pagamento adicional opcional do
-proponente; até 3 negociações concluídas por clube; uma proposta ativa por clube; prazo de 10 s;
-sem contrapropostas; transações atômicas mantendo 18 jogadores e saldo não negativo.
+| Arquivo | Conteúdo |
+|---|---|
+| `rules.py` | 3 min, 10 s por proposta, 3 negociações, 1 pendente por proponente, 18 jogadores |
+| `engine.py` | motor: propostas, decisões únicas, trocas atômicas, linha do tempo do servidor, bots |
+| `service.py` | um mercado por sessão (memória) e visões públicas |
 
-## Limites
-- Avaliação dos bots é delegada a `bot_ai`.
-- Estado em memória na sessão; nada persistido.
+Limites: não acessa SQLite; recebe elencos e atletas do leilão concluído; decisões dos bots em
+`services/bot_ai/trade_bot.py`; nada é persistido.
