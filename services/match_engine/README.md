@@ -1,13 +1,20 @@
 # Serviço: match_engine (motor de partidas)
 
-**Estado:** planejado — sem implementação na Entrega 1.
-**Skill:** [`match-engine`](../../.claude/skills/match-engine/SKILL.md) · **GDD:** seções 10 a 16
+**Estado:** implementado (Entrega 5) como biblioteca pura e determinística. **Parâmetros provisórios, não
+calibrados** (`params.py`, pendência PM-02).
+**Skill:** [`match-engine`](../../.claude/skills/match-engine/SKILL.md) · **Detalhes:** [docs/architecture/motor-esportivo.md](../../docs/architecture/motor-esportivo.md)
 
-## Responsabilidade
-Simulação por eventos encadeados (posse → construção → oposição → oportunidade → finalização →
-goleiro → resultado), xG contextual, faltas/cartões/lesões, substituições, notas, Craque da
-Partida, determinismo por semente.
+Uso mínimo:
 
-## Limites
-- Recebe um estado inicial imutável por partida; não acessa outras partidas simultâneas.
-- Não consolida classificação (responsabilidade de `competition`).
+```python
+from services.match_engine.engine import simulate
+from services.match_engine.lineup import build_team_sheet
+from services.match_engine.types import MatchInput
+
+home = build_team_sheet(club_a, squad_a, formation)
+away = build_team_sheet(club_b, squad_b, formation)
+result = simulate(MatchInput("M-1", "liga", home, away, seed=123))
+```
+
+Limites: não acessa SQLite nem relógio de parede; não consolida classificação (`competition`); não decide
+posturas dos bots (Entrega 6).

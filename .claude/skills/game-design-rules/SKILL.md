@@ -51,6 +51,7 @@ Game Design v5.2 e que lacunas sejam registradas — nunca inventadas. As demais
 - Inferir a divisão Série A/B a partir de `club_reputation`: a fonte é `club_divisions` (temporada 2026, PD-01).
 - Expor informações declaradas ocultas (overall, atributos no leilão, reputação, personalidade dos bots).
 - Persistir progresso de competição.
+- Apresentar parâmetros provisórios (`services/match_engine/params.py`, `AuctionModel`) como calibrados ou aprovados.
 
 ## Critérios de teste
 - Testes citam a regra do GDD que verificam (nome ou comentário).

@@ -1,4 +1,4 @@
-# Arquitetura — SquadForce (Entregas 1 a 4)
+# Arquitetura — SquadForce (Entregas 1 a 5)
 
 ## Visão geral
 
@@ -14,7 +14,7 @@
         ├── services/auction      leilão: motor, regras, complementação (modelo de fórmulas pendente)
         ├── services/trading      mercado: propostas, decisões únicas, trocas atômicas
         ├── services/bot_ai       avaliação 80/20 e decisões de lance dos bots
-        └── services/match_engine planejado
+        └── services/match_engine motor de partidas determinístico (parâmetros provisórios)
 ```
 
 ## Decisões (ADR resumidas)
@@ -35,6 +35,7 @@
 | ADR-13 | **Motor do leilão determinístico e thread-safe**: estado sob uma `RLock`; o relógio é injetado; rodadas contíguas calculadas a partir do fim da anterior; ações dos bots agendadas em tempo de servidor. Uma tarefa asyncio no gateway avança os leilões a cada 100 ms e publica eventos sem dados sigilosos. | Relógio autoritativo, concorrência protegida e testes reprodutíveis (inclusive com saltos de tempo). |
 | ADR-14 | **`PlayerProfile` no domínio compartilhado**: o serviço de dados carrega atributos e familiaridades para uso interno; nenhum contrato público os expõe. | Mantém o leilão sem acesso ao SQLite e preserva a ocultação de dados. |
 | ADR-15 | **Mercado com decisão única e cópia-e-confirmação**: uma `RLock` por mercado; cada proposta tem exatamente uma decisão final; a troca monta e valida o novo estado (18, sem duplicação, saldo ≥ 0) antes de aplicá-lo; idempotência no gateway e no motor (inclusive para erros definitivos). Linha do tempo (expirações, bots, fechamento) processada em ordem de tempo do servidor. | Aceite/cancelamento/expiração concorrentes e comandos duplicados nunca produzem duas trocas nem estado parcial. |
+| ADR-16 | **Motor como biblioteca pura e determinística**: `services/match_engine` não tem I/O, relógio de parede nem estado global; entrada imutável (`MatchInput`) + parâmetros versionados (`MatchParams`) + semente + decisões → eventos. Estatísticas e notas são funções dos eventos; `validate_result` confere todas as invariantes. A apresentação só converte tempo de tela em tempo de jogo. | GDD §16 (reprodutibilidade, velocidade sem efeito) e os critérios de aceitação da Entrega 5. |
 | ADR-11 | **Divisões como dados de referência** (`club_divisions`, migração 0002), sem FK para `clubs`. | Reimportar clubes não apaga as divisões; clubes sem divisão ficam inelegíveis. |
 
 ## Limites de responsabilidade

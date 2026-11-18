@@ -80,3 +80,25 @@
 | IA: perda pequena compensada, sem exploração | `test_small_sporting_loss_needs_economic_justification` · `test_bots_cannot_be_systematically_exploited` |
 | Estresse concorrente (12 threads + relógio, 3 sementes): integridade e dinheiro conservado | `tests/simulation/test_trading_stress.py` |
 | Interface | `TradingBoard.test.tsx` (busca e filtros, confirmação, dinheiro acima do saldo, aceitar/rejeitar, cancelar, limite) |
+
+## Entrega 5 — motor esportivo
+
+| Requisito | Testes (`tests/unit/test_match_engine.py`, salvo indicação) |
+|---|---|
+| Gols e finalizações; placar = gols | `test_goals_come_only_from_shot_events_and_match_the_score` · `test_every_match_is_structurally_valid` (40 sementes) |
+| Posses e estatísticas derivadas | `test_statistics_are_derived_from_events` |
+| xG contextual sem dupla contagem | `test_contextual_xg_depends_only_on_context` · `test_shooter_skill_changes_conversion_not_xg` · `test_goalkeeper_skill_reduces_goals_without_changing_xg` |
+| Defesas | `test_saves_are_made_by_the_defending_goalkeeper` |
+| Lesões (0–3 jogos, saída de campo, equipe reduzida) | `test_injuries_have_0_to_3_matches_and_injured_leave_the_pitch` · `test_injury_without_substitutes_leaves_team_short` |
+| Cartões e expulsões | `test_second_yellow_is_red_and_sent_off_player_never_acts_or_is_replaced` |
+| Menos de 7 jogadores | `test_fewer_than_seven_players_abandons_with_official_3_0` |
+| Substituições (≤ 5, sem retorno) e desgaste | `test_at_most_five_substitutions_and_no_return` · `test_fatigue_grows_during_match_and_depends_on_posture` |
+| Limite de jogadores em campo, eventos sem duplicação | `validation.validate_result` aplicado em todos os testes e lotes |
+| Emergenciais | `tests/unit/test_match_availability.py::test_emergency_players_only_when_fewer_than_eleven_available` · `test_emergency_players_never_enter_the_ledger` |
+| Suspensões por competição, lesões em qualquer competição, folgas | `test_match_availability.py` (6 testes) · `tests/simulation/test_match_batches.py::test_season_of_real_matches_with_ledger` |
+| Notas e Craque | `test_ratings_in_range_with_one_decimal_and_motm_is_best` · `test_ratings_depend_on_events_not_on_overall` · `test_goal_raises_rating_and_red_card_lowers_it` · `test_motm_tie_breaks_*` · `test_short_cameo_counts_less_than_full_match` |
+| Determinismo e velocidades | `test_same_input_reproduces_same_events` · `test_stepwise_and_presentation_speeds_reproduce_identical_events` |
+| Mudanças de postura (só eventos futuros, efeito moderado) | `test_posture_change_only_affects_future_events` · `test_postures_change_attack_moderately` |
+| 0 × 0, goleadas e resultados inesperados | `test_nil_nil_and_thrashings_are_possible` · `test_stronger_team_wins_more_but_upsets_happen` · `test_score_is_not_predetermined` |
+| Lote exploratório na base real | `tests/simulation/test_match_batches.py` · relatório `scripts/match_engine_report.py` |
+| Pênaltis da Copa (sem prorrogação, fora do placar e da artilharia) | `test_knockout_draw_goes_to_penalties_recorded_separately` · `test_league_draw_has_no_penalties` |

@@ -62,6 +62,10 @@ relógio, simulações completas com Liga de 20 e Copa de 32 na base real (todo 
 expiração, encerramento, falha na confirmação, bot ↔ bot, dupla aceitação, reconexão e estresse concorrente com
 conservação do dinheiro total.
 
+**Entrega 5:** todo teste/lote do motor passa por `validate_result`; determinismo (mesma semente e decisões =
+mesmos eventos; etapas e velocidades equivalentes); estatísticas derivadas; xG sem dupla contagem; lotes
+exploratórios com base real (`-m simulation`). Nunca afirmar calibração sem referências aprovadas.
+
 ## Referências
 - [Matriz de testes da Entrega 1](../../../docs/architecture/matriz-de-testes.md)
 - [Especificação técnica §8–9](../../../docs/architecture/especificacao-tecnica-v5.2.md)

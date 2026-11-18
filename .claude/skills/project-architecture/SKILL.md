@@ -19,7 +19,8 @@ Manter a arquitetura de serviços especializados coerente, com limites claros e 
 | `services/session` | estado em memória, versão, trava de importação | acessar banco/arquivos |
 | `services/data` | SQLite, migrações, importação, catálogo | conhecer HTTP |
 | `services/competition` | formatos (E1); calendário, chave, classificação (futuro) | acessar SQLite diretamente |
-| `services/auction`, `trading`, `bot_ai`, `match_engine` | ver README de cada um | ser implementados antes da entrega autorizada |
+| `services/auction`, `trading`, `bot_ai` | ver README de cada um | ser implementados antes da entrega autorizada |
+| `services/match_engine` | biblioteca pura do motor (sem I/O, sem relógio de parede) | acessar banco, rede ou estado global |
 | `shared/python/squadforce_shared` | `domain/` regras puras, `contracts/` Pydantic, `errors/` códigos | ter I/O |
 
 ## Regras do Game Design aplicáveis

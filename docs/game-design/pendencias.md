@@ -70,6 +70,12 @@ Legenda: **P** = regra pendente · **D** = decisão técnica provisória (confir
 | ID | Tipo | Tema |
 |---|---|---|
 | PM-01 | P | Lista oficial de **formações**. |
-| PM-02 | P | Parâmetros do motor e **referências estatísticas** para calibração. |
+| PM-02 | P | **Referências estatísticas oficiais e calibração** do motor. Todos os números de `services/match_engine/params.py` são provisórios; lotes exploratórios em `docs/architecture/motor-calibracao-exploratoria.md` (dentro de faixas PRELIMINARES não aprovadas; grandes chances observadas ≈ 0,5 por time, possivelmente baixas). |
 | PM-03 | P | Métrica de "**impacto das ações decisivas**" (desempate do Craque da Partida). |
-| PG-01 | P | **Requisitos de desempenho** (GDD §26) não quantificados. |
+| PG-01 | P | **Requisitos de desempenho** (GDD §26) não quantificados. (Observado: ~45 ms por partida instantânea.) |
+| MD-01 | P | **Duração da suspensão por vermelho** (provisório: 1 jogo na mesma competição) e **suspensão por acúmulo de amarelos** (desligada até definição). |
+| MD-02 | D | Lesão de **0 jogos** retira o atleta da partida atual, sem afastamento nas seguintes. |
+| MD-03 | D | Craque da Partida: após nota exibida, precisão interna e impacto decisivo, o último desempate é o menor ID. |
+| MD-04 | D | Pesos das composições de atributos por ação (iguais dentro de cada composição) e efeitos das posturas: provisórios. |
+| MD-05 | D | Emergenciais com atributos 30 (goleiro emergencial com atributos de goleiro; os demais com 5 nesses atributos). |
+| MD-06 | D | Atleta com amarelo reduz o risco de faltas e de novo cartão (`booked_caution`), para evitar expulsões irreais por acúmulo dentro do jogo. |

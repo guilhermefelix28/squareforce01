@@ -15,6 +15,7 @@
 - [Importação Excel → SQLite](architecture/importacao-excel.md)
 - [Leilão e fórmulas pendentes](architecture/leilao.md)
 - [Mercado de negociações](architecture/mercado.md)
+- [Motor esportivo](architecture/motor-esportivo.md) · [lotes exploratórios](architecture/motor-calibracao-exploratoria.md)
 - [Matriz de testes](architecture/matriz-de-testes.md)
 
 ## API
