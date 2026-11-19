@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useState, type CSSProperties, type ReactNode } from "react";
 import { playerPhotoUrl } from "../api/endpoints";
 import { displayPosition, sector } from "../domain/positions";
 import { ClubCrest } from "./ClubCrest";
@@ -10,31 +10,31 @@ export function PositionBadge({ position, size = "md" }: { position: string; siz
   );
 }
 
-/** Silhueta genérica (jogador chutando a bola), a MESMA para todos os atletas sem foto na base. */
+const photoSize = (size: number) => ({ "--photo-size": `${size}px` }) as CSSProperties;
+
+/**
+ * Silhueta genérica (busto de jogador com camisa de gola em V), a MESMA para todos os atletas sem foto na base.
+ * Ocupa o mesmo círculo que a foto real.
+ */
 export function PlayerSilhouette({ size = 64 }: { size?: number }) {
   return (
-    <span className="photo photo--fallback photo--silhouette" style={{ width: size, height: size }} aria-hidden data-testid="player-silhouette">
-      <svg viewBox="0 0 64 64" width="78%" height="78%" fill="currentColor">
-        <circle cx="34" cy="10" r="6.5" />
-        <g stroke="currentColor" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round" fill="none">
-          <path d="M32 21 L28 37" />
-          <path d="M32 22 L22 28 L15 25" />
-          <path d="M32 22 L41 27 L47 23" />
-          <path d="M28 37 L20 46 L13 46" />
-          <path d="M28 37 L38 45 L45 53" />
-        </g>
-        <circle cx="53" cy="56" r="5.5" />
+    <span className="photo photo--fallback photo--silhouette" style={photoSize(size)} aria-hidden data-testid="player-silhouette">
+      <svg viewBox="0 0 64 64" width="100%" height="100%" preserveAspectRatio="xMidYMax meet">
+        <path className="sil__body" d="M8 64c0-13 8.5-20.5 19-22.5h10C47.5 43.5 56 51 56 64z" />
+        <rect className="sil__body" x="27.5" y="33" width="9" height="9" rx="3" />
+        <ellipse className="sil__body" cx="32" cy="24" rx="10.5" ry="12" />
+        <path className="sil__collar" d="M26 42.5l6 7.5 6-7.5" />
       </svg>
     </span>
   );
 }
 
-/** Foto do atleta (Graphics/Faces) ou a silhueta genérica. */
+/** Foto do atleta (Graphics/Faces) ou a silhueta genérica, no mesmo diâmetro. */
 export function PlayerPhoto({ id, hasPhoto = true, size = 64 }: { id: number; name?: string; hasPhoto?: boolean; size?: number }) {
   const [failed, setFailed] = useState(!hasPhoto);
   if (failed) return <PlayerSilhouette size={size} />;
   return (
-    <img className="photo" src={playerPhotoUrl(id)} alt="" width={size} height={size} loading="lazy" onError={() => setFailed(true)} />
+    <img className="photo" style={photoSize(size)} src={playerPhotoUrl(id)} alt="" width={size} height={size} loading="lazy" onError={() => setFailed(true)} />
   );
 }
 

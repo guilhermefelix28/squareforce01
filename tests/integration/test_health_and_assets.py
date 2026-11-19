@@ -9,7 +9,7 @@ def test_startup_creates_schema_and_reports_services(client, settings):
     assert settings.db_path.exists()
     h = client.get("/api/health").json()
     assert h["status"] == "ok"
-    assert h["database"] == {"status": "ok", "schema_version": 2, "clubs": 0, "players": 0}
+    assert h["database"] == {"status": "ok", "schema_version": 3, "clubs": 0, "players": 0}
     assert h["services"]["data"] == h["services"]["session"] == "ready"
     assert h["services"]["auction"] == "ready"  # AuctionModel oficial carregado por padrão
     assert h["services"]["bot_ai"] == h["services"]["match_engine"] == "ready"  # regressão: não mais "planned" fixo

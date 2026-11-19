@@ -45,6 +45,29 @@ def _upsert_clubs(conn: sqlite3.Connection, clubs: list[importer.ParsedClub]) ->
     )
 
 
+def _renumbered_links(conn: sqlite3.Connection, sheets, file_name: str, new_ids: set[int],
+                      orphaned: list[int]) -> list[tuple[int, int]]:
+    """Novos vínculos (club_uid, unique_id) dos jogadores de clubes renumerados na planilha.
+
+    Um clube que saiu da base foi renumerado quando todos os seus jogadores de ID real estão no arquivo, e todos num
+    mesmo clube novo; então todo o elenco dele (inclusive IDs gerados, que dependem do clube) passa para esse ID.
+    Se algum clube que saiu não cumprir isso, a lista é vazia e a importação de clubes deve ser recusada.
+    """
+    _, players = importer.parse_players(sheets, file_name, new_ids)
+    target = {p.unique_id: p.club_uid for p in players}
+    links: list[tuple[int, int]] = []
+    for old in orphaned:
+        squad = conn.execute("SELECT unique_id, id_generated FROM players WHERE club_uid = ?", (old,)).fetchall()
+        real = [uid for uid, generated in squad if not generated]
+        if not real or any(uid not in target for uid in real):
+            return []
+        dest = {target[uid] for uid in real}
+        if len(dest) != 1:
+            return []
+        new = dest.pop()
+        links += [(new, uid) for uid, _ in squad]
+    return links
+
 def _insert_players(conn: sqlite3.Connection, players: list[importer.ParsedPlayer]) -> None:
     conn.executemany(
         "INSERT INTO players (unique_id, name, first_name, last_name, full_name, birth_date, age, nation_id,"
@@ -135,6 +158,18 @@ class DataService:
                         "SELECT club_uid, COUNT(*) FROM players GROUP BY club_uid"
                     ).fetchall()
                     orphaned = sorted((r[0], r[1]) for r in in_use if r[0] not in new_ids)
+                    relink: list[tuple[int, int]] = []
+                    if orphaned:
+                        # Clube renumerado na planilha: se TODOS os jogadores dos clubes que saíram vêm no arquivo
+                        # com um club_uid novo, o vínculo deles é atualizado; senão a importação é recusada.
+                        relink = _renumbered_links(conn, sheets, file_name, new_ids, [u for u, _ in orphaned])
+                        if relink:
+                            report.warnings.append(importer.ImportIssue(
+                                code="CLUB_UID_CHANGED", column="club_uid",
+                                message=f"{len(relink)} jogador(es) passaram para o novo ID do clube; importe os jogadores em seguida.",
+                            ))
+                            report.warning_count += 1
+                            orphaned = []
                     if orphaned:
                         conn.execute("ROLLBACK")
                         for uid, n in orphaned[: importer.MAX_ISSUES_LISTED]:
@@ -150,6 +185,7 @@ class DataService:
                         report.rows_imported = 0
                         raise self._reject(report)
                     _upsert_clubs(conn, clubs)
+                    conn.executemany("UPDATE players SET club_uid = ? WHERE unique_id = ?", relink)
                     placeholders = ",".join("?" * len(new_ids))
                     conn.execute(f"DELETE FROM clubs WHERE club_uid NOT IN ({placeholders})", tuple(new_ids))
                     divisions = {r[0] for r in conn.execute("SELECT club_uid FROM club_divisions")}

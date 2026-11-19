@@ -12,6 +12,7 @@ export function QuitToHome({ navigate, label = "Encerrar e voltar ao início" }:
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   if (!session || session.status !== "active") return null;
+  const what = session.config.format === "cup" ? "copa" : "liga";
 
   async function quit() {
     if (!session) return;
@@ -24,8 +25,8 @@ export function QuitToHome({ navigate, label = "Encerrar e voltar ao início" }:
     } catch (e) {
       if (e instanceof ApiError && e.code === "VERSION_CONFLICT") {
         setSession(await getSession(session.id));
-        setError("O estado da partida mudou. Confirme novamente.");
-      } else setError(e instanceof ApiError ? e.message : "Não foi possível encerrar a partida.");
+        setError(`O estado da ${what} mudou. Confirme novamente.`);
+      } else setError(e instanceof ApiError ? e.message : `Não foi possível encerrar a ${what}.`);
       setOpen(false);
     } finally {
       setBusy(false);
@@ -38,9 +39,9 @@ export function QuitToHome({ navigate, label = "Encerrar e voltar ao início" }:
       {error && <Notice kind="error">{error}</Notice>}
       <ConfirmDialog
         open={open}
-        title="Encerrar esta partida?"
-        message="O progresso não é salvo: a competição será encerrada e você volta à tela inicial."
-        confirmLabel="Encerrar"
+        title={`Encerrar esta ${what}?`}
+        message={`O progresso não é salvo: a ${what} será encerrada e você volta à tela inicial.`}
+        confirmLabel={`Encerrar ${what}`}
         danger
         busy={busy}
         onConfirm={() => void quit()}

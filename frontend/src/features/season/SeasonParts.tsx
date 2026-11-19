@@ -1,5 +1,7 @@
+import type { CSSProperties } from "react";
 import { ClubCrest } from "../../components/ClubCrest";
 import { Jumbotron } from "../match/LiveParts";
+import { css, useKitColors, type Rgb } from "../match/clubColors";
 import { displayPosition } from "../../domain/positions";
 import type { CupBracket, MatchReport, Position, SeasonFixture, StandingRow, TeamLineup } from "../../types/api";
 import { EVENT_ICON, STAT_LABELS, describeEvent, eventLabel, formatStat, postureLabel } from "./labels";
@@ -156,7 +158,7 @@ export function MatchReportView({ report, names, user }: { report: MatchReport; 
         </section>
         <section className="card">
           <h3>Estatísticas</h3>
-          <StatsCompare stats={report.stats} labels={[names.get(sides[0]) ?? "Mandante", names.get(sides[1]) ?? "Visitante"]} />
+          <StatsCompare stats={report.stats} uids={[sides[0], sides[1]]} labels={[names.get(sides[0]) ?? "Mandante", names.get(sides[1]) ?? "Visitante"]} />
         </section>
       </div>
       <section className="card">
@@ -206,14 +208,26 @@ export function EventFeed({ events, names }: { events: MatchReport["events"]; na
   );
 }
 
-export function StatsCompare({ stats, labels = ["Mandante", "Visitante"] }: { stats: Record<string, Record<string, unknown>>; labels?: [string, string] }) {
+/** Barras comparativas nas cores dos uniformes dos dois clubes (mesma regra do campinho ao vivo). */
+export function StatsCompare({ stats, uids, labels = ["Mandante", "Visitante"] }: { stats: Record<string, Record<string, unknown>>; uids?: [number, number]; labels?: [string, string] }) {
+  return uids ? <KitStats stats={stats} uids={uids} labels={labels} /> : <StatBars stats={stats} labels={labels} />;
+}
+
+function KitStats({ stats, uids, labels }: { stats: Record<string, Record<string, unknown>>; uids: [number, number]; labels: [string, string] }) {
+  const kits = useKitColors(uids[0], uids[1]);
+  return <StatBars stats={stats} labels={labels} kits={kits} />;
+}
+
+function StatBars({ stats, labels, kits }: { stats: Record<string, Record<string, unknown>>; labels: [string, string]; kits?: [Rgb, Rgb] }) {
   const h = stats.home ?? {};
   const a = stats.away ?? {};
+  const legend = (i: 0 | 1) => (kits ? ({ "--kit": css(kits[i]) } as CSSProperties) : undefined);
+  const kit = (i: 0 | 1) => (kits ? { background: css(kits[i]) } : undefined);
   return (
-    <div className="statbars" aria-label={`Estatísticas: ${labels[0]} × ${labels[1]}`}>
+    <div className={`statbars${kits ? " statbars--kits" : ""}`} aria-label={`Estatísticas: ${labels[0]} × ${labels[1]}`}>
       <div className="live-legend">
-        <b className="home">{labels[0]}</b>
-        <b className="away">{labels[1]}</b>
+        <b className={kits ? "home kit" : "home"} style={legend(0)}>{labels[0]}</b>
+        <b className={kits ? "away kit" : "away"} style={legend(1)}>{labels[1]}</b>
       </div>
       {STAT_LABELS.map((s) => {
         const hv = Number(h[s.key] ?? 0);
@@ -224,8 +238,8 @@ export function StatsCompare({ stats, labels = ["Mandante", "Visitante"] }: { st
             <span className="statbar__label">{s.label}</span>
             <span className="statbar__v">{formatStat(hv, s)}</span>
             <span className="statbar__track" aria-hidden>
-              <span><i style={{ width: `${(hv / max) * 100}%` }} /></span>
-              <span><i style={{ width: `${(av / max) * 100}%` }} /></span>
+              <span><i data-testid="statbar-home" style={{ width: `${(hv / max) * 100}%`, ...kit(0) }} /></span>
+              <span><i data-testid="statbar-away" style={{ width: `${(av / max) * 100}%`, ...kit(1) }} /></span>
             </span>
             <span className="statbar__v">{formatStat(av, s)}</span>
           </div>

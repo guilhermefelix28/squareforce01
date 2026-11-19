@@ -110,19 +110,23 @@ def test_model_prices_respect_gdd_limits(bound):
 
 
 # ------------------------------------------------------------------ PM-01 formações
-def test_eleven_official_formations():
+def test_official_formations_follow_dr11():
     names = [f.name for f in OFFICIAL_FORMATIONS]
-    assert names == ["4-2-2-2", "4-1-2-3", "4-2-3-1", "3-5-2", "3-4-3", "5-3-2", "4-1-4-1", "4-5-1", "4-3-2-1",
-                     "4-3-1-2", "5-4-1"]
+    assert names == ["4-2-2-2", "4-1-2-3", "4-2-3-1", "4-3-2-1", "4-3-1-2", "4-1-3-2", "4-1-4-1", "4-2-1-3",
+                     "3-1-3-3", "3-2-3-2", "3-1-4-2", "3-1-5-1", "3-2-4-1",
+                     "5-4-1", "5-3-2", "5-2-3", "5-1-3-1", "5-1-2-2", "5-2-2-1", "5-2-1-2"]
     for f in OFFICIAL_FORMATIONS:
         c = Counter(f.slots)
         assert len(f.slots) == 11 and c[P.GK] == 1
         back = int(f.name.split("-")[0])
-        if back == 3:  # linha de 3: alas como LD/LE
-            assert c[P.DC] == 3 and c[P.DR] == c[P.DL] == 1
+        if back == 3:  # linha de 3: três zagueiros, sem laterais
+            assert c[P.DC] == 3 and c[P.DR] == c[P.DL] == 0
         else:
-            assert c[P.DR] + c[P.DL] + c[P.DC] == back
-    assert len({f.slots for f in OFFICIAL_FORMATIONS}) == 11  # tuplas distintas: o nome é preservado
+            assert c[P.DR] == c[P.DL] == 1 and c[P.DC] == back - 2
+        # o nome descreve as faixas: DEF-VOL-ME-ATA (ou DEF-ME-ATA sem volante)
+        bands = [back, c[P.DM], c[P.MC], c[P.STC]]
+        assert "-".join(str(n) for n in bands if n > 0) == f.name
+    assert len({f.slots for f in OFFICIAL_FORMATIONS}) == 20  # tuplas distintas: o nome é preservado
     assert list(OfficialAuctionModel().formations()) == list(OFFICIAL_FORMATIONS)
 
 

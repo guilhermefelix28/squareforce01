@@ -183,7 +183,7 @@ export function sessionSocketUrl(id: string): string {
   return base.replace(/^http/, "ws") + `/ws/sessions/${encodeURIComponent(id)}`;
 }
 
-/** As 11 formações oficiais (disponíveis antes da temporada). */
+/** As 20 formações oficiais (DR-11) (disponíveis antes da temporada). */
 export const getOfficialFormations = () => apiRequest<Formation[]>("/api/formations");
 
 /** Tática do usuário antes do leilão (DR-02). */

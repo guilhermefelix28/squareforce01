@@ -2,7 +2,7 @@
  * Campo interativo (GDD §9): 11 titulares, até 7 reservas.
  * - Arrastar e soltar (mouse: drag nativo; toque: Pointer Events) entre vagas, banco e elenco.
  * - O campo tem faixas por função (GOL, DEF, VOL, ME, ATA). Arrastar um titular para OUTRA FAIXA muda o desenho;
- *   se o novo desenho for uma das 11 formações oficiais, a formação é trocada automaticamente (aviso
+ *   se o novo desenho for uma das formações oficiais, a formação é trocada automaticamente (aviso
  *   "Formação: 4-3-1-2"); senão a carta volta. Durante o arraste as faixas ficam visíveis com o nome.
  * - Toque/clique: selecione um atleta e depois o destino para trocar os dois (celular e teclado).
  * - As vagas são distribuídas por linha com espaçamento igual: as cartas nunca se sobrepõem.

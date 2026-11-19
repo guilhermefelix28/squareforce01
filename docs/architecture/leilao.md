@@ -37,7 +37,7 @@ continua **validada contra o GDD** pelo motor.
 | `market_value` / `minimum_bid` | §3: R$ 3 mi × e^(k(overall−70)) × idade (k = 0,1228 acima e 0,25 abaixo da mediana); lance mínimo 50% |
 | `basic_price` / `build_reserves` | §4: min(R$ 500 mil, lance mínimo); reservas básica e complementar |
 | `position_weights` / `pick_round_players` | §5: necessidade × disponibilidade × recência; peso 6 acima e 1 abaixo da mediana |
-| `formations` | §6: 11 formações oficiais |
+| `formations` | §6: 20 formações oficiais (lista DR-11) |
 | `bot_profile` / `trade_profile` | §7 e §8 |
 
 Bots (GDD §6, concorrência pública): rivais esperados por atleta e escolha mista do alvo (PB-06, parâmetros

@@ -171,8 +171,8 @@ Detalhes em [interface](../architecture/interface.md). Todo POST exige `Idempote
 
 | Método | Rota | Resposta | Erros principais |
 |---|---|---|---|
-| GET | `/api/formations` | `FormationOut[]` (11 oficiais), sem sessão: usado na escolha da tática antes do leilão (DR-02) | — |
-| GET | `/api/sessions/{id}/season/formations` | `FormationOut[]` (11 oficiais, PM-01) | 404 `SEASON_NOT_FOUND` |
+| GET | `/api/formations` | `FormationOut[]` (20 oficiais, DR-11), sem sessão: usado na escolha da tática antes do leilão (DR-02) | — |
+| GET | `/api/sessions/{id}/season/formations` | `FormationOut[]` (20 oficiais, PM-01/DR-11) | 404 `SEASON_NOT_FOUND` |
 | GET | `/api/sessions/{id}/season/squad` | `SquadPlayerOut[]` (disponibilidade, adequação por posição, números) | 404 |
 | GET | `/api/sessions/{id}/season/lineup` | `LineupOut` (escalação atual, postura, adversário público, `locked`) | 404 |
 | POST | `/api/sessions/{id}/season/lineup` | `LineupOut` | 422 `INVALID_LINEUP`, 409 `MATCH_IN_PROGRESS` / `NO_USER_MATCH` |

@@ -243,21 +243,21 @@ describe("escalação", () => {
       Object.defineProperty(e, "dataTransfer", { value: dataTransfer });
       fireEvent(field, e);
     };
-    // 4-1-2-3: meia levado à faixa de defesa (y = 74%) => 3-4-3 (5 defensores com os alas)
+    // 4-1-2-3: meia levado à faixa de volantes (y = 53,5%) => 4-2-1-3
     const me = screen.getAllByRole("button", { name: /^Vaga ME/ })[0];
     fireEvent.dragStart(me, { dataTransfer });
     expect(field).toHaveClass("is-dragging");
-    dropAt("dragover", 340, 666);
-    dropAt("drop", 340, 666);
-    expect(await screen.findByText("Formação: 3-4-3")).toBeInTheDocument();
-    expect(screen.getByLabelText("Formação")).toHaveValue("3-4-3");
-    expect(screen.getAllByRole("button", { name: /^Vaga ZAG/ })).toHaveLength(3);
-    // volante levado à faixa de meias (y = 33%) => 3-4-3 sem volante e com 2 ME: não oficial, nada muda
+    dropAt("dragover", 340, 481);
+    dropAt("drop", 340, 481);
+    expect(await screen.findByText("Formação: 4-2-1-3")).toBeInTheDocument();
+    expect(screen.getByLabelText("Formação")).toHaveValue("4-2-1-3");
+    expect(screen.getAllByRole("button", { name: /^Vaga VOL/ })).toHaveLength(2);
+    // volante levado ao ataque (y = 13%) => 4-1-1-4: não oficial, nada muda
     const vol = screen.getAllByRole("button", { name: /^Vaga VOL/ })[0];
     fireEvent.dragStart(vol, { dataTransfer });
-    dropAt("drop", 340, 297);
+    dropAt("drop", 340, 117);
     expect(await screen.findByText("Essa formação não é oficial")).toBeInTheDocument();
-    expect(screen.getByLabelText("Formação")).toHaveValue("3-4-3");
+    expect(screen.getByLabelText("Formação")).toHaveValue("4-2-1-3");
   });
 
   it("mostra recusa do servidor", async () => {
@@ -368,7 +368,7 @@ describe("encerramento", () => {
     });
     at("#/encerramento");
     await userEvent.click(await screen.findByRole("button", { name: /Encerrar e voltar ao início/ }));
-    await userEvent.click(within(screen.getByRole("alertdialog")).getByRole("button", { name: "Encerrar" }));
+    await userEvent.click(within(screen.getByRole("alertdialog")).getByRole("button", { name: /^Encerrar (liga|copa)$/ }));
     await waitFor(() => expect(window.location.hash).toBe("#/home"));
     expect(closed).toBe(true);
     expect((calls.find((c) => c.method === "POST")!.init.headers as Record<string, string>)["Idempotency-Key"]).toMatch(/^sf-/);

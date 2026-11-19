@@ -17,6 +17,7 @@ from squadforce_shared.contracts import (
 )
 from test_auction_api import big_squad
 from test_season_api import boot, to_competition
+from squadforce_shared.domain.formations import OFFICIAL_FORMATIONS
 
 
 @pytest.fixture
@@ -49,8 +50,8 @@ def test_squad_and_formations(env):
     assert len(squad) == 18 and all(p.available for p in squad)
     assert all(p.fit[p.position] == "natural" for p in squad)
     forms = get(c, sid, "formations")
-    assert [f["id"] for f in forms] == ["4-2-2-2", "4-1-2-3", "4-2-3-1", "3-5-2", "3-4-3", "5-3-2", "4-1-4-1", "4-5-1",
-                                     "4-3-2-1", "4-3-1-2", "5-4-1"] and all(len(f["positions"]) == 11 for f in forms)
+    assert [f["id"] for f in forms] == [f.name for f in OFFICIAL_FORMATIONS]
+    assert all(len(f["positions"]) == 11 for f in forms)
     assert "attributes" not in str(squad[0].model_dump())  # atributos não são expostos
 
 

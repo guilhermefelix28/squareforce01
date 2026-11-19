@@ -81,11 +81,18 @@ export function AuctionBoard({
   const [feedback, setFeedback] = useState<{ kind: "success" | "error"; text: string } | null>(null);
   const keyRef = useRef(newIdempotencyKey());
 
-  // nova rodada: limpa seleção (mantém feedback do último lance)
+  // nova rodada: limpa seleção e a mensagem do lance (ela só vale para a rodada em que foi dada)
   const roundNumber = round?.number;
+  const roundRef = useRef(roundNumber);
+  roundRef.current = roundNumber;
+  // resposta que chega depois da troca de rodada não deixa mensagem na rodada nova
+  const say = (from: number, f: { kind: "success" | "error"; text: string }) => {
+    if (roundRef.current === from) setFeedback(f);
+  };
   useEffect(() => {
     setSelected(null);
     setAmountText("");
+    setFeedback(null);
   }, [roundNumber]);
 
   const player = round?.players.find((p) => p.unique_id === selected) ?? null;
@@ -119,14 +126,14 @@ export function AuctionBoard({
     setFeedback(null);
     try {
       const ack = await placeBid(sessionId, { player_id: player.unique_id, amount, round_number: round.number }, keyRef.current);
-      setFeedback({
+      say(round.number, {
         kind: "success",
         text: `Lance de ${formatMoney(ack.amount)} em ${player.name} confirmado${ack.replaced_player_id ? " (alvo alterado)" : ""}.`,
       });
       onChanged();
     } catch (err) {
       const code = err instanceof ApiError ? err.code : "";
-      setFeedback({ kind: "error", text: BID_ERRORS[code] ?? (err instanceof ApiError ? err.message : "Falha ao enviar o lance.") });
+      say(round.number, { kind: "error", text: BID_ERRORS[code] ?? (err instanceof ApiError ? err.message : "Falha ao enviar o lance.") });
     } finally {
       keyRef.current = newIdempotencyKey(); // uma chave por confirmação do usuário
       setBusy(false);
@@ -139,11 +146,11 @@ export function AuctionBoard({
     setFeedback(null);
     try {
       await cancelBid(sessionId, round.number, keyRef.current);
-      setFeedback({ kind: "success", text: `Lance em ${activePlayer?.name ?? "atleta"} cancelado. Você pode dar outro lance até o fim da rodada.` });
+      say(round.number, { kind: "success", text: `Lance em ${activePlayer?.name ?? "atleta"} cancelado. Você pode dar outro lance até o fim da rodada.` });
       onChanged();
     } catch (err) {
       const code = err instanceof ApiError ? err.code : "";
-      setFeedback({ kind: "error", text: BID_ERRORS[code] ?? (err instanceof ApiError ? err.message : "Falha ao cancelar o lance.") });
+      say(round.number, { kind: "error", text: BID_ERRORS[code] ?? (err instanceof ApiError ? err.message : "Falha ao cancelar o lance.") });
     } finally {
       keyRef.current = newIdempotencyKey();
       setBusy(false);
@@ -273,7 +280,7 @@ export function AuctionBoard({
                   <td>
                     <span className="club-name">
                       <ClubCrest clubUid={c.club_uid} name={clubName.get(c.club_uid) ?? "?"} size={18} />
-                      <span>{clubName.get(c.club_uid) ?? c.club_uid}</span>
+                      <span title={clubName.get(c.club_uid)}>{clubName.get(c.club_uid) ?? c.club_uid}</span>
                     </span>
                   </td>
                   <td className="num">{c.squad_count}/18</td>

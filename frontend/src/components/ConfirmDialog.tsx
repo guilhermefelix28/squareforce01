@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 
 export function ConfirmDialog({
   open,
@@ -29,7 +30,8 @@ export function ConfirmDialog({
   }, [open, onCancel]);
 
   if (!open) return null;
-  return (
+  // portal no <body>: dentro da barra de ações (fixa, com blur) o fundo e o diálogo ficavam presos e cortados
+  return createPortal(
     <div className="dialog-backdrop" onClick={onCancel}>
       <div
         className="dialog"
@@ -55,6 +57,7 @@ export function ConfirmDialog({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

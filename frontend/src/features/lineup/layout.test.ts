@@ -1,20 +1,10 @@
 import { describe, expect, it } from "vitest";
+import { FORMATIONS } from "../../test/fakeApi";
 import { BAND_Y, detectFormation, moveToRow, slotLayout, slotRows, widestRow, type FormationDef } from "./layout";
 
-/** As 11 formações oficiais (mesma ordem de vagas do servidor). */
-export const OFFICIAL: FormationDef[] = [
-  ["4-2-2-2", "GK DR DC DC DL DM DM MC MC STC STC"],
-  ["4-1-2-3", "GK DR DC DC DL DM MC MC STC STC STC"],
-  ["4-2-3-1", "GK DR DC DC DL DM DM MC MC MC STC"],
-  ["3-5-2", "GK DC DC DC DR DL DM MC MC STC STC"],
-  ["3-4-3", "GK DC DC DC DR DL DM MC STC STC STC"],
-  ["5-3-2", "GK DR DC DC DC DL DM MC MC STC STC"],
-  ["4-1-4-1", "GK DR DC DC DL DM MC MC MC MC STC"],
-  ["4-5-1", "GK DR DC DC DL MC MC MC MC MC STC"],
-  ["4-3-2-1", "GK DR DC DC DL DM MC DM MC MC STC"],
-  ["4-3-1-2", "GK DR DC DC DL DM MC MC MC STC STC"],
-  ["5-4-1", "GK DR DC DC DC DL DM MC MC MC STC"],
-].map(([id, p]) => ({ id, positions: p.split(" ") }));
+/** As 20 formações oficiais (DR-11), na mesma ordem de vagas do servidor. */
+export const OFFICIAL: FormationDef[] = FORMATIONS;
+const byId = (id: string) => OFFICIAL.find((f) => f.id === id)!;
 
 describe("desenho tático sem sobreposição", () => {
   it.each(OFFICIAL.map((f) => [f.id, f] as const))("%s: vagas distintas e espaçadas em 360 px", (_, f) => {
@@ -39,8 +29,9 @@ describe("desenho tático sem sobreposição", () => {
     expect(pts[7].y).toBe(BAND_Y[3]); // ME
     expect(pts[5].y).toBeGreaterThan(pts[7].y); // volante atrás do meia
     expect(pts[9].y).toBeLessThan(pts[7].y);
-    expect(slotRows(OFFICIAL[3])[1]).toEqual([5, 1, 2, 3, 4]); // 3-5-2: LE ... LD na faixa de defesa
-    expect(slotRows(OFFICIAL[7])[2]).toEqual([]); // 4-5-1: faixa de volantes vazia (mas existe como destino)
+    expect(slotRows(byId("4-2-2-2"))[1]).toEqual([4, 2, 3, 1]); // LE ... LD na faixa de defesa
+    expect(slotRows(byId("3-1-3-3"))[1]).toEqual([1, 2, 3]); // linha de 3: três zagueiros
+    expect(slotRows(byId("5-4-1"))[2]).toEqual([]); // 5-4-1: faixa de volantes vazia (mas existe como destino)
   });
 });
 
@@ -49,31 +40,35 @@ describe("reconhece a formação ao mudar o desenho", () => {
     expect(detectFormation([4, 1, 2, 3], OFFICIAL)?.id).toBe("4-1-2-3");
     expect(detectFormation([4, 2, 2, 2], OFFICIAL)?.id).toBe("4-2-2-2");
     expect(detectFormation([4, 2, 3, 1], OFFICIAL)?.id).toBe("4-2-3-1");
-    expect(detectFormation([5, 1, 2, 2], OFFICIAL)?.id).toBe("5-3-2"); // mesma composição do 3-5-2: o nome que descreve as faixas
-    expect(detectFormation([5, 1, 2, 2], OFFICIAL, "3-5-2")?.id).toBe("3-5-2");
+    expect(detectFormation([5, 1, 2, 2], OFFICIAL)?.id).toBe("5-1-2-2");
+    expect(detectFormation([5, 0, 3, 2], OFFICIAL)?.id).toBe("5-3-2");
+    expect(detectFormation([3, 2, 3, 2], OFFICIAL)?.id).toBe("3-2-3-2");
+    // toda formação oficial é reconhecida pelas próprias faixas
+    for (const f of OFFICIAL) expect(detectFormation(slotRows(f).slice(1).map((r) => r.length), OFFICIAL)?.id).toBe(f.id);
     expect(detectFormation([2, 4, 4, 0], OFFICIAL)).toBeNull();
   });
-  it("volante levado à faixa de meias: 4-2-2-2 vira 4-3-1-2 com os mesmos atletas", () => {
+  it("volante levado à faixa de meias: 4-2-2-2 vira 4-1-3-2 com os mesmos atletas", () => {
     const starters = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
     const r = moveToRow(OFFICIAL[0], starters, 5, 3, 0, OFFICIAL)!;
-    expect(r.formation.id).toBe("4-3-1-2");
+    expect(r.formation.id).toBe("4-1-3-2");
     expect([...r.starters].sort((a, b) => a! - b!)).toEqual(starters);
     expect(r.starters[0]).toBe(1); // goleiro intacto
     const rows = slotRows(r.formation).map((s) => s.map((i) => r.starters[i]));
     expect(rows[3]).toContain(6);
     expect(rows[2]).toEqual([7]);
   });
-  it("atacante recuado: 4-1-2-3 vira 4-2-2-2 (faixa VOL) ou 4-3-1-2 (faixa ME); desenho não oficial ou goleiro => null", () => {
+  it("atacante recuado: 4-1-2-3 vira 4-2-2-2 (faixa VOL) ou 4-1-3-2 (faixa ME); desenho não oficial ou goleiro => null", () => {
     const starters = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
     expect(moveToRow(OFFICIAL[1], starters, 9, 2, 0, OFFICIAL)?.formation.id).toBe("4-2-2-2");
-    expect(moveToRow(OFFICIAL[1], starters, 9, 3, 0, OFFICIAL)?.formation.id).toBe("4-3-1-2");
-    expect(moveToRow(OFFICIAL[6], starters, 5, 1, 0, OFFICIAL)).toBeNull(); // 4-1-4-1 sem volante: 5-0-4-1
+    expect(moveToRow(OFFICIAL[1], starters, 9, 3, 0, OFFICIAL)?.formation.id).toBe("4-1-3-2");
+    expect(moveToRow(byId("4-1-4-1"), starters, 5, 1, 0, OFFICIAL)?.formation.id).toBe("5-4-1"); // volante na defesa
+    expect(moveToRow(byId("4-1-4-1"), starters, 10, 1, 0, OFFICIAL)).toBeNull(); // 5-1-4-0: sem atacante
     expect(moveToRow(OFFICIAL[0], starters, 0, 1, 0, OFFICIAL)).toBeNull();
   });
-  it("faixa vazia também recebe: meia do 4-5-1 levado à faixa VOL vira 4-1-4-1", () => {
+  it("faixa vazia também recebe: meia do 5-4-1 levado à faixa VOL vira 5-1-3-1", () => {
     const starters = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
-    const r = moveToRow(OFFICIAL[7], starters, 7, 2, 0, OFFICIAL)!;
-    expect(r.formation.id).toBe("4-1-4-1");
+    const r = moveToRow(byId("5-4-1"), starters, 7, 2, 0, OFFICIAL)!;
+    expect(r.formation.id).toBe("5-1-3-1");
     expect(r.starters[r.formation.positions.indexOf("DM")]).toBe(8);
   });
 });

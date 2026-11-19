@@ -162,7 +162,7 @@ describe("tática antes do leilão (DR-02)", () => {
     const { calls } = fakeApi({
       "GET /api/health": () => json(200, { ...HEALTH, active_session: true }),
       [`GET /api/sessions/${SESSION.id}`]: () =>
-        json(200, started ? { ...SESSION, version: 3, phase: "auction", user_formation: "3-5-2" } : SESSION),
+        json(200, started ? { ...SESSION, version: 3, phase: "auction", user_formation: "3-2-3-2" } : SESSION),
       "GET /api/formations": () => json(200, FORMATIONS),
       "GET /api/catalog/clubs": () => json(200, { items: CLUBS, total: 3, limit: 200, offset: 0 }),
       [`POST /api/sessions/${SESSION.id}/formation`]: (_u, init) =>
@@ -175,15 +175,15 @@ describe("tática antes do leilão (DR-02)", () => {
     window.location.hash = "#/tatica";
     render(<App />);
     const tiles = await screen.findAllByRole("radio");
-    expect(tiles).toHaveLength(11);
-    await user.click(screen.getByRole("radio", { name: "3-5-2" }));
-    expect(screen.getByRole("radio", { name: "3-5-2" })).toHaveAttribute("aria-checked", "true");
+    expect(tiles).toHaveLength(20);
+    await user.click(screen.getByRole("radio", { name: "3-2-3-2" }));
+    expect(screen.getByRole("radio", { name: "3-2-3-2" })).toHaveAttribute("aria-checked", "true");
     expect(screen.queryByText(/Formação: 3-5-2/)).toBeNull(); // a barra de ação não repete a formação
     await user.click(screen.getByRole("button", { name: /Confirmar tática e começar o leilão/ }));
     await waitFor(() => expect(window.location.hash).toBe("#/auction"));
     const posts = calls.filter((c) => c.method === "POST");
     expect(posts.map((c) => c.path)).toEqual([`/api/sessions/${SESSION.id}/formation`, `/api/sessions/${SESSION.id}/auction/start`]);
-    expect(JSON.parse(String(posts[0].init.body))).toEqual({ formation: "3-5-2" });
+    expect(JSON.parse(String(posts[0].init.body))).toEqual({ formation: "3-2-3-2" });
     for (const p of posts) expect((p.init.headers as Record<string, string>)["Idempotency-Key"]).toMatch(/^sf-/);
     expect(screen.queryByRole("button", { name: /Trocar tática/ })).toBeNull();
     expect(screen.queryByRole("button", { name: /Começar leilão/ })).toBeNull();

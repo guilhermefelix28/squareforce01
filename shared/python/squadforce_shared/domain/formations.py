@@ -1,8 +1,8 @@
-"""Formações oficiais (PM-01), escolhidas pelo responsável em 2026-11-19 (nomes ajustados em DR-08).
+"""Formações oficiais (PM-01), redefinidas pelo responsável em 2026-11-19 (DR-08 e DR-11).
 
-Usam somente os 7 códigos do GDD §3: meias abertos e meias-atacantes são MC; alas são DR/DL. Por isso alguns
-pares têm as mesmas vagas e diferem só no nome: 3-5-2 = 5-3-2 e 4-3-2-1 = 4-2-3-1. A ORDEM das vagas é
-diferente em cada formação, para que o nome escolhido seja preservado (a tupla de vagas identifica a formação).
+Lista definida pelo responsável em DR-11: cada nome descreve as faixas DEF-VOL-ME-ATA (ou DEF-ME-ATA quando não
+há volante). Usam somente os 7 códigos do GDD §3; linhas de 3 são três ZAG, linhas de 4 e 5 têm LD e LE. Toda
+formação tem composição própria, então a tupla de vagas identifica a formação.
 Valem para o leilão, os bots, a escalação e o motor. Ver docs/architecture/proposta-auction-model.md §6.
 """
 
@@ -25,18 +25,27 @@ class Formation:
 
 
 OFFICIAL_FORMATIONS: tuple[Formation, ...] = (
-    # DR-08 (2026-11-19): o antigo 4-4-2 passou a 4-2-2-2 (2 VOL + 2 ME) e o 4-3-3 foi renomeado 4-1-2-3
+    # DR-11 (2026-11-19): lista definida pelo responsável (20 formações; 4-5-1, 3-5-2 e 3-4-3 saíram)
     Formation("4-2-2-2", (GK, DR, DC, DC, DL, DM, DM, MC, MC, STC, STC)),
     Formation("4-1-2-3", (GK, DR, DC, DC, DL, DM, MC, MC, STC, STC, STC)),
     Formation("4-2-3-1", (GK, DR, DC, DC, DL, DM, DM, MC, MC, MC, STC)),
-    Formation("3-5-2", (GK, DC, DC, DC, DR, DL, DM, MC, MC, STC, STC)),
-    Formation("3-4-3", (GK, DC, DC, DC, DR, DL, DM, MC, STC, STC, STC)),
-    Formation("5-3-2", (GK, DR, DC, DC, DC, DL, DM, MC, MC, STC, STC)),
+    Formation("4-3-2-1", (GK, DR, DC, DC, DL, DM, DM, DM, MC, MC, STC)),
+    Formation("4-3-1-2", (GK, DR, DC, DC, DL, DM, DM, DM, MC, STC, STC)),
+    Formation("4-1-3-2", (GK, DR, DC, DC, DL, DM, MC, MC, MC, STC, STC)),
     Formation("4-1-4-1", (GK, DR, DC, DC, DL, DM, MC, MC, MC, MC, STC)),
-    Formation("4-5-1", (GK, DR, DC, DC, DL, MC, MC, MC, MC, MC, STC)),
-    Formation("4-3-2-1", (GK, DR, DC, DC, DL, DM, MC, DM, MC, MC, STC)),  # mesma composição do 4-2-3-1, outra ordem
-    Formation("4-3-1-2", (GK, DR, DC, DC, DL, DM, MC, MC, MC, STC, STC)),
-    Formation("5-4-1", (GK, DR, DC, DC, DC, DL, DM, MC, MC, MC, STC)),
+    Formation("4-2-1-3", (GK, DR, DC, DC, DL, DM, DM, MC, STC, STC, STC)),
+    Formation("3-1-3-3", (GK, DC, DC, DC, DM, MC, MC, MC, STC, STC, STC)),
+    Formation("3-2-3-2", (GK, DC, DC, DC, DM, DM, MC, MC, MC, STC, STC)),
+    Formation("3-1-4-2", (GK, DC, DC, DC, DM, MC, MC, MC, MC, STC, STC)),
+    Formation("3-1-5-1", (GK, DC, DC, DC, DM, MC, MC, MC, MC, MC, STC)),
+    Formation("3-2-4-1", (GK, DC, DC, DC, DM, DM, MC, MC, MC, MC, STC)),
+    Formation("5-4-1", (GK, DR, DC, DC, DC, DL, MC, MC, MC, MC, STC)),
+    Formation("5-3-2", (GK, DR, DC, DC, DC, DL, MC, MC, MC, STC, STC)),
+    Formation("5-2-3", (GK, DR, DC, DC, DC, DL, MC, MC, STC, STC, STC)),
+    Formation("5-1-3-1", (GK, DR, DC, DC, DC, DL, DM, MC, MC, MC, STC)),
+    Formation("5-1-2-2", (GK, DR, DC, DC, DC, DL, DM, MC, MC, STC, STC)),
+    Formation("5-2-2-1", (GK, DR, DC, DC, DC, DL, DM, DM, MC, MC, STC)),
+    Formation("5-2-1-2", (GK, DR, DC, DC, DC, DL, DM, DM, MC, STC, STC)),
 )
 
 

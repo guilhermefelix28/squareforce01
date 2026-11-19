@@ -32,15 +32,17 @@ Consulte a Skill correspondente **antes** de alterar um módulo. `game-design-ru
 **Entregas 1 a 9 concluídas** (infraestrutura, dados, sessão; competições; leilão; mercado; motor esportivo; IA tática;
 execução de Liga e Copa; interface; homologação). Conclusão em 2026-11-19: o `AuctionModel` oficial foi aprovado
 (`docs/architecture/proposta-auction-model.md`, `services/auction/official_model.py`, carregado por padrão), assim como
-as 11 formações (PM-01), o desempate Brasileirão (PC-01), a pontuação 3/1/0 (PC-09) e as referências do motor (PM-02).
+as formações (PM-01; lista atual de 20 em DR-11), o desempate Brasileirão (PC-01), a pontuação 3/1/0 (PC-09) e as referências do motor (PM-02).
 Mudar fórmula, perfil de bot ou formação aprovados exige nova aprovação do responsável. Os parâmetros do motor
 (`services/match_engine/params.py`) são os calibrados contra as referências aceitas; os da IA tática
 (`services/bot_ai/tactics_params.py`) e da concorrência no leilão (PB-06) continuam provisórios.
-**Experiência de jogo (2026-11-19):** as diretrizes do responsável prevalecem sobre o GDD (DR-01..DR-10 em
+**Experiência de jogo (2026-11-19):** as diretrizes do responsável prevalecem sobre o GDD (DR-01..DR-11 em
 `pendencias.md`: lance redutível e cancelável, tática antes do leilão (confirmar já inicia o leilão), goleiro cansa
 ×0,35, área oculta de dados com senha, ordem de posições GOL-LD-ZAG-LE-VOL-ME-ATA, partida ao vivo com as duas
 equipes e os outros jogos, formações 4-2-2-2 e 4-1-2-3 com faixas VOL/ME no campinho, pênaltis cobrança a cobrança,
-cores dos uniformes extraídas do escudo).
+cores dos uniformes extraídas do escudo; DR-11: 20 formações definidas pelo responsável, IDs de clube
+renumerados na planilha (migração 0003), estatísticas nas cores dos clubes, partida ao vivo com lance a lance sob o
+placar).
 Critérios de aceitação são fixos (`docs/homologacao/criterios.md`): nunca altere limites depois de ver resultados.
 Não implemente novas entregas sem autorização
 explícita do usuário para a entrega correspondente.

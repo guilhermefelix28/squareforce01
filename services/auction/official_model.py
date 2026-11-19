@@ -3,7 +3,7 @@
 Ajustes pedidos pelo responsável na aprovação:
 - atletas abaixo da mediana bem mais baratos: a curva do valor é mais inclinada abaixo de overall 70 (§3);
 - muito mais chance de atletas acima da mediana nas rodadas: peso 6 contra 1 (§5);
-- 11 formações oficiais (§6, `squadforce_shared.domain.formations`).
+- 20 formações oficiais (§6, lista DR-11, `squadforce_shared.domain.formations`).
 
 O modelo "solto" (`OfficialAuctionModel()`) só fornece regras independentes da base: formações, perfis dos bots
 e curvas de preço. Tudo que depende da base (overall calibrado, qualidade, preços por atleta, reservas, sorteio

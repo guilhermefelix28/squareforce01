@@ -47,7 +47,7 @@ def server(tmp_path):
 def test_server_boots_and_serves_contracts(server):
     base, tmp = server
     h = httpx.get(f"{base}/api/health").json()
-    assert h["status"] == "ok" and h["database"]["schema_version"] == 2
+    assert h["status"] == "ok" and h["database"]["schema_version"] == 3
     assert (tmp / "e2e.db").exists()
     assert httpx.get(f"{base}/api/competitions/options").json()["cup"]["allowed_sizes"] == [2, 4, 8, 16, 32]
     assert httpx.get(f"{base}/openapi.json").status_code == 200

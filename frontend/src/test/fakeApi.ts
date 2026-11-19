@@ -99,17 +99,26 @@ export const CUP_COMPETITION = {
   },
 };
 
-/** As 11 formações oficiais (mesmas vagas do servidor). */
+/** As 20 formações oficiais (DR-11) (mesmas vagas do servidor). */
 export const FORMATIONS = [
   ["4-2-2-2", "GK DR DC DC DL DM DM MC MC STC STC"],
   ["4-1-2-3", "GK DR DC DC DL DM MC MC STC STC STC"],
   ["4-2-3-1", "GK DR DC DC DL DM DM MC MC MC STC"],
-  ["3-5-2", "GK DC DC DC DR DL DM MC MC STC STC"],
-  ["3-4-3", "GK DC DC DC DR DL DM MC STC STC STC"],
-  ["5-3-2", "GK DR DC DC DC DL DM MC MC STC STC"],
+  ["4-3-2-1", "GK DR DC DC DL DM DM DM MC MC STC"],
+  ["4-3-1-2", "GK DR DC DC DL DM DM DM MC STC STC"],
+  ["4-1-3-2", "GK DR DC DC DL DM MC MC MC STC STC"],
   ["4-1-4-1", "GK DR DC DC DL DM MC MC MC MC STC"],
-  ["4-5-1", "GK DR DC DC DL MC MC MC MC MC STC"],
-  ["4-3-2-1", "GK DR DC DC DL DM MC DM MC MC STC"],
-  ["4-3-1-2", "GK DR DC DC DL DM MC MC MC STC STC"],
-  ["5-4-1", "GK DR DC DC DC DL DM MC MC MC STC"],
+  ["4-2-1-3", "GK DR DC DC DL DM DM MC STC STC STC"],
+  ["3-1-3-3", "GK DC DC DC DM MC MC MC STC STC STC"],
+  ["3-2-3-2", "GK DC DC DC DM DM MC MC MC STC STC"],
+  ["3-1-4-2", "GK DC DC DC DM MC MC MC MC STC STC"],
+  ["3-1-5-1", "GK DC DC DC DM MC MC MC MC MC STC"],
+  ["3-2-4-1", "GK DC DC DC DM DM MC MC MC MC STC"],
+  ["5-4-1", "GK DR DC DC DC DL MC MC MC MC STC"],
+  ["5-3-2", "GK DR DC DC DC DL MC MC MC STC STC"],
+  ["5-2-3", "GK DR DC DC DC DL MC MC STC STC STC"],
+  ["5-1-3-1", "GK DR DC DC DC DL DM MC MC MC STC"],
+  ["5-1-2-2", "GK DR DC DC DC DL DM MC MC STC STC"],
+  ["5-2-2-1", "GK DR DC DC DC DL DM DM MC MC STC"],
+  ["5-2-1-2", "GK DR DC DC DC DL DM DM MC STC STC"],
 ].map(([id, p]) => ({ id, positions: p.split(" ") }));

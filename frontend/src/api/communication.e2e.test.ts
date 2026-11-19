@@ -37,7 +37,7 @@ describe("frontend <-> backend real", () => {
   it("consulta o health check", async () => {
     const h = await getHealth();
     expect(h.status).toBe("ok");
-    expect(h.database.schema_version).toBe(2);
+    expect(h.database.schema_version).toBe(3);
   });
 
   it("recebe erro padronizado em sessão inexistente", async () => {

@@ -104,6 +104,27 @@ describe("AuctionBoard", () => {
     expect(onChanged).toHaveBeenCalled();
   });
 
+  it("a mensagem do lance some quando a rodada muda (regressão: 'Lance de R$…' de rodada anterior)", async () => {
+    const user = userEvent.setup();
+    fakeApi({
+      [`POST /api/sessions/${SESSION.id}/auction/bids`]: (_u, init) => {
+        const b = JSON.parse(String(init.body));
+        return json(200, { round: 7, player_id: b.player_id, amount: b.amount, seq: 12, replaced_player_id: null, replayed: false });
+      },
+    });
+    const view = render(
+      <AuctionBoard sessionId={SESSION.id} state={STATE} clubs={CLUBS as Club[]} formation={null} roundRemainingMs={8_000} globalRemainingMs={540_000} onChanged={vi.fn()} />,
+    );
+    await user.click(screen.getByRole("button", { name: /Atacante Dois/ }));
+    await user.click(screen.getByRole("button", { name: "Confirmar lance" }));
+    expect(await screen.findByText(/Lance de R\$\s2\.500\.000 em Atacante Dois confirmado/)).toBeInTheDocument();
+    const next = { ...STATE, round: { ...STATE.round!, number: 8 } };
+    view.rerender(
+      <AuctionBoard sessionId={SESSION.id} state={next} clubs={CLUBS as Club[]} formation={null} roundRemainingMs={8_000} globalRemainingMs={540_000} onChanged={vi.fn()} />,
+    );
+    expect(screen.queryByText(/Lance de R\$/)).toBeNull();
+  });
+
   it("aceita digitação manual e explica recusas do servidor", async () => {
     const user = userEvent.setup();
     fakeApi({

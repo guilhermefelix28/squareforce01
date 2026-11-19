@@ -104,7 +104,7 @@ def _divisions(client):
 @pytest.mark.real_data
 def test_real_league_of_20_with_serie_b_user(real_client):
     div = _divisions(real_client)
-    goias = 102496
+    goias = 102555
     assert div[goias] == "B"
     s = create_session(real_client, num_clubs=20, user_club_uid=goias, league_rounds="double").json()
     assert s["participants"][0] == goias
@@ -124,8 +124,8 @@ def test_real_league_of_20_with_serie_a_user_is_the_whole_serie_a(real_client):
 @real
 @pytest.mark.real_data
 def test_real_cup_of_32(real_client):
-    s = create_session(real_client, format="cup", num_clubs=32, user_club_uid=900205, league_rounds=None).json()
-    assert s["participants"][0] == 900205 and len(set(s["participants"])) == 32
+    s = create_session(real_client, format="cup", num_clubs=32, user_club_uid=900678, league_rounds=None).json()
+    assert s["participants"][0] == 900678 and len(set(s["participants"])) == 32
     st = competition(real_client, s["id"]).structure
     assert [r.name for r in st.rounds] == [
         "Dezesseis-avos de final", "Oitavas de final", "Quartas de final", "Semifinal", "Final",

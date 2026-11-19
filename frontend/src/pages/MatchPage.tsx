@@ -175,13 +175,44 @@ export function MatchPage({ navigate }: { navigate: (h: string) => void }) {
       {pollError && <Notice kind="warning">{pollError} Reconectando… o relógio da partida continua no servidor.</Notice>}
       {cmd.error && <Notice kind="error" onDismiss={() => cmd.setError(null)}>{cmd.error.message}</Notice>}
 
+      <section className="card live-feed" aria-label="Lance a lance">
+        <h3>Lance a lance</h3>
+        {feed.length === 0 ? <p className="muted small">A bola vai rolar…</p> : (
+          <ol className="feed">
+            {feed.map((e) => (
+              <li key={e.seq} className={e.type === "goal" || (e.type === "shootout_kick" && e.data?.scored) ? "is-goal"
+                : ["penalty_awarded", "red_card", "shootout_kick", "shootout_start", "shootout_end"].includes(e.type) ? "is-key" : ""}>
+                <span className="feed__min">{e.type === "shootout_kick" ? "pên." : `${e.minute}'`}</span>
+                <span aria-hidden>{EVENT_ICON[e.type] ?? "•"}</span>
+                <span>
+                  <strong>{eventLabel(e.type)}</strong> {describeEvent(e)}
+                  {e.club_uid != null && <span className="muted small"> · {names.get(e.club_uid) ?? ""}</span>}
+                </span>
+              </li>
+            ))}
+          </ol>
+        )}
+      </section>
       <div className="live-layout">
-        <div className="live-main">
+        <aside className="live-left">
           <section className="card">
-            <LivePitch home={homePlayers} away={awayPlayers}
-              homeName={names.get(live.home_club_uid) ?? "Mandante"} awayName={names.get(live.away_club_uid) ?? "Visitante"}
-              homeUid={live.home_club_uid} awayUid={live.away_club_uid} userSide={side} />
+            <h3>Condição física</h3>
+            <span className="muted small">Substituições {live.substitutions_used}/{live.max_substitutions} (automáticas)</span>
+            <ul className="condition-list">
+              {live.own_players.map((p) => (
+                <li key={p.player} className={p.on_field ? "" : "is-off"}>
+                  <PositionBadge position={p.slot} size="sm" />
+                  <span className="condition-list__name">{p.name}{p.yellow_cards > 0 ? " 🟨" : ""}{p.on_field ? "" : " (fora)"}</span>
+                  <span className="condition" role="meter" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(p.condition)} aria-label={`Condição de ${p.name}`}>
+                    <span className={p.condition < 60 ? "is-low" : p.condition < 80 ? "is-mid" : ""} style={{ width: `${p.condition}%` }} />
+                  </span>
+                  <span className="num small">{Math.round(p.condition)}%</span>
+                </li>
+              ))}
+            </ul>
           </section>
+        </aside>
+        <div className="live-main">
           <section className="card">
             <h3>Sua postura</h3>
             <div className="posture-buttons" role="group" aria-label="Postura tática">
@@ -204,22 +235,9 @@ export function MatchPage({ navigate }: { navigate: (h: string) => void }) {
             </div>
           </section>
           <section className="card">
-            <h3>Lance a lance</h3>
-            {feed.length === 0 ? <p className="muted small">A bola vai rolar…</p> : (
-              <ol className="feed">
-                {feed.map((e) => (
-                  <li key={e.seq} className={e.type === "goal" || (e.type === "shootout_kick" && e.data?.scored) ? "is-goal"
-                    : ["penalty_awarded", "red_card", "shootout_kick", "shootout_start", "shootout_end"].includes(e.type) ? "is-key" : ""}>
-                    <span className="feed__min">{e.type === "shootout_kick" ? "pên." : `${e.minute}'`}</span>
-                    <span aria-hidden>{EVENT_ICON[e.type] ?? "•"}</span>
-                    <span>
-                      <strong>{eventLabel(e.type)}</strong> {describeEvent(e)}
-                      {e.club_uid != null && <span className="muted small"> · {names.get(e.club_uid) ?? ""}</span>}
-                    </span>
-                  </li>
-                ))}
-              </ol>
-            )}
+            <LivePitch home={homePlayers} away={awayPlayers}
+              homeName={names.get(live.home_club_uid) ?? "Mandante"} awayName={names.get(live.away_club_uid) ?? "Visitante"}
+              homeUid={live.home_club_uid} awayUid={live.away_club_uid} userSide={side} />
           </section>
         </div>
         <aside className="live-side">
@@ -229,23 +247,7 @@ export function MatchPage({ navigate }: { navigate: (h: string) => void }) {
           </section>
           <section className="card">
             <h3>Estatísticas</h3>
-            <StatsCompare stats={live.stats} labels={[names.get(live.home_club_uid) ?? "Mandante", names.get(live.away_club_uid) ?? "Visitante"]} />
-          </section>
-          <section className="card">
-            <h3>Condição física</h3>
-            <span className="muted small">Substituições {live.substitutions_used}/{live.max_substitutions} (automáticas)</span>
-            <ul className="condition-list">
-              {live.own_players.map((p) => (
-                <li key={p.player} className={p.on_field ? "" : "is-off"}>
-                  <PositionBadge position={p.slot} size="sm" />
-                  <span className="condition-list__name">{p.name}{p.yellow_cards > 0 ? " 🟨" : ""}{p.on_field ? "" : " (fora)"}</span>
-                  <span className="condition" role="meter" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(p.condition)} aria-label={`Condição de ${p.name}`}>
-                    <span className={p.condition < 60 ? "is-low" : p.condition < 80 ? "is-mid" : ""} style={{ width: `${p.condition}%` }} />
-                  </span>
-                  <span className="num small">{Math.round(p.condition)}%</span>
-                </li>
-              ))}
-            </ul>
+            <StatsCompare stats={live.stats} uids={[live.home_club_uid, live.away_club_uid]} labels={[names.get(live.home_club_uid) ?? "Mandante", names.get(live.away_club_uid) ?? "Visitante"]} />
           </section>
         </aside>
       </div>

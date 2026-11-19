@@ -241,7 +241,7 @@ async def close_session(
 @router.post("/sessions/{session_id}/formation", response_model=SessionOut, responses=ERR, tags=["sessions"])
 async def choose_user_formation(c: C, request: Request, session_id: str, body: UserFormationIn,
                                 idempotency_key: IdemKey = None):
-    """Tática do usuário antes do leilão (decisão DR-02): uma das 11 formações oficiais, somente na fase `setup`.
+    """Tática do usuário antes do leilão (decisão DR-02): uma das 20 formações oficiais (DR-11), somente na fase `setup`.
     Vira a formação inicial da escalação automática do usuário."""
     key = validate_key(idempotency_key)
     raw = await request.body()
@@ -731,7 +731,7 @@ def _live_error(exc: LiveError) -> AppError:
 
 @router.get("/formations", response_model=list[FormationOut], tags=["season"])
 def official_formations(c: C) -> list[FormationOut]:
-    """As 11 formações oficiais (PM-01), disponíveis antes do leilão para a escolha da tática (DR-02)."""
+    """As 20 formações oficiais (PM-01, lista DR-11), disponíveis antes do leilão para a escolha da tática (DR-02)."""
     return c.seasons.formations()
 
 

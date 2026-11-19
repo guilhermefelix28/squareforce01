@@ -1,7 +1,7 @@
 # Proposta do `AuctionModel` (PE-01 a PE-05, PM-01, PB-01, PB-02)
 
 **Situação: APROVADA pelo responsável em 2026-11-19, com ajustes:** atletas abaixo da mediana bem mais baratos (§3),
-maior chance de atletas acima da mediana nas rodadas (§5) e 11 formações (§6). O
+maior chance de atletas acima da mediana nas rodadas (§5) e as formações oficiais (§6; 11 na aprovação, 20 desde DR-11). O
 modelo é implementado em `services/auction/official_model.py`, a pendência correspondente passa a **C** em
 `pendencias.md` e a homologação do leilão é refeita com critérios fixados **antes** das medições.
 

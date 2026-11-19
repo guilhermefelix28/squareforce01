@@ -40,7 +40,8 @@ O arquivo original nunca é modificado nem copiado (teste `test_real_spreadsheet
 `INCONSISTENT_CLUB_DATA`, `CLUBS_NOT_IMPORTED`.
 
 **Avisos (não bloqueiam):** `GENERATED_ID` (ID gerado), `POSSIBLE_DUPLICATE_PERSON`, `UNKNOWN_COLUMN` (ignorada),
-`CLUB_WITHOUT_DIVISION` (clube importado sem Série A/B: não elegível).
+`CLUB_WITHOUT_DIVISION` (clube importado sem Série A/B: não elegível), `CLUB_UID_CHANGED` (clube renumerado: vínculo
+dos jogadores atualizado).
 
 **Arquivo:** `UNSUPPORTED_FILE` (415), `INVALID_WORKBOOK` (422), `FILE_TOO_LARGE` (413).
 
@@ -48,6 +49,8 @@ O arquivo original nunca é modificado nem copiado (teste `test_real_spreadsheet
 
 1. Importar **clubes** (aceita a própria `jogadores.xlsx`).
 2. Importar **jogadores** — todo `club_uid` precisa existir em `clubs`.
-3. Reimportar clubes que removam um clube ainda referenciado por jogadores é rejeitado (`INVALID_RELATIONSHIP`).
+3. Reimportar clubes que removam um clube ainda referenciado por jogadores é rejeitado (`INVALID_RELATIONSHIP`),
+   salvo renumeração (2026-11-19): se todos os jogadores de ID real do clube que saiu vêm no arquivo num mesmo clube
+   novo, o elenco inteiro passa para o ID novo na mesma transação; importe os jogadores em seguida.
 
 Código: `services/data/importer.py` (validação) e `services/data/service.py` (transação).

@@ -106,7 +106,7 @@ if real.exists():
               "| Clube | Contra adversário forte | Contra adversário fraco |", "|---|---|---|"]
     strong = OpponentHistory(5, 12.0, 3.0)
     weak = OpponentHistory(5, 3.0, 12.0)
-    for club in (322, 329, 316, 102496, 900205, 2106413):
+    for club in (322, 329, 316, 102555, 900678, 2106553):
         row = []
         for opp in (strong, weak):
             ch = choose_lineup(club, pool[club], [FORMATION_433, FORMATION_442, FORMATION_532],

@@ -174,7 +174,7 @@ class AdminLoginOut(_Model):
 
 
 class UserFormationIn(_Model):
-    formation: str = Field(description="Nome de uma das 11 formações oficiais (ex.: '4-2-2-2').")
+    formation: str = Field(description="Nome de uma das 20 formações oficiais (ex.: '4-2-2-2').")
 
 
 # ---------------------------------------------------------------- competições

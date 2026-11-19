@@ -32,17 +32,17 @@ def test_formation_is_chosen_in_setup_and_used_by_the_automatic_lineup(env):
     c, clock, sid = env
     assert SessionOut.model_validate(c.get(f"/api/sessions/{sid}").json()).user_formation is None
     idem = key()
-    r = choose(c, sid, "3-5-2", idem)
+    r = choose(c, sid, "3-2-3-2", idem)
     assert r.status_code == 200, r.json()
     out = SessionOut.model_validate(r.json())
-    assert out.user_formation == "3-5-2"
-    assert choose(c, sid, "3-5-2", idem).json() == r.json()  # idempotente
+    assert out.user_formation == "3-2-3-2"
+    assert choose(c, sid, "3-2-3-2", idem).json() == r.json()  # idempotente
     assert choose(c, sid, "4-1-2-3").json()["user_formation"] == "4-1-2-3"  # pode trocar enquanto em setup
-    assert choose(c, sid, "3-5-2").status_code == 200
+    assert choose(c, sid, "3-2-3-2").status_code == 200
     to_competition(c, clock, sid)
     assert c.post(f"/api/sessions/{sid}/season/start", headers={"Idempotency-Key": key()}).status_code == 201
     lu = LineupOut.model_validate(c.get(f"/api/sessions/{sid}/season/lineup").json())
-    assert lu.source == "auto" and lu.formation == "3-5-2"
+    assert lu.source == "auto" and lu.formation == "3-2-3-2"
 
 
 def test_formation_rejected_outside_setup_or_unknown(env):
@@ -59,5 +59,5 @@ def test_official_formations_are_listed_without_a_season(client):
     r = client.get("/api/formations")
     assert r.status_code == 200
     forms = r.json()
-    assert [f["id"] for f in forms][:3] == ["4-2-2-2", "4-1-2-3", "4-2-3-1"] and len(forms) == 11
+    assert [f["id"] for f in forms][:3] == ["4-2-2-2", "4-1-2-3", "4-2-3-1"] and len(forms) == 20
     assert all(len(f["positions"]) == 11 and f["positions"][0] == "GK" for f in forms)

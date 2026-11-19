@@ -128,6 +128,27 @@ def test_clubs_reimport_cannot_orphan_players(loaded_client):
     assert loaded_client.get("/api/catalog/clubs").json()["total"] == 4
 
 
+def test_clubs_reimport_with_renumbered_club_relinks_its_players(loaded_client, settings):
+    """Regressão (2026-11-19): o responsável trocou o club_uid de um clube na planilha. Os mesmos jogadores vêm no
+    arquivo com o ID novo, então a importação de clubes muda o vínculo deles em vez de recusar; a de jogadores
+    depois funciona e a divisão segue o ID novo (migração 0003 cobre a base real)."""
+    rows = squad()
+    for r in rows:
+        if r["club_uid"] == 400:
+            r.update(club_row(401))
+    # um jogador vai para outro clube e o elenco fica dividido: não é renumeração, a importação é recusada
+    split = [dict(r) for r in rows]
+    next(r for r in split if r["club_uid"] == 401).update(club_row(402))
+    assert post_import(loaded_client, "clubs", build_xlsx(split)).status_code == 422
+    r = post_import(loaded_client, "clubs", build_xlsx(rows))
+    assert r.status_code == 200, r.json()
+    clubs = {c["club_uid"] for c in loaded_client.get("/api/catalog/clubs").json()["items"]}
+    assert clubs == {100, 200, 300, 401}
+    assert post_import(loaded_client, "players", build_xlsx(rows)).status_code == 200
+    players = loaded_client.get("/api/catalog/players", params={"club_uid": 401}).json()
+    assert players["total"] == 3
+
+
 def test_clubs_reimport_updates_and_adds(loaded_client):
     rows = [player_row(i, c) for i, c in enumerate((100, 200, 300, 400), 1)]
     rows[0]["club_short_name"] = "Alfa Novo"

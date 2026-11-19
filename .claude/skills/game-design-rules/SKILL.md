@@ -59,7 +59,7 @@ Game Design v5.2 e que lacunas sejam registradas — nunca inventadas. As demais
   (ex.: `test_table_is_exactly_the_official_one`, `test_options_contract_matches_game_design`).
 
 ## Estado na homologação (Entrega 9)
-Homologação: regras do GDD conferidas por testes; nenhuma regra alterada para aprovar. Conclusão (2026-11-19): `AuctionModel` oficial, 11 formações, desempate Brasileirão, 3/1/0, referências do motor e PH-01/PH-02 aprovados pelo responsável. Abertas: PC-03 (mando), PM-03, PI-01, PB-03–PB-06 provisórias; ver `pendencias.md`.
+Homologação: regras do GDD conferidas por testes; nenhuma regra alterada para aprovar. Conclusão (2026-11-19): `AuctionModel` oficial, formações (20 desde DR-11), desempate Brasileirão, 3/1/0, referências do motor e PH-01/PH-02 aprovados pelo responsável. Abertas: PC-03 (mando), PM-03, PI-01, PB-03–PB-06 provisórias; ver `pendencias.md`.
 
 ## Referências
 - [Game Design v5.2](../../../docs/game-design/game-design-v5.2.md)

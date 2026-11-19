@@ -191,7 +191,7 @@ export interface paths {
         put?: never;
         /**
          * Choose User Formation
-         * @description Tática do usuário antes do leilão (decisão DR-02): uma das 11 formações oficiais, somente na fase `setup`.
+         * @description Tática do usuário antes do leilão (decisão DR-02): uma das 20 formações oficiais (DR-11), somente na fase `setup`.
          *     Vira a formação inicial da escalação automática do usuário.
          */
         post: operations["choose_user_formation_api_sessions__session_id__formation_post"];
@@ -561,7 +561,7 @@ export interface paths {
         };
         /**
          * Official Formations
-         * @description As 11 formações oficiais (PM-01), disponíveis antes do leilão para a escolha da tática (DR-02).
+         * @description As 20 formações oficiais (PM-01, lista DR-11), disponíveis antes do leilão para a escolha da tática (DR-02).
          */
         get: operations["official_formations_api_formations_get"];
         put?: never;
@@ -2453,7 +2453,7 @@ export interface components {
         UserFormationIn: {
             /**
              * Formation
-             * @description Nome de uma das 11 formações oficiais (ex.: '4-2-2-2').
+             * @description Nome de uma das 20 formações oficiais (ex.: '4-2-2-2').
              */
             formation: string;
         };

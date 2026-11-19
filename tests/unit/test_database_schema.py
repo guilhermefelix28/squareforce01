@@ -11,7 +11,7 @@ from services.data.db import apply_migrations, connect
 @pytest.fixture
 def db(tmp_path):
     path = tmp_path / "schema.db"
-    assert apply_migrations(path) == 2
+    assert apply_migrations(path) == 3
     conn = connect(path)
     yield path, conn
     conn.close()
@@ -19,8 +19,8 @@ def db(tmp_path):
 
 def test_migrations_are_idempotent(db):
     path, conn = db
-    assert apply_migrations(path) == 2
-    assert conn.execute("SELECT COUNT(*) FROM schema_migrations").fetchone()[0] == 2
+    assert apply_migrations(path) == 3
+    assert conn.execute("SELECT COUNT(*) FROM schema_migrations").fetchone()[0] == 3
 
 
 def test_expected_tables_and_indexes(db):
@@ -43,6 +43,15 @@ def test_club_divisions_reference_has_20_a_and_20_b(db):
     assert rows == {"A": 20, "B": 20}
     with pytest.raises(sqlite3.IntegrityError):
         conn.execute("INSERT INTO club_divisions VALUES (1, 'C', 2026, 'X')")
+
+
+def test_club_divisions_follow_remapped_club_uids(db):
+    """Migração 0003: os 18 clubes com ID novo na planilha mantêm a divisão no ID novo (ID do escudo)."""
+    _, conn = db
+    div = dict(conn.execute("SELECT club_uid, division FROM club_divisions").fetchall())
+    assert div[314] == "A" and div[319] == "A" and div[301344] == "A" and div[301304] == "A"
+    assert div[102555] == "B" and div[900678] == "B" and div[19342677] == "B"
+    assert not {313, 318, 102496, 900205, 19342670} & div.keys()
 
 
 def test_generated_id_flag_defaults_to_false(db):
