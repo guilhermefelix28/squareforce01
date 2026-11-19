@@ -10,7 +10,6 @@ import threading
 from concurrent.futures import Executor
 from typing import Callable, Mapping
 
-from services.match_engine.calibration import SAMPLE_FORMATIONS
 from services.match_engine.lineup import to_match_player
 from services.trading.engine import TradingEngine
 from squadforce_shared.contracts import (
@@ -26,18 +25,20 @@ from squadforce_shared.contracts import (
     StandingRowOut,
 )
 
+from .live import LiveMatch
 from .season import MAIN_EVENTS, PlayedMatch, PlayerStats, Season
-
-# Lista oficial de formações PENDENTE (PM-01): usa-se a lista de amostra do motor, marcada como provisória.
-PROVISIONAL_FORMATIONS = SAMPLE_FORMATIONS
+from .views import PROVISIONAL_FORMATIONS, SeasonViewsMixin
 
 
-class SeasonService:
+
+class SeasonService(SeasonViewsMixin):
     def __init__(self, executor_factory: Callable[[], Executor]):
         self._executor_factory = executor_factory
         self._executor: Executor | None = None
         self._seasons: dict[str, Season] = {}
         self._locks: dict[str, threading.Lock] = {}
+        self._ages: dict[str, dict[int, int]] = {}
+        self._live: dict[str, tuple[str, LiveMatch]] = {}  # sessão -> (snapshot, partida ao vivo)
         self._lock = threading.Lock()
 
     # -------------------------------------------------------------- ciclo de vida
@@ -60,12 +61,14 @@ class SeasonService:
                       for u, c in market.clubs.items()}
             personalities = {u: c.personality for u, c in market.clubs.items() if c.is_bot}
             user = market.user_club_uid
+            ages = {pid: p.age for pid, p in market.players.items()}
         season = Season(competition_id=competition_id, structure=structure,
                         squads={c: squads[c] for c in structure.participants}, names=names, user_club=user,
                         personalities=personalities, formations=PROVISIONAL_FORMATIONS, seed=seed)
         with self._lock:
             self._seasons[session_id] = season
             self._locks[session_id] = threading.Lock()
+            self._ages[session_id] = ages
         return season
 
     def get(self, session_id: str) -> Season | None:
@@ -80,6 +83,8 @@ class SeasonService:
         with self._lock:
             self._seasons.pop(session_id, None)
             self._locks.pop(session_id, None)
+            self._ages.pop(session_id, None)
+            self._live.pop(session_id, None)
 
     # -------------------------------------------------------------- visões
     @staticmethod
@@ -145,6 +150,7 @@ class SeasonService:
             stats={k: dict(v) for k, v in r.stats.items()},
             ratings=sorted(ratings, key=lambda x: (-x.rating, x.player)), man_of_the_match=motm,
             final_postures=r.final_postures, engine_version=r.engine_version, params_version=r.params_version,
+            lineups=[self._team_lineup(sh) for sh in (pm.home_sheet, pm.away_sheet) if sh is not None],
         )
 
     @staticmethod

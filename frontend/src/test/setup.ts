@@ -26,3 +26,6 @@ afterEach(() => {
   vi.restoreAllMocks();
   localStorage.clear();
 });
+
+// jsdom não implementa rolagem
+window.scrollTo = (() => undefined) as typeof window.scrollTo;

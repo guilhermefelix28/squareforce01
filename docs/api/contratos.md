@@ -160,3 +160,25 @@ Nenhum contrato expõe atributos, personalidades ou sementes.
 
 Fases da sessão: `competition` → `finished` (fim da temporada). WebSocket: `season.started`, `season.round_played`,
 `season.advanced`.
+
+## Interface: elenco, escalação, partida ao vivo, estatísticas (Entrega 8)
+
+Detalhes em [interface](../architecture/interface.md). Todo POST exige `Idempotency-Key`.
+
+| Método | Rota | Resposta | Erros principais |
+|---|---|---|---|
+| GET | `/api/sessions/{id}/season/formations` | `FormationOut[]` (provisórias, PM-01) | 404 `SEASON_NOT_FOUND` |
+| GET | `/api/sessions/{id}/season/squad` | `SquadPlayerOut[]` (disponibilidade, adequação por posição, números) | 404 |
+| GET | `/api/sessions/{id}/season/lineup` | `LineupOut` (escalação atual, postura, adversário público, `locked`) | 404 |
+| POST | `/api/sessions/{id}/season/lineup` | `LineupOut` | 422 `INVALID_LINEUP`, 409 `MATCH_IN_PROGRESS` / `NO_USER_MATCH` |
+| POST | `/api/sessions/{id}/season/live/start` | `LiveStateOut` (201) | 409 `INVALID_PHASE` / `NO_USER_MATCH`, 422 velocidade |
+| GET | `/api/sessions/{id}/season/live` | `LiveStateOut` (somente eventos já ocorridos) | 404 `LIVE_NOT_FOUND` |
+| POST | `/api/sessions/{id}/season/live/posture` | `LiveStateOut` | 409 `SAME_POSTURE` / `MATCH_FINISHED` |
+| POST | `/api/sessions/{id}/season/live/speed` | `LiveStateOut` | 422 velocidade inválida |
+| GET | `/api/sessions/{id}/season/stats` | `SeasonStatsOut` (jogadores e clubes) | 404 |
+| GET | `/api/sessions/{id}/season/calendar` | `CalendarOut` (todas as rodadas/fases com resultados) | 404 |
+
+`POST /season/play` passa a recusar com 409 `MATCH_IN_PROGRESS` enquanto a partida ao vivo não terminar e
+exige que a execução reproduza exatamente a apresentação. `MatchReportOut.lineups` traz as escalações.
+Nenhum contrato expõe atributos, personalidades, sementes ou a condição física do adversário.
+WebSocket: `season.live_started`.

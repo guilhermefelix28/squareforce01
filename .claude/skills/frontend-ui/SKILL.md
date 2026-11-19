@@ -40,6 +40,16 @@ Qualquer alteração em `frontend/src/**`, estilos, tipos gerados ou testes Vite
 2. Estados de carregamento, vazio, erro e sucesso em toda tela.
 3. Testar em 390 px e ≥ 1024 px; foco visível; rótulos acessíveis.
 
+## Entrega 8 (interface definitiva)
+- Rotas por hash e menu contextual por fase em `app/App.tsx` (`parseHash`, `navItems`, `phaseHome`).
+- Temporada: `features/season/` (`useSeason`, `useCommand`, `Pitch`, `SeasonParts`, `StatsCenter`) e páginas
+  `SeasonPage`, `LineupPage`, `MatchPage`, `PostMatchPage`, `EndPage`; estilos em `src/season.css` (só tokens).
+- Comandos com `useCommand` (desabilita durante a chamada, mesma chave nas repetições). Nunca simular
+  resposta do backend no cliente; partida ao vivo só mostra o que o servidor revelou.
+- Eventos WebSocket chegam por `SessionContext.subscribe`. Âncoras `#id` não podem ser usadas como links
+  (o hash é rota): use foco programático.
+- Testes: `Season.test.tsx` (fake API) e `src/api/journey.e2e.test.ts` (backend real com relógio acelerado).
+
 ## Restrições e comportamentos proibidos
 - `fetch` direto fora de `api/client.ts`; tipos de API escritos à mão divergentes do OpenAPI.
 - Guardar estado de competição no navegador além do `id` da sessão.

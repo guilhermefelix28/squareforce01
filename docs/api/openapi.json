@@ -2941,6 +2941,1159 @@
           }
         }
       }
+    },
+    "/api/sessions/{session_id}/season/formations": {
+      "get": {
+        "tags": [
+          "season"
+        ],
+        "summary": "Season Formations",
+        "description": "Formações disponíveis (lista oficial pendente — PM-01: provisória).",
+        "operationId": "season_formations_api_sessions__session_id__season_formations_get",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FormationOut"
+                  },
+                  "title": "Response Season Formations Api Sessions  Session Id  Season Formations Get"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/sessions/{session_id}/season/squad": {
+      "get": {
+        "tags": [
+          "season"
+        ],
+        "summary": "Season Squad",
+        "description": "Meu elenco: disponibilidade (lesões/suspensões), adequação por posição e números da competição.",
+        "operationId": "season_squad_api_sessions__session_id__season_squad_get",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SquadPlayerOut"
+                  },
+                  "title": "Response Season Squad Api Sessions  Session Id  Season Squad Get"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/sessions/{session_id}/season/lineup": {
+      "get": {
+        "tags": [
+          "season"
+        ],
+        "summary": "Get Lineup",
+        "description": "Próximo confronto do usuário: escalação atual, postura inicial e informações públicas do adversário.",
+        "operationId": "get_lineup_api_sessions__session_id__season_lineup_get",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LineupOut"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "season"
+        ],
+        "summary": "Set Lineup",
+        "description": "Define formação, 11 titulares (na ordem das vagas), até 7 reservas e postura inicial.",
+        "operationId": "set_lineup_api_sessions__session_id__season_lineup_post",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Obrigatório: identificador único do comando (8–128 caracteres).",
+              "title": "Idempotency-Key"
+            },
+            "description": "Obrigatório: identificador único do comando (8–128 caracteres)."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LineupIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LineupOut"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/sessions/{session_id}/season/live/start": {
+      "post": {
+        "tags": [
+          "season"
+        ],
+        "summary": "Start Live",
+        "description": "Inicia a apresentação da partida do usuário (15 s, 30 s, 60 s ou instantânea). O relógio é do servidor\ne não pausa; somente eventos já ocorridos são enviados.",
+        "operationId": "start_live_api_sessions__session_id__season_live_start_post",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Obrigatório: identificador único do comando (8–128 caracteres).",
+              "title": "Idempotency-Key"
+            },
+            "description": "Obrigatório: identificador único do comando (8–128 caracteres)."
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/LiveStartIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LiveStateOut"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/sessions/{session_id}/season/live": {
+      "get": {
+        "tags": [
+          "season"
+        ],
+        "summary": "Get Live",
+        "operationId": "get_live_api_sessions__session_id__season_live_get",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LiveStateOut"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/sessions/{session_id}/season/live/posture": {
+      "post": {
+        "tags": [
+          "season"
+        ],
+        "summary": "Live Posture",
+        "description": "Muda a postura do usuário a partir do tempo de jogo atual (afeta só eventos ainda não simulados).",
+        "operationId": "live_posture_api_sessions__session_id__season_live_posture_post",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Obrigatório: identificador único do comando (8–128 caracteres).",
+              "title": "Idempotency-Key"
+            },
+            "description": "Obrigatório: identificador único do comando (8–128 caracteres)."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PostureIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LiveStateOut"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/sessions/{session_id}/season/live/speed": {
+      "post": {
+        "tags": [
+          "season"
+        ],
+        "summary": "Live Speed",
+        "description": "Muda só a velocidade de apresentação (não altera eventos).",
+        "operationId": "live_speed_api_sessions__session_id__season_live_speed_post",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Obrigatório: identificador único do comando (8–128 caracteres).",
+              "title": "Idempotency-Key"
+            },
+            "description": "Obrigatório: identificador único do comando (8–128 caracteres)."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LiveSpeedIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LiveStateOut"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/sessions/{session_id}/season/stats": {
+      "get": {
+        "tags": [
+          "season"
+        ],
+        "summary": "Season Stats",
+        "description": "Central de estatísticas: jogadores e clubes (somente números produzidos pelo motor).",
+        "operationId": "season_stats_api_sessions__session_id__season_stats_get",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeasonStatsOut"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/sessions/{session_id}/season/calendar": {
+      "get": {
+        "tags": [
+          "season"
+        ],
+        "summary": "Season Calendar",
+        "operationId": "season_calendar_api_sessions__session_id__season_calendar_get",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarOut"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -3556,6 +4709,77 @@
         ],
         "title": "Body_import_players_api_imports_players_post"
       },
+      "CalendarOut": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "league",
+              "cup"
+            ],
+            "title": "Kind"
+          },
+          "current_round": {
+            "type": "integer",
+            "title": "Current Round"
+          },
+          "rounds": {
+            "items": {
+              "$ref": "#/components/schemas/CalendarRoundOut"
+            },
+            "type": "array",
+            "title": "Rounds"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "session_id",
+          "kind",
+          "current_round",
+          "rounds"
+        ],
+        "title": "CalendarOut"
+      },
+      "CalendarRoundOut": {
+        "properties": {
+          "number": {
+            "type": "integer",
+            "title": "Number"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "fixtures": {
+            "items": {
+              "$ref": "#/components/schemas/SeasonFixtureOut"
+            },
+            "type": "array",
+            "title": "Fixtures"
+          },
+          "byes": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Byes"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "number",
+          "label",
+          "fixtures",
+          "byes"
+        ],
+        "title": "CalendarRoundOut"
+      },
       "ClubCampaignOut": {
         "properties": {
           "club_uid": {
@@ -3705,6 +4929,68 @@
           "offset"
         ],
         "title": "ClubPage"
+      },
+      "ClubSeasonStatsOut": {
+        "properties": {
+          "club_uid": {
+            "type": "integer",
+            "title": "Club Uid"
+          },
+          "played": {
+            "type": "integer",
+            "title": "Played"
+          },
+          "wins": {
+            "type": "integer",
+            "title": "Wins"
+          },
+          "draws": {
+            "type": "integer",
+            "title": "Draws"
+          },
+          "losses": {
+            "type": "integer",
+            "title": "Losses"
+          },
+          "goals_for": {
+            "type": "integer",
+            "title": "Goals For"
+          },
+          "goals_against": {
+            "type": "integer",
+            "title": "Goals Against"
+          },
+          "totals": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Totals",
+            "description": "Somas das estatísticas do motor nas partidas do clube."
+          },
+          "against": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Against",
+            "description": "Mesmas estatísticas, dos adversários."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "club_uid",
+          "played",
+          "wins",
+          "draws",
+          "losses",
+          "goals_for",
+          "goals_against",
+          "totals",
+          "against"
+        ],
+        "title": "ClubSeasonStatsOut"
       },
       "CompetitionConfig": {
         "properties": {
@@ -4190,6 +5476,30 @@
         ],
         "title": "ErrorResponse"
       },
+      "FormationOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Nome da formação (ex.: 4-3-3). Lista oficial pendente (PM-01): provisória."
+          },
+          "positions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Positions",
+            "description": "11 vagas na ordem do campo (código interno)."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "positions"
+        ],
+        "title": "FormationOut"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -4557,6 +5867,476 @@
         ],
         "title": "LeagueSchedule"
       },
+      "LineupIn": {
+        "properties": {
+          "formation": {
+            "type": "string",
+            "title": "Formation"
+          },
+          "starters": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "maxItems": 11,
+            "minItems": 11,
+            "title": "Starters",
+            "description": "IDs na ordem das vagas da formação."
+          },
+          "bench": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "maxItems": 7,
+            "title": "Bench"
+          },
+          "posture": {
+            "type": "string",
+            "enum": [
+              "retranca",
+              "defensiva",
+              "equilibrada",
+              "ofensiva",
+              "ataque_total"
+            ],
+            "title": "Posture",
+            "default": "equilibrada"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "formation",
+          "starters"
+        ],
+        "title": "LineupIn"
+      },
+      "LineupOut": {
+        "properties": {
+          "has_match": {
+            "type": "boolean",
+            "title": "Has Match",
+            "description": "false: folga, eliminado ou competição encerrada."
+          },
+          "match_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Match Id"
+          },
+          "opponent": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OpponentPreviewOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "is_home": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Home",
+            "description": "null na Copa (mando neutro)."
+          },
+          "formation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Formation"
+          },
+          "starters": {
+            "items": {
+              "$ref": "#/components/schemas/LineupSlotOut"
+            },
+            "type": "array",
+            "title": "Starters"
+          },
+          "bench": {
+            "items": {
+              "$ref": "#/components/schemas/LineupPlayerOut"
+            },
+            "type": "array",
+            "title": "Bench"
+          },
+          "posture": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "retranca",
+                  "defensiva",
+                  "equilibrada",
+                  "ofensiva",
+                  "ataque_total"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Posture"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "user",
+              "auto"
+            ],
+            "title": "Source",
+            "default": "auto"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note",
+            "description": "Motivo de a escalação do usuário não ter sido usada."
+          },
+          "locked": {
+            "type": "boolean",
+            "title": "Locked",
+            "description": "true: partida já iniciada ao vivo ou rodada jogada."
+          },
+          "formations": {
+            "items": {
+              "$ref": "#/components/schemas/FormationOut"
+            },
+            "type": "array",
+            "title": "Formations"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "has_match",
+          "locked",
+          "formations"
+        ],
+        "title": "LineupOut"
+      },
+      "LineupPlayerOut": {
+        "properties": {
+          "player": {
+            "type": "integer",
+            "title": "Player"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "slot": {
+            "type": "string",
+            "title": "Slot",
+            "description": "Vaga (código interno GK, DR, DL, DC, DM, MC, STC)."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "player",
+          "name",
+          "slot"
+        ],
+        "title": "LineupPlayerOut"
+      },
+      "LineupSlotOut": {
+        "properties": {
+          "index": {
+            "type": "integer",
+            "title": "Index"
+          },
+          "position": {
+            "type": "string",
+            "title": "Position"
+          },
+          "player": {
+            "type": "integer",
+            "title": "Player"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "fit": {
+            "type": "string",
+            "enum": [
+              "natural",
+              "boa",
+              "regular",
+              "improvisada"
+            ],
+            "title": "Fit"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "index",
+          "position",
+          "player",
+          "name",
+          "fit"
+        ],
+        "title": "LineupSlotOut"
+      },
+      "LivePlayerOut": {
+        "properties": {
+          "player": {
+            "type": "integer",
+            "title": "Player"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "slot": {
+            "type": "string",
+            "title": "Slot"
+          },
+          "condition": {
+            "type": "number",
+            "title": "Condition",
+            "description": "Condição física (0–100) do PRÓPRIO atleta."
+          },
+          "on_field": {
+            "type": "boolean",
+            "title": "On Field"
+          },
+          "yellow_cards": {
+            "type": "integer",
+            "title": "Yellow Cards"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "player",
+          "name",
+          "slot",
+          "condition",
+          "on_field",
+          "yellow_cards"
+        ],
+        "title": "LivePlayerOut"
+      },
+      "LiveSpeedIn": {
+        "properties": {
+          "speed": {
+            "type": "string",
+            "enum": [
+              "15s",
+              "30s",
+              "60s",
+              "instant"
+            ],
+            "title": "Speed"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "speed"
+        ],
+        "title": "LiveSpeedIn"
+      },
+      "LiveStartIn": {
+        "properties": {
+          "speed": {
+            "type": "string",
+            "enum": [
+              "15s",
+              "30s",
+              "60s",
+              "instant"
+            ],
+            "title": "Speed",
+            "default": "30s"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "LiveStartIn"
+      },
+      "LiveStateOut": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "match_id": {
+            "type": "string",
+            "title": "Match Id"
+          },
+          "home_club_uid": {
+            "type": "integer",
+            "title": "Home Club Uid"
+          },
+          "away_club_uid": {
+            "type": "integer",
+            "title": "Away Club Uid"
+          },
+          "user_side": {
+            "type": "integer",
+            "title": "User Side"
+          },
+          "speed": {
+            "type": "string",
+            "enum": [
+              "15s",
+              "30s",
+              "60s",
+              "instant"
+            ],
+            "title": "Speed"
+          },
+          "minute": {
+            "type": "integer",
+            "title": "Minute"
+          },
+          "game_second": {
+            "type": "number",
+            "title": "Game Second"
+          },
+          "finished": {
+            "type": "boolean",
+            "title": "Finished"
+          },
+          "score": {
+            "prefixItems": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "type": "array",
+            "maxItems": 2,
+            "minItems": 2,
+            "title": "Score"
+          },
+          "shootout": {
+            "anyOf": [
+              {
+                "prefixItems": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ],
+                "type": "array",
+                "maxItems": 2,
+                "minItems": 2
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shootout"
+          },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/MatchEventOut"
+            },
+            "type": "array",
+            "title": "Events",
+            "description": "Somente eventos já revelados pelo relógio do servidor."
+          },
+          "stats": {
+            "additionalProperties": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Stats"
+          },
+          "postures": {
+            "prefixItems": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "type": "array",
+            "maxItems": 2,
+            "minItems": 2,
+            "title": "Postures",
+            "description": "Posturas observáveis atuais (mandante, visitante)."
+          },
+          "own_players": {
+            "items": {
+              "$ref": "#/components/schemas/LivePlayerOut"
+            },
+            "type": "array",
+            "title": "Own Players"
+          },
+          "own_bench": {
+            "items": {
+              "$ref": "#/components/schemas/LineupPlayerOut"
+            },
+            "type": "array",
+            "title": "Own Bench"
+          },
+          "substitutions_used": {
+            "type": "integer",
+            "title": "Substitutions Used"
+          },
+          "max_substitutions": {
+            "type": "integer",
+            "title": "Max Substitutions",
+            "default": 5
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "session_id",
+          "match_id",
+          "home_club_uid",
+          "away_club_uid",
+          "user_side",
+          "speed",
+          "minute",
+          "game_second",
+          "finished",
+          "score",
+          "events",
+          "stats",
+          "postures",
+          "own_players",
+          "own_bench",
+          "substitutions_used"
+        ],
+        "title": "LiveStateOut"
+      },
       "MatchEventOut": {
         "properties": {
           "seq": {
@@ -4799,6 +6579,14 @@
           "params_version": {
             "type": "string",
             "title": "Params Version"
+          },
+          "lineups": {
+            "items": {
+              "$ref": "#/components/schemas/TeamLineupOut"
+            },
+            "type": "array",
+            "title": "Lineups",
+            "description": "Escalações dos dois clubes (mandante, visitante)."
           }
         },
         "additionalProperties": false,
@@ -4819,6 +6607,42 @@
           "params_version"
         ],
         "title": "MatchReportOut"
+      },
+      "OpponentPreviewOut": {
+        "properties": {
+          "club_uid": {
+            "type": "integer",
+            "title": "Club Uid"
+          },
+          "campaign": {
+            "$ref": "#/components/schemas/ClubCampaignOut"
+          },
+          "previous_formations": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Previous Formations",
+            "description": "Formações usadas nas partidas anteriores (públicas)."
+          },
+          "top_players": {
+            "items": {
+              "$ref": "#/components/schemas/AwardEntryOut"
+            },
+            "type": "array",
+            "title": "Top Players",
+            "description": "Destaques públicos: artilheiros e melhores médias."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "club_uid",
+          "campaign",
+          "previous_formations",
+          "top_players"
+        ],
+        "title": "OpponentPreviewOut"
       },
       "PlayerOut": {
         "properties": {
@@ -4963,6 +6787,77 @@
         ],
         "title": "PlayerRatingOut"
       },
+      "PlayerSeasonStatsOut": {
+        "properties": {
+          "player": {
+            "type": "integer",
+            "title": "Player"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "club_uid": {
+            "type": "integer",
+            "title": "Club Uid"
+          },
+          "appearances": {
+            "type": "integer",
+            "title": "Appearances"
+          },
+          "goals": {
+            "type": "integer",
+            "title": "Goals"
+          },
+          "assists": {
+            "type": "integer",
+            "title": "Assists"
+          },
+          "average_rating": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average Rating"
+          },
+          "rating_eligible": {
+            "type": "boolean",
+            "title": "Rating Eligible",
+            "description": "Atingiu 50% das partidas da própria equipe (arredondado para cima)."
+          },
+          "motm": {
+            "type": "integer",
+            "title": "Motm"
+          },
+          "yellow_cards": {
+            "type": "integer",
+            "title": "Yellow Cards"
+          },
+          "red_cards": {
+            "type": "integer",
+            "title": "Red Cards"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "player",
+          "name",
+          "club_uid",
+          "appearances",
+          "goals",
+          "assists",
+          "rating_eligible",
+          "motm",
+          "yellow_cards",
+          "red_cards"
+        ],
+        "title": "PlayerSeasonStatsOut"
+      },
       "PointsSystemOut": {
         "properties": {
           "win": {
@@ -5005,6 +6900,27 @@
           "STC"
         ],
         "title": "Position"
+      },
+      "PostureIn": {
+        "properties": {
+          "posture": {
+            "type": "string",
+            "enum": [
+              "retranca",
+              "defensiva",
+              "equilibrada",
+              "ofensiva",
+              "ataque_total"
+            ],
+            "title": "Posture"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "posture"
+        ],
+        "title": "PostureIn"
       },
       "ProposalCreate": {
         "properties": {
@@ -5383,6 +7299,41 @@
         ],
         "title": "SeasonStateOut"
       },
+      "SeasonStatsOut": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "matches_played": {
+            "type": "integer",
+            "title": "Matches Played"
+          },
+          "players": {
+            "items": {
+              "$ref": "#/components/schemas/PlayerSeasonStatsOut"
+            },
+            "type": "array",
+            "title": "Players"
+          },
+          "clubs": {
+            "items": {
+              "$ref": "#/components/schemas/ClubSeasonStatsOut"
+            },
+            "type": "array",
+            "title": "Clubs"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "session_id",
+          "matches_played",
+          "players",
+          "clubs"
+        ],
+        "title": "SeasonStatsOut"
+      },
       "SeasonSummaryOut": {
         "properties": {
           "session_id": {
@@ -5622,6 +7573,114 @@
         ],
         "title": "SessionOut"
       },
+      "SquadPlayerOut": {
+        "properties": {
+          "player": {
+            "type": "integer",
+            "title": "Player"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "age": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Age"
+          },
+          "position": {
+            "type": "string",
+            "title": "Position",
+            "description": "Posição natural (código interno)."
+          },
+          "available": {
+            "type": "boolean",
+            "title": "Available"
+          },
+          "unavailable_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unavailable Reason"
+          },
+          "fit": {
+            "additionalProperties": {
+              "type": "string",
+              "enum": [
+                "natural",
+                "boa",
+                "regular",
+                "improvisada"
+              ]
+            },
+            "type": "object",
+            "title": "Fit",
+            "description": "Adequação a cada posição (indicador visual do próprio elenco)."
+          },
+          "appearances": {
+            "type": "integer",
+            "title": "Appearances"
+          },
+          "goals": {
+            "type": "integer",
+            "title": "Goals"
+          },
+          "assists": {
+            "type": "integer",
+            "title": "Assists"
+          },
+          "average_rating": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average Rating"
+          },
+          "motm": {
+            "type": "integer",
+            "title": "Motm"
+          },
+          "yellow_cards": {
+            "type": "integer",
+            "title": "Yellow Cards"
+          },
+          "red_cards": {
+            "type": "integer",
+            "title": "Red Cards"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "player",
+          "name",
+          "position",
+          "available",
+          "fit",
+          "appearances",
+          "goals",
+          "assists",
+          "motm",
+          "yellow_cards",
+          "red_cards"
+        ],
+        "title": "SquadPlayerOut"
+      },
       "StandingRowOut": {
         "properties": {
           "position": {
@@ -5704,6 +7763,47 @@
           "tied_with"
         ],
         "title": "StandingRowOut"
+      },
+      "TeamLineupOut": {
+        "properties": {
+          "club_uid": {
+            "type": "integer",
+            "title": "Club Uid"
+          },
+          "formation": {
+            "type": "string",
+            "title": "Formation"
+          },
+          "starters": {
+            "items": {
+              "$ref": "#/components/schemas/LineupPlayerOut"
+            },
+            "type": "array",
+            "title": "Starters"
+          },
+          "bench": {
+            "items": {
+              "$ref": "#/components/schemas/LineupPlayerOut"
+            },
+            "type": "array",
+            "title": "Bench",
+            "description": "Reservas (slot = posição natural)."
+          },
+          "initial_posture": {
+            "type": "string",
+            "title": "Initial Posture"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "club_uid",
+          "formation",
+          "starters",
+          "bench",
+          "initial_posture"
+        ],
+        "title": "TeamLineupOut"
       },
       "TradeRecordOut": {
         "properties": {

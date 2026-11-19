@@ -3,7 +3,7 @@
 **Football Strategy Game** — simulador de futebol com leilão de jogadores, negociações, bots com IA,
 Liga, Copa e motor de partidas. Implementação do **Game Design v5.2**.
 
-**Estado:** Entrega 7 — execução de Liga e Copa (snapshot por rodada, partidas paralelas, consolidação atômica, pós-partida e premiações) pela API; desempate pendente e parâmetros provisórios.
+**Estado:** Entrega 8 — interface definitiva integrada do início ao fim (leilão, mercado, escalação, partida ao vivo, pós-partida, estatísticas, encerramento). Versão final pendente da Entrega 9; leilão real aguarda o `AuctionModel`; desempate pendente; parâmetros provisórios.
 
 ## Estrutura
 

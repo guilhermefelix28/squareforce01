@@ -17,6 +17,15 @@ import type {
   SeasonState,
   SeasonSummary,
   MatchReport,
+  Calendar,
+  Formation,
+  Lineup,
+  LineupIn,
+  LiveState,
+  Posture,
+  SeasonStats,
+  Speed,
+  SquadPlayer,
   Session,
   SessionCreate,
 } from "../types/api";
@@ -95,6 +104,22 @@ export const getMatchReport = (id: string, matchId: string) =>
   apiRequest<MatchReport>(`${sid(id)}/season/matches/${encodeURIComponent(matchId)}`);
 
 export const getSeasonSummary = (id: string) => apiRequest<SeasonSummary>(`${sid(id)}/season/summary`);
+
+// ---------------------------------------------------------------- interface (Entrega 8)
+export const getFormations = (id: string) => apiRequest<Formation[]>(`${sid(id)}/season/formations`);
+export const getSquad = (id: string) => apiRequest<SquadPlayer[]>(`${sid(id)}/season/squad`);
+export const getLineup = (id: string) => apiRequest<Lineup>(`${sid(id)}/season/lineup`, { retries: 1 });
+export const saveLineup = (id: string, body: LineupIn, idempotencyKey = newIdempotencyKey()) =>
+  apiRequest<Lineup>(`${sid(id)}/season/lineup`, { method: "POST", json: body, idempotencyKey, retries: 1 });
+export const startLive = (id: string, speed: Speed, idempotencyKey = newIdempotencyKey()) =>
+  apiRequest<LiveState>(`${sid(id)}/season/live/start`, { method: "POST", json: { speed }, idempotencyKey, retries: 1 });
+export const getLive = (id: string) => apiRequest<LiveState>(`${sid(id)}/season/live`, { retries: 0 });
+export const changePosture = (id: string, posture: Posture, idempotencyKey = newIdempotencyKey()) =>
+  apiRequest<LiveState>(`${sid(id)}/season/live/posture`, { method: "POST", json: { posture }, idempotencyKey, retries: 1 });
+export const changeSpeed = (id: string, speed: Speed, idempotencyKey = newIdempotencyKey()) =>
+  apiRequest<LiveState>(`${sid(id)}/season/live/speed`, { method: "POST", json: { speed }, idempotencyKey, retries: 1 });
+export const getSeasonStats = (id: string) => apiRequest<SeasonStats>(`${sid(id)}/season/stats`);
+export const getCalendar = (id: string) => apiRequest<Calendar>(`${sid(id)}/season/calendar`);
 
 export const closeSession = (id: string, expectedVersion?: number, idempotencyKey = newIdempotencyKey()) =>
   apiRequest<Session>(`/api/sessions/${encodeURIComponent(id)}/close`, {

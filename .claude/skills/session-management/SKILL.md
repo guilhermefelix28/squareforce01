@@ -41,6 +41,8 @@ Gerenciar a única competição ativa com estado autoritativo no servidor, sem n
 
 Entrega 7: `competition` → `finished` quando a temporada termina; `SeasonService` guarda a temporada em memória e é
 descartado com a sessão (encerramento ou substituição).
+Entrega 8: o cliente recarrega a sessão quando a temporada termina (versão/fase) e recebe eventos `season.*`
+pelo WebSocket; a partida ao vivo não pausa por desconexão (relógio do servidor).
 
 ## Restrições e comportamentos proibidos
 - Persistir estado em SQLite, JSON, Redis ou qualquer armazenamento permanente.

@@ -7,6 +7,9 @@ eventos ou resultados de outros confrontos simultâneos.
 
 from __future__ import annotations
 
+import multiprocessing
+import os
+import threading
 import traceback
 from dataclasses import dataclass, field
 
@@ -69,3 +72,16 @@ def play_fixture(task: FixtureTask) -> FixtureOutcome:
     except Exception as exc:  # falha da partida: registrada, nunca consolidada
         return FixtureOutcome(task.snapshot_id, task.match_id, None,
                               f"{type(exc).__name__}: {exc}\n{traceback.format_exc(limit=3)}")
+
+
+def exit_with_parent() -> None:
+    """Inicializador dos processos de partida: encerra o worker se o gateway morrer (sem órfãos)."""
+    parent = multiprocessing.parent_process()
+    if parent is None:
+        return
+
+    def watch() -> None:
+        parent.join()  # espera o processo pai terminar (inclusive encerramento forçado)
+        os._exit(0)
+
+    threading.Thread(target=watch, name="parent-watch", daemon=True).start()

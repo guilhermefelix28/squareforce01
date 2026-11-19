@@ -543,6 +543,7 @@ class MatchReportOut(_Model):
     final_postures: tuple[str, str]
     engine_version: str
     params_version: str
+    lineups: list["TeamLineupOut"] = Field(default_factory=list, description="Escalações dos dois clubes (mandante, visitante).")
 
 
 class AwardEntryOut(_Model):
@@ -581,6 +582,174 @@ class SeasonSummaryOut(_Model):
     history: list[SeasonFixtureOut] = Field(description="Todas as partidas consolidadas, em ordem.")
 
 
+# ---------------------------------------------------------------- interface e integração (Entrega 8)
+FitLevel = Literal["natural", "boa", "regular", "improvisada"]
+Posture = Literal["retranca", "defensiva", "equilibrada", "ofensiva", "ataque_total"]
+Speed = Literal["15s", "30s", "60s", "instant"]
+
+
+class LineupPlayerOut(_Model):
+    player: int
+    name: str
+    slot: str = Field(description="Vaga (código interno GK, DR, DL, DC, DM, MC, STC).")
+
+
+class TeamLineupOut(_Model):
+    club_uid: int
+    formation: str
+    starters: list[LineupPlayerOut]
+    bench: list[LineupPlayerOut] = Field(description="Reservas (slot = posição natural).")
+    initial_posture: str
+
+
+class FormationOut(_Model):
+    id: str = Field(description="Nome da formação (ex.: 4-3-3). Lista oficial pendente (PM-01): provisória.")
+    positions: list[str] = Field(description="11 vagas na ordem do campo (código interno).")
+
+
+class SquadPlayerOut(_Model):
+    player: int
+    name: str
+    age: int | None = None
+    position: str = Field(description="Posição natural (código interno).")
+    available: bool
+    unavailable_reason: str | None = None
+    fit: dict[str, FitLevel] = Field(description="Adequação a cada posição (indicador visual do próprio elenco).")
+    appearances: int
+    goals: int
+    assists: int
+    average_rating: float | None = None
+    motm: int
+    yellow_cards: int
+    red_cards: int
+
+
+class LineupSlotOut(_Model):
+    index: int
+    position: str
+    player: int
+    name: str
+    fit: FitLevel
+
+
+class OpponentPreviewOut(_Model):
+    club_uid: int
+    campaign: "ClubCampaignOut"
+    previous_formations: list[str] = Field(description="Formações usadas nas partidas anteriores (públicas).")
+    top_players: list["AwardEntryOut"] = Field(description="Destaques públicos: artilheiros e melhores médias.")
+
+
+class LineupOut(_Model):
+    has_match: bool = Field(description="false: folga, eliminado ou competição encerrada.")
+    match_id: str | None = None
+    opponent: OpponentPreviewOut | None = None
+    is_home: bool | None = Field(None, description="null na Copa (mando neutro).")
+    formation: str | None = None
+    starters: list[LineupSlotOut] = Field(default_factory=list)
+    bench: list[LineupPlayerOut] = Field(default_factory=list)
+    posture: Posture | None = None
+    source: Literal["user", "auto"] = "auto"
+    note: str | None = Field(None, description="Motivo de a escalação do usuário não ter sido usada.")
+    locked: bool = Field(description="true: partida já iniciada ao vivo ou rodada jogada.")
+    formations: list[FormationOut]
+
+
+class LineupIn(_Model):
+    formation: str
+    starters: list[int] = Field(min_length=11, max_length=11, description="IDs na ordem das vagas da formação.")
+    bench: list[int] = Field(default_factory=list, max_length=7)
+    posture: Posture = "equilibrada"
+
+
+class LiveStartIn(_Model):
+    speed: Speed = "30s"
+
+
+class LiveSpeedIn(_Model):
+    speed: Speed
+
+
+class PostureIn(_Model):
+    posture: Posture
+
+
+class LivePlayerOut(_Model):
+    player: int
+    name: str
+    slot: str
+    condition: float = Field(description="Condição física (0–100) do PRÓPRIO atleta.")
+    on_field: bool
+    yellow_cards: int
+
+
+class LiveStateOut(_Model):
+    session_id: str
+    match_id: str
+    home_club_uid: int
+    away_club_uid: int
+    user_side: int
+    speed: Speed
+    minute: int
+    game_second: float
+    finished: bool
+    score: tuple[int, int]
+    shootout: tuple[int, int] | None = None
+    events: list[MatchEventOut] = Field(description="Somente eventos já revelados pelo relógio do servidor.")
+    stats: dict[str, dict[str, Any]]
+    postures: tuple[str, str] = Field(description="Posturas observáveis atuais (mandante, visitante).")
+    own_players: list[LivePlayerOut]
+    own_bench: list[LineupPlayerOut]
+    substitutions_used: int
+    max_substitutions: int = 5
+
+
+class PlayerSeasonStatsOut(_Model):
+    player: int
+    name: str
+    club_uid: int
+    appearances: int
+    goals: int
+    assists: int
+    average_rating: float | None = None
+    rating_eligible: bool = Field(description="Atingiu 50% das partidas da própria equipe (arredondado para cima).")
+    motm: int
+    yellow_cards: int
+    red_cards: int
+
+
+class ClubSeasonStatsOut(_Model):
+    club_uid: int
+    played: int
+    wins: int
+    draws: int
+    losses: int
+    goals_for: int
+    goals_against: int
+    totals: dict[str, float] = Field(description="Somas das estatísticas do motor nas partidas do clube.")
+    against: dict[str, float] = Field(description="Mesmas estatísticas, dos adversários.")
+
+
+class SeasonStatsOut(_Model):
+    session_id: str
+    matches_played: int
+    players: list[PlayerSeasonStatsOut]
+    clubs: list[ClubSeasonStatsOut]
+
+
+class CalendarRoundOut(_Model):
+    number: int
+    label: str
+    fixtures: list[SeasonFixtureOut]
+    byes: list[int]
+
+
+class CalendarOut(_Model):
+    session_id: str
+    kind: Literal["league", "cup"]
+    current_round: int
+    rounds: list[CalendarRoundOut]
+
+
 # ---------------------------------------------------------------- websocket
 class WsEnvelope(_Model):
     """Envelope de mensagens WebSocket. Tipos na Entrega 1: session.snapshot, session.closed, pong, error."""
@@ -595,3 +764,7 @@ class WsEnvelope(_Model):
         if not self.type:
             raise ValueError("type obrigatório")
         return self
+
+
+MatchReportOut.model_rebuild()
+OpponentPreviewOut.model_rebuild()

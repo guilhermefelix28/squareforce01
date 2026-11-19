@@ -32,6 +32,8 @@ class Settings:
     auction_ticker: bool = True  # testes desligam e avançam o relógio manualmente
     # Partidas paralelas (GDD §19): processos isolados com limite de trabalhadores
     match_executor: str = field(default_factory=lambda: os.environ.get("SQUADFORCE_MATCH_EXECUTOR", "process"))
+    # SOMENTE testes/demonstração: acelera os relógios do servidor (leilão, mercado, partida ao vivo). 1 = real.
+    clock_scale: float = field(default_factory=lambda: float(os.environ.get("SQUADFORCE_CLOCK_SCALE", "1")))
     match_workers: int = field(
         default_factory=lambda: int(os.environ.get("SQUADFORCE_MATCH_WORKERS", str(min(4, os.cpu_count() or 1))))
     )

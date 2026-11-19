@@ -110,7 +110,7 @@ function LeagueView({ s, clubs, user }: { s: LeagueSchedule; clubs: ClubMap; use
           )}
         </>
       )}
-      <p className="muted small">Mandante à esquerda. Partidas serão disputadas nas próximas entregas.</p>
+      <p className="muted small">Mandante à esquerda. Resultados na Central da competição.</p>
     </div>
   );
 }

@@ -88,8 +88,9 @@ export function TradingPage({ go }: { go: (page: "auction" | "session") => void 
           <h3>Mercado encerrado</h3>
           <p className="muted">
             {state.history.length} negociações concluídas. Você fez {state.completed_trades} e terminou com saldo de{" "}
-            {formatMoneyShort(state.budget)}. A preparação das partidas chega na próxima entrega.
+            {formatMoneyShort(state.budget)}.
           </p>
+          <a className="btn btn--primary" href="#/temporada/central">Ir para a competição</a>
           <ol className="results">
             {state.history.map((r) => (
               <li key={r.proposal_id}>

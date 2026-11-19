@@ -12,7 +12,8 @@ from fastapi.responses import FileResponse, JSONResponse
 
 from services.auction.engine import AuctionError
 from services.trading.engine import TradingError
-from services.competition.season import SeasonError
+from services.competition.live import LiveError
+from services.competition.season import SeasonError, events_digest
 from services.competition.options import competition_options
 from squadforce_shared import __version__
 from squadforce_shared.contracts import (
@@ -29,6 +30,16 @@ from squadforce_shared.contracts import (
     CompetitionOptions,
     CompetitionOut,
     MatchReportOut,
+    CalendarOut,
+    FormationOut,
+    LineupIn,
+    LineupOut,
+    LiveSpeedIn,
+    LiveStartIn,
+    LiveStateOut,
+    PostureIn,
+    SeasonStatsOut,
+    SquadPlayerOut,
     SeasonStateOut,
     SeasonSummaryOut,
     DatabaseHealth,
@@ -503,12 +514,15 @@ async def act_on_proposal(
 
 
 # ------------------------------------------------------------------ temporada: Liga e Copa (Entrega 7)
-_SEASON_STATUS = {"INVALID_STATE": 409, "ALREADY_CONSOLIDATED": 409, "NOTHING_TO_RETRY": 409, "ROUND_FAILED": 500}
+_SEASON_STATUS = {"INVALID_STATE": 409, "ALREADY_CONSOLIDATED": 409, "NOTHING_TO_RETRY": 409, "ROUND_FAILED": 500,
+                  "INVALID_LINEUP": 422}
 
 
 def _season_error(exc: SeasonError) -> AppError:
     status = _SEASON_STATUS.get(exc.code, 500)
-    if status == 409:
+    if exc.code == "INVALID_LINEUP":
+        code = ErrorCode.INVALID_LINEUP
+    elif status == 409:
         code = ErrorCode.INVALID_PHASE
     else:
         code = ErrorCode.ROUND_FAILED if exc.code == "ROUND_FAILED" else ErrorCode.SEASON_FAILED
@@ -573,12 +587,21 @@ def _season_command(c: Container, session_id: str, action: str):
         with c.seasons.lock(session_id):
             try:
                 if action == "play":
+                    live = c.seasons.live(session_id, season)
+                    if live is not None and not season.failed:
+                        if not live.finished:
+                            raise AppError(409, ErrorCode.MATCH_IN_PROGRESS,
+                                           "Sua partida ainda está em andamento: aguarde o apito final ou mude para Instantâneo.")
+                        task = live.final_task()
+                        season.set_user_decisions(task.match_id, task.user_decisions)
+                        season.expect_result(task.match_id, events_digest(live.result()))
                     if season.failed:
                         season.retry_failed(c.seasons.executor())  # repete SOMENTE as partidas falhas
                     else:
                         season.play(c.seasons.executor())
                 else:
                     season.advance()
+                    c.seasons.clear_live(session_id)
             except SeasonError as exc:
                 raise _season_error(exc) from exc
             if season.phase == "finished":
@@ -633,3 +656,151 @@ def season_summary(c: C, session_id: str) -> SeasonSummaryOut:
     season = _season(c, session_id)
     with c.seasons.lock(session_id):
         return c.seasons.summary(session_id, season)
+
+
+
+# ------------------------------------------------------------------ interface: elenco, escalação, partida ao vivo (Entrega 8)
+def _live_error(exc: LiveError) -> AppError:
+    status = {"INVALID_SPEED": 422}.get(exc.code, 409)
+    code = getattr(ErrorCode, exc.code, ErrorCode.INVALID_PHASE)
+    return AppError(status, code, exc.message)
+
+
+@router.get("/sessions/{session_id}/season/formations", response_model=list[FormationOut], responses=ERR, tags=["season"])
+def season_formations(c: C, session_id: str) -> list[FormationOut]:
+    """Formações disponíveis (lista oficial pendente — PM-01: provisória)."""
+    _season(c, session_id)
+    return c.seasons.formations()
+
+
+@router.get("/sessions/{session_id}/season/squad", response_model=list[SquadPlayerOut], responses=ERR, tags=["season"])
+def season_squad(c: C, session_id: str) -> list[SquadPlayerOut]:
+    """Meu elenco: disponibilidade (lesões/suspensões), adequação por posição e números da competição."""
+    season = _season(c, session_id)
+    with c.seasons.lock(session_id):
+        return c.seasons.squad(session_id, season)
+
+
+@router.get("/sessions/{session_id}/season/lineup", response_model=LineupOut, responses=ERR, tags=["season"])
+def get_lineup(c: C, session_id: str) -> LineupOut:
+    """Próximo confronto do usuário: escalação atual, postura inicial e informações públicas do adversário."""
+    season = _season(c, session_id)
+    with c.seasons.lock(session_id):
+        return c.seasons.lineup(session_id, season)
+
+
+@router.post("/sessions/{session_id}/season/lineup", response_model=LineupOut, responses=ERR, tags=["season"])
+async def set_lineup(c: C, request: Request, session_id: str, body: LineupIn, idempotency_key: IdemKey = None):
+    """Define formação, 11 titulares (na ordem das vagas), até 7 reservas e postura inicial."""
+    key = validate_key(idempotency_key)
+    raw = await request.body()
+    season = _season(c, session_id)
+
+    def run() -> tuple[int, dict[str, Any]]:
+        with c.seasons.lock(session_id):
+            if c.seasons.live(session_id, season) is not None:
+                raise AppError(409, ErrorCode.MATCH_IN_PROGRESS, "A partida já começou: a escalação está fechada.")
+            if season.user_task() is None:
+                raise AppError(409, ErrorCode.NO_USER_MATCH, "Seu clube não joga nesta rodada.")
+            try:
+                c.seasons.set_lineup(season, body.formation, body.starters, body.bench, body.posture)
+            except SeasonError as exc:
+                raise _season_error(exc) from exc
+            return 200, c.seasons.lineup(session_id, season).model_dump(mode="json")
+
+    status, out, replayed = c.idempotency.execute(f"season:lineup:{session_id}", key, fingerprint("lineup", raw), run)
+    return _respond(status, out, replayed)
+
+
+@router.post("/sessions/{session_id}/season/live/start", response_model=LiveStateOut, status_code=201, responses=ERR, tags=["season"])
+async def start_live(c: C, request: Request, session_id: str, body: LiveStartIn | None = None, idempotency_key: IdemKey = None):
+    """Inicia a apresentação da partida do usuário (15 s, 30 s, 60 s ou instantânea). O relógio é do servidor
+    e não pausa; somente eventos já ocorridos são enviados."""
+    key = validate_key(idempotency_key)
+    raw = await request.body()
+    season = _season(c, session_id)
+    speed = body.speed if body else "30s"
+
+    def run() -> tuple[int, dict[str, Any]]:
+        with c.seasons.lock(session_id):
+            if season.phase != "ready":
+                raise AppError(409, ErrorCode.INVALID_PHASE, "A rodada atual já foi jogada.")
+            if season.user_task() is None:
+                raise AppError(409, ErrorCode.NO_USER_MATCH, "Seu clube não joga nesta rodada.")
+            live = c.seasons.live(session_id, season)
+            if live is None:
+                try:
+                    live = c.seasons.start_live(session_id, season, speed, c.clock)
+                except LiveError as exc:
+                    raise _live_error(exc) from exc
+            return 201, c.seasons.live_state(session_id, season, live).model_dump(mode="json")
+
+    status, out, replayed = c.idempotency.execute(f"season:live:{session_id}", key, fingerprint("live", raw), run)
+    if not replayed:
+        await c.hub.broadcast(session_id, WsEnvelope(type="season.live_started", session_id=session_id))
+    return _respond(status, out, replayed)
+
+
+def _live(c: Container, session_id: str):
+    season = _season(c, session_id)
+    live = c.seasons.live(session_id, season)
+    if live is None:
+        raise AppError(404, ErrorCode.LIVE_NOT_FOUND, "Nenhuma partida em apresentação nesta rodada.")
+    return season, live
+
+
+@router.get("/sessions/{session_id}/season/live", response_model=LiveStateOut, responses=ERR, tags=["season"])
+def get_live(c: C, session_id: str) -> LiveStateOut:
+    season, live = _live(c, session_id)
+    return c.seasons.live_state(session_id, season, live)
+
+
+@router.post("/sessions/{session_id}/season/live/posture", response_model=LiveStateOut, responses=ERR, tags=["season"])
+async def live_posture(c: C, request: Request, session_id: str, body: PostureIn, idempotency_key: IdemKey = None):
+    """Muda a postura do usuário a partir do tempo de jogo atual (afeta só eventos ainda não simulados)."""
+    key = validate_key(idempotency_key)
+    raw = await request.body()
+    season, live = _live(c, session_id)
+
+    def run() -> tuple[int, dict[str, Any]]:
+        try:
+            live.change_posture(body.posture)
+        except LiveError as exc:
+            raise _live_error(exc) from exc
+        return 200, c.seasons.live_state(session_id, season, live).model_dump(mode="json")
+
+    status, out, replayed = c.idempotency.execute(f"season:posture:{session_id}", key, fingerprint("posture", raw), run)
+    return _respond(status, out, replayed)
+
+
+@router.post("/sessions/{session_id}/season/live/speed", response_model=LiveStateOut, responses=ERR, tags=["season"])
+async def live_speed(c: C, request: Request, session_id: str, body: LiveSpeedIn, idempotency_key: IdemKey = None):
+    """Muda só a velocidade de apresentação (não altera eventos)."""
+    key = validate_key(idempotency_key)
+    raw = await request.body()
+    season, live = _live(c, session_id)
+
+    def run() -> tuple[int, dict[str, Any]]:
+        try:
+            live.set_speed(body.speed)
+        except LiveError as exc:
+            raise _live_error(exc) from exc
+        return 200, c.seasons.live_state(session_id, season, live).model_dump(mode="json")
+
+    status, out, replayed = c.idempotency.execute(f"season:speed:{session_id}", key, fingerprint("speed", raw), run)
+    return _respond(status, out, replayed)
+
+
+@router.get("/sessions/{session_id}/season/stats", response_model=SeasonStatsOut, responses=ERR, tags=["season"])
+def season_stats(c: C, session_id: str) -> SeasonStatsOut:
+    """Central de estatísticas: jogadores e clubes (somente números produzidos pelo motor)."""
+    season = _season(c, session_id)
+    with c.seasons.lock(session_id):
+        return c.seasons.stats(session_id, season)
+
+
+@router.get("/sessions/{session_id}/season/calendar", response_model=CalendarOut, responses=ERR, tags=["season"])
+def season_calendar(c: C, session_id: str) -> CalendarOut:
+    season = _season(c, session_id)
+    with c.seasons.lock(session_id):
+        return c.seasons.calendar(session_id, season)

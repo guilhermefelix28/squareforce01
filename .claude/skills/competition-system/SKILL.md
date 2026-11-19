@@ -48,6 +48,8 @@ Formatos; participantes; calendário/chave; disparo paralelo das partidas; conso
    snapshot marcado como consolidado (nunca duas vezes). Falha => nada aplicado; repetir só as falhas com a mesma tarefa.
 7. Nada que uma partida precise pode vir de fora da sua `FixtureTask` (isolamento entre confrontos simultâneos).
 8. Avanço sempre manual (`advance`); nunca encadear rodadas automaticamente.
+9. Escalação do usuário: `Season.set_user_lineup` (validada contra o estado oficial). Partida ao vivo:
+   `live.py` (`LiveMatch`); antes de `play`, registrar as decisões e `expect_result` (resultado idêntico).
 
 ## Restrições e comportamentos proibidos
 Inventar critérios de desempate (PC-01) ou efeito de mando (PC-03); atribuir mando na Copa (PC-05); expor a semente; consolidar rodada parcialmente; persistir progresso; expor `register_cup_winner` diretamente por API; aplicar critérios de desempate não enviados (lista padrão vazia);

@@ -85,3 +85,14 @@ Legenda: **P** = regra pendente · **D** = decisão técnica provisória (confir
 | MD-04 | D | Pesos das composições de atributos por ação (iguais dentro de cada composição) e efeitos das posturas: provisórios. |
 | MD-05 | D | Emergenciais com atributos 30 (goleiro emergencial com atributos de goleiro; os demais com 5 nesses atributos). |
 | MD-06 | D | Atleta com amarelo reduz o risco de faltas e de novo cartão (`booked_caution`), para evitar expulsões irreais por acúmulo dentro do jogo. |
+
+## Interface (Entrega 8)
+
+| ID | Tipo | Pendência | Estado |
+|---|---|---|---|
+| PI-01 | P | **Tipografia**: o manual de identidade visual não define fontes. Usada a fonte do sistema. | Aguardando |
+| PI-02 | D | **Limiares dos indicadores de adequação** (familiaridade ≥ 90 Natural, ≥ 70 Boa, ≥ 40 Regular, abaixo Improvisado): apresentação provisória; o motor usa o valor contínuo (`positional_factor`). | Confirmar |
+| PI-03 | D | **Partida ao vivo sem pausa**: o GDD não prevê pausa; o relógio da apresentação é do servidor e segue mesmo desconectado (coerente com §23). Velocidade pode ser trocada durante o jogo. | Confirmar |
+| PI-04 | D | **Condição física exibida só do próprio time** (a do adversário não é informação pública). | Confirmar |
+| PI-05 | I | **Ícone do app**: o manual pede revisão em tamanho pequeno antes da publicação (arquivo raster). | Aberta |
+| PI-06 | I | `SQUADFORCE_CLOCK_SCALE` e o modelo falso do leilão existem SOMENTE para testes/demonstração. | Informativo |

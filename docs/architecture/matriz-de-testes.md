@@ -139,3 +139,18 @@
 | Consolidação única e avanço manual | `test_consolidation_happens_once_and_advance_is_manual` · API `test_full_competition_flow` |
 | Histórico, campeões e premiações | `test_awards_and_campaign` · API `test_full_competition_flow` |
 | API (início após o mercado, pós-partida, resumo, sessão encerrada) | `tests/integration/test_season_api.py` |
+
+## Entrega 8 — Interface e integração
+
+| Requisito | Testes |
+|---|---|
+| Navegação contextual e rotas | `frontend/src/features/season/Season.test.tsx` (`navegação contextual`) · `App.test.tsx` |
+| Escalação: arrastar e soltar, troca por toque, indisponíveis, adequação, postura, erro do servidor | `Season.test.tsx` (`escalação`, `campo interativo`) · `tests/integration/test_interface_api.py::test_lineup_*` |
+| Partida: velocidades, revelação progressiva, postura, condição física, substituições | `tests/unit/test_live_match.py` · `test_interface_api.py::test_live_match_flow_*` · `Season.test.tsx` (`partida`) |
+| Velocidade não altera eventos com as mesmas decisões | `test_live_match.py::test_speed_does_not_change_events_without_decisions` · `::test_posture_change_is_reproduced_by_the_round_execution_at_any_speed` |
+| Pós-partida, avanço manual, encerramento, campeão indefinido | `Season.test.tsx` (`central da temporada`, `encerramento`) |
+| Estatísticas (4 abas, rankings, filtros) | `Season.test.tsx` · `test_interface_api.py::test_stats_and_calendar` |
+| Reconexão, versão da sessão, sessão perdida, comandos sem duplicação | `Season.test.tsx` (`sincronização de versão`, `reconexão`), idempotência em todos os POST |
+| Acessibilidade (teclado) | `Season.test.tsx::pular para o conteúdo…` + verificação no navegador real |
+| **Jornada real completa** | `frontend/src/api/journey.e2e.test.ts` (backend real, relógio acelerado: leilão → complementação → mercado → escalação → partida ao vivo → rodadas → encerramento → nova competição) |
+| Desktop e celular | navegador real (agent-browser) 1366×900 e 390×844, temas claro e escuro |

@@ -29,7 +29,7 @@ from services.bot_ai.tactics import (
 )
 from services.competition.planner import register_cup_winner
 from services.match_engine.availability import AvailabilityLedger
-from services.match_engine.params import DEFAULT_PARAMS
+from services.match_engine.params import DEFAULT_PARAMS, POSTURES
 from services.match_engine.types import MatchPlayer, MatchResult, PostureChange, TeamSheet
 from squadforce_shared.contracts import CupBracket, LeagueSchedule
 from squadforce_shared.domain.positions import Position
@@ -70,6 +70,22 @@ class PlayedMatch:
     home: int
     away: int
     result: MatchResult
+    home_sheet: TeamSheet | None = None  # escalações (histórico completo, GDD §20)
+    away_sheet: TeamSheet | None = None
+
+
+@dataclass(frozen=True)
+class UserLineup:
+    """Escalação escolhida pelo usuário (GDD §9): formação, titulares na ordem das vagas, reservas e postura."""
+
+    formation: tuple[Position, ...]
+    starters: tuple[int, ...]
+    bench: tuple[int, ...]
+    posture: str
+
+
+def events_digest(result: MatchResult) -> tuple:
+    return tuple((e.seq, round(e.second, 6), e.type, e.side, e.player, e.other) for e in result.events)
 
 
 @dataclass
@@ -178,6 +194,9 @@ class Season:
         self.consolidated_snapshots: set[str] = set()
         self.last_round: list[PlayedMatch] = []
         self.user_decisions: dict[str, tuple[PostureChange, ...]] = {}
+        self.user_lineup: UserLineup | None = None
+        self.lineup_note: str | None = None  # por que a escalação do usuário não pôde ser usada
+        self.expected: dict[str, tuple] = {}  # partidas já apresentadas ao vivo: resultado deve ser idêntico
         self._prepare()
 
     # ================================================================ rodadas
@@ -232,6 +251,7 @@ class Season:
 
     def _prepare(self) -> None:
         fixtures, byes, label = self._round_fixtures()
+        self.lineup_note = None
         table = tuple(self.standings()) if self.kind == "league" else ()
         led = self.state.ledger
         snapshot_id = f"{self.competition_id}:{self.round_index + 1}"
@@ -243,11 +263,16 @@ class Season:
             for club, opp in ((home, away), (away, home)):
                 ctx = PreMatchContext(self._situation(club, table), self.personalities.get(club, "balanced"),
                                       self._public_history(opp))
-                choice = choose_lineup(club, list(self.squads[club]), self.formations, ctx, led, comp,
-                                       recent_ratings=self._recent_ratings(club))
-                sheet = choice.sheet
+                sheet = None
+                if club == self.user_club and self.user_lineup is not None:
+                    sheet, self.lineup_note = self._user_sheet(self.user_lineup)
+                if sheet is None:
+                    choice = choose_lineup(club, list(self.squads[club]), self.formations, ctx, led, comp,
+                                           recent_ratings=self._recent_ratings(club))
+                    sheet = choice.sheet
+                    if club == self.user_club:  # sem escalação válida do usuário: sugestão automática, equilibrada
+                        sheet = TeamSheet(sheet.club_uid, sheet.formation, sheet.starters, sheet.bench, "equilibrada")
                 if club == self.user_club:  # o usuário decide a postura: sem controlador automático
-                    sheet = TeamSheet(sheet.club_uid, sheet.formation, sheet.starters, sheet.bench, "equilibrada")
                     contexts.append(None)
                 else:
                     contexts.append(ctx)
@@ -271,6 +296,51 @@ class Season:
         )
         self.pending, self.errors, self.failed = {}, {}, []
         self.phase = "ready"
+
+    # ================================================================ escalação do usuário
+    def _user_sheet(self, lu: UserLineup) -> tuple[TeamSheet | None, str | None]:
+        """Valida a escalação do usuário contra o estado OFICIAL atual; inválida => (None, motivo)."""
+        led, comp = self.state.ledger, self.competition_id
+        squad = {p.unique_id: p for p in self.squads[self.user_club]}
+        if tuple(lu.formation) not in self.formations:
+            return None, "Formação indisponível."
+        ids = list(lu.starters) + list(lu.bench)
+        if len(lu.starters) != 11 or len(lu.bench) > 7 or len(set(ids)) != len(ids):
+            return None, "A escalação exige 11 titulares distintos e até 7 reservas."
+        unknown = [i for i in ids if i not in squad]
+        if unknown:
+            return None, f"Jogadores fora do elenco: {unknown}."
+        out = [i for i in ids if not led.is_available(i, comp)]
+        if out:
+            names = ", ".join(f"{squad[i].name} ({led.unavailable_reason(i, comp)})" for i in out)
+            return None, f"Indisponíveis: {names}."
+        if lu.posture not in POSTURES:
+            return None, "Postura inválida."
+        try:
+            sheet = TeamSheet(self.user_club, tuple(lu.formation), tuple(squad[i] for i in lu.starters),
+                              tuple(squad[i] for i in lu.bench), lu.posture)
+        except ValueError as exc:
+            return None, str(exc)
+        return sheet, None
+
+    def set_user_lineup(self, lineup: UserLineup) -> None:
+        """Escalação do usuário para a rodada pronta (vale também para as próximas enquanto continuar válida)."""
+        if self.phase != "ready":
+            raise SeasonError("INVALID_STATE", "A escalação só pode ser alterada antes de a rodada ser jogada.")
+        sheet, problem = self._user_sheet(lineup)
+        if sheet is None:
+            raise SeasonError("INVALID_LINEUP", problem or "Escalação inválida.")
+        self.user_lineup = lineup
+        self._prepare()
+
+    def user_task(self) -> FixtureTask | None:
+        if self.snapshot is None:
+            return None
+        return next((t for t in self.snapshot.tasks if self.user_club in (t.home_club, t.away_club)), None)
+
+    def expect_result(self, match_id: str, digest: tuple) -> None:
+        """Partida do usuário já apresentada ao vivo: a execução da rodada deve reproduzi-la exatamente."""
+        self.expected[match_id] = digest
 
     # ================================================================ execução paralela
     def play(self, executor: Executor) -> list[PlayedMatch]:
@@ -337,6 +407,9 @@ class Season:
                 raise SeasonError("CONSOLIDATION_INVALID", f"Partida {m} inválida.", {"problems": list(o.problems)})
             if res.stats["home"]["goals"] != res.score[0] or res.stats["away"]["goals"] != res.score[1]:
                 raise SeasonError("CONSOLIDATION_INVALID", f"Estatísticas e placar divergentes na partida {m}.")
+            if m in self.expected and events_digest(res) != self.expected[m]:
+                raise SeasonError("CONSOLIDATION_INVALID",
+                                  f"Partida {m} diverge da apresentação ao vivo (determinismo violado).")
             if self.kind == "cup" and res.winner_side is None:
                 raise SeasonError("CONSOLIDATION_INVALID", f"Confronto eliminatório {m} sem vencedor.")
         # 6–9: aplica em CÓPIAS e troca de uma vez (nenhuma consolidação parcial)
@@ -345,7 +418,7 @@ class Season:
         for m, home, away in snap.fixtures:  # ordem fixa pelo calendário
             res = outcomes[m].result
             task = tasks[m]
-            pm = PlayedMatch(m, snap.round_no, home, away, res)
+            pm = PlayedMatch(m, snap.round_no, home, away, res, task.home, task.away)
             played.append(pm)
             new.history.append(pm)
             new.club_matches[home] += 1
@@ -389,6 +462,7 @@ class Season:
     def advance(self) -> None:
         if self.phase != "awaiting_advance":
             raise SeasonError("INVALID_STATE", f"Avanço indisponível no estado {self.phase}.")
+        self.expected = {}
         if self.round_index + 1 >= self.total_rounds:
             self.phase = "finished"
             self.snapshot = None

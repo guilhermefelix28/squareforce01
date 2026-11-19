@@ -491,6 +491,185 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/sessions/{session_id}/season/formations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Season Formations
+         * @description Formações disponíveis (lista oficial pendente — PM-01: provisória).
+         */
+        get: operations["season_formations_api_sessions__session_id__season_formations_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sessions/{session_id}/season/squad": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Season Squad
+         * @description Meu elenco: disponibilidade (lesões/suspensões), adequação por posição e números da competição.
+         */
+        get: operations["season_squad_api_sessions__session_id__season_squad_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sessions/{session_id}/season/lineup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Lineup
+         * @description Próximo confronto do usuário: escalação atual, postura inicial e informações públicas do adversário.
+         */
+        get: operations["get_lineup_api_sessions__session_id__season_lineup_get"];
+        put?: never;
+        /**
+         * Set Lineup
+         * @description Define formação, 11 titulares (na ordem das vagas), até 7 reservas e postura inicial.
+         */
+        post: operations["set_lineup_api_sessions__session_id__season_lineup_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sessions/{session_id}/season/live/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start Live
+         * @description Inicia a apresentação da partida do usuário (15 s, 30 s, 60 s ou instantânea). O relógio é do servidor
+         *     e não pausa; somente eventos já ocorridos são enviados.
+         */
+        post: operations["start_live_api_sessions__session_id__season_live_start_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sessions/{session_id}/season/live": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Live */
+        get: operations["get_live_api_sessions__session_id__season_live_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sessions/{session_id}/season/live/posture": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Live Posture
+         * @description Muda a postura do usuário a partir do tempo de jogo atual (afeta só eventos ainda não simulados).
+         */
+        post: operations["live_posture_api_sessions__session_id__season_live_posture_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sessions/{session_id}/season/live/speed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Live Speed
+         * @description Muda só a velocidade de apresentação (não altera eventos).
+         */
+        post: operations["live_speed_api_sessions__session_id__season_live_speed_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sessions/{session_id}/season/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Season Stats
+         * @description Central de estatísticas: jogadores e clubes (somente números produzidos pelo motor).
+         */
+        get: operations["season_stats_api_sessions__session_id__season_stats_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sessions/{session_id}/season/calendar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Season Calendar */
+        get: operations["season_calendar_api_sessions__session_id__season_calendar_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -737,6 +916,31 @@ export interface components {
              */
             file: string;
         };
+        /** CalendarOut */
+        CalendarOut: {
+            /** Session Id */
+            session_id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "league" | "cup";
+            /** Current Round */
+            current_round: number;
+            /** Rounds */
+            rounds: components["schemas"]["CalendarRoundOut"][];
+        };
+        /** CalendarRoundOut */
+        CalendarRoundOut: {
+            /** Number */
+            number: number;
+            /** Label */
+            label: string;
+            /** Fixtures */
+            fixtures: components["schemas"]["SeasonFixtureOut"][];
+            /** Byes */
+            byes: number[];
+        };
         /** ClubCampaignOut */
         ClubCampaignOut: {
             /** Club Uid */
@@ -793,6 +997,37 @@ export interface components {
             limit: number;
             /** Offset */
             offset: number;
+        };
+        /** ClubSeasonStatsOut */
+        ClubSeasonStatsOut: {
+            /** Club Uid */
+            club_uid: number;
+            /** Played */
+            played: number;
+            /** Wins */
+            wins: number;
+            /** Draws */
+            draws: number;
+            /** Losses */
+            losses: number;
+            /** Goals For */
+            goals_for: number;
+            /** Goals Against */
+            goals_against: number;
+            /**
+             * Totals
+             * @description Somas das estatísticas do motor nas partidas do clube.
+             */
+            totals: {
+                [key: string]: number;
+            };
+            /**
+             * Against
+             * @description Mesmas estatísticas, dos adversários.
+             */
+            against: {
+                [key: string]: number;
+            };
         };
         /** CompetitionConfig */
         CompetitionConfig: {
@@ -1002,6 +1237,19 @@ export interface components {
         ErrorResponse: {
             error: components["schemas"]["ErrorBody"];
         };
+        /** FormationOut */
+        FormationOut: {
+            /**
+             * Id
+             * @description Nome da formação (ex.: 4-3-3). Lista oficial pendente (PM-01): provisória.
+             */
+            id: string;
+            /**
+             * Positions
+             * @description 11 vagas na ordem do campo (código interno).
+             */
+            positions: string[];
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -1172,6 +1420,193 @@ export interface components {
             /** Matches Per Club */
             matches_per_club: number;
         };
+        /** LineupIn */
+        LineupIn: {
+            /** Formation */
+            formation: string;
+            /**
+             * Starters
+             * @description IDs na ordem das vagas da formação.
+             */
+            starters: number[];
+            /** Bench */
+            bench?: number[];
+            /**
+             * Posture
+             * @default equilibrada
+             * @enum {string}
+             */
+            posture: "retranca" | "defensiva" | "equilibrada" | "ofensiva" | "ataque_total";
+        };
+        /** LineupOut */
+        LineupOut: {
+            /**
+             * Has Match
+             * @description false: folga, eliminado ou competição encerrada.
+             */
+            has_match: boolean;
+            /** Match Id */
+            match_id?: string | null;
+            opponent?: components["schemas"]["OpponentPreviewOut"] | null;
+            /**
+             * Is Home
+             * @description null na Copa (mando neutro).
+             */
+            is_home?: boolean | null;
+            /** Formation */
+            formation?: string | null;
+            /** Starters */
+            starters?: components["schemas"]["LineupSlotOut"][];
+            /** Bench */
+            bench?: components["schemas"]["LineupPlayerOut"][];
+            /** Posture */
+            posture?: ("retranca" | "defensiva" | "equilibrada" | "ofensiva" | "ataque_total") | null;
+            /**
+             * Source
+             * @default auto
+             * @enum {string}
+             */
+            source: "user" | "auto";
+            /**
+             * Note
+             * @description Motivo de a escalação do usuário não ter sido usada.
+             */
+            note?: string | null;
+            /**
+             * Locked
+             * @description true: partida já iniciada ao vivo ou rodada jogada.
+             */
+            locked: boolean;
+            /** Formations */
+            formations: components["schemas"]["FormationOut"][];
+        };
+        /** LineupPlayerOut */
+        LineupPlayerOut: {
+            /** Player */
+            player: number;
+            /** Name */
+            name: string;
+            /**
+             * Slot
+             * @description Vaga (código interno GK, DR, DL, DC, DM, MC, STC).
+             */
+            slot: string;
+        };
+        /** LineupSlotOut */
+        LineupSlotOut: {
+            /** Index */
+            index: number;
+            /** Position */
+            position: string;
+            /** Player */
+            player: number;
+            /** Name */
+            name: string;
+            /**
+             * Fit
+             * @enum {string}
+             */
+            fit: "natural" | "boa" | "regular" | "improvisada";
+        };
+        /** LivePlayerOut */
+        LivePlayerOut: {
+            /** Player */
+            player: number;
+            /** Name */
+            name: string;
+            /** Slot */
+            slot: string;
+            /**
+             * Condition
+             * @description Condição física (0–100) do PRÓPRIO atleta.
+             */
+            condition: number;
+            /** On Field */
+            on_field: boolean;
+            /** Yellow Cards */
+            yellow_cards: number;
+        };
+        /** LiveSpeedIn */
+        LiveSpeedIn: {
+            /**
+             * Speed
+             * @enum {string}
+             */
+            speed: "15s" | "30s" | "60s" | "instant";
+        };
+        /** LiveStartIn */
+        LiveStartIn: {
+            /**
+             * Speed
+             * @default 30s
+             * @enum {string}
+             */
+            speed: "15s" | "30s" | "60s" | "instant";
+        };
+        /** LiveStateOut */
+        LiveStateOut: {
+            /** Session Id */
+            session_id: string;
+            /** Match Id */
+            match_id: string;
+            /** Home Club Uid */
+            home_club_uid: number;
+            /** Away Club Uid */
+            away_club_uid: number;
+            /** User Side */
+            user_side: number;
+            /**
+             * Speed
+             * @enum {string}
+             */
+            speed: "15s" | "30s" | "60s" | "instant";
+            /** Minute */
+            minute: number;
+            /** Game Second */
+            game_second: number;
+            /** Finished */
+            finished: boolean;
+            /** Score */
+            score: [
+                number,
+                number
+            ];
+            /** Shootout */
+            shootout?: [
+                number,
+                number
+            ] | null;
+            /**
+             * Events
+             * @description Somente eventos já revelados pelo relógio do servidor.
+             */
+            events: components["schemas"]["MatchEventOut"][];
+            /** Stats */
+            stats: {
+                [key: string]: {
+                    [key: string]: unknown;
+                };
+            };
+            /**
+             * Postures
+             * @description Posturas observáveis atuais (mandante, visitante).
+             */
+            postures: [
+                string,
+                string
+            ];
+            /** Own Players */
+            own_players: components["schemas"]["LivePlayerOut"][];
+            /** Own Bench */
+            own_bench: components["schemas"]["LineupPlayerOut"][];
+            /** Substitutions Used */
+            substitutions_used: number;
+            /**
+             * Max Substitutions
+             * @default 5
+             */
+            max_substitutions: number;
+        };
         /** MatchEventOut */
         MatchEventOut: {
             /** Seq */
@@ -1256,6 +1691,27 @@ export interface components {
             engine_version: string;
             /** Params Version */
             params_version: string;
+            /**
+             * Lineups
+             * @description Escalações dos dois clubes (mandante, visitante).
+             */
+            lineups?: components["schemas"]["TeamLineupOut"][];
+        };
+        /** OpponentPreviewOut */
+        OpponentPreviewOut: {
+            /** Club Uid */
+            club_uid: number;
+            campaign: components["schemas"]["ClubCampaignOut"];
+            /**
+             * Previous Formations
+             * @description Formações usadas nas partidas anteriores (públicas).
+             */
+            previous_formations: string[];
+            /**
+             * Top Players
+             * @description Destaques públicos: artilheiros e melhores médias.
+             */
+            top_players: components["schemas"]["AwardEntryOut"][];
         };
         /** PlayerOut */
         PlayerOut: {
@@ -1315,6 +1771,34 @@ export interface components {
             /** Minutes */
             minutes: number;
         };
+        /** PlayerSeasonStatsOut */
+        PlayerSeasonStatsOut: {
+            /** Player */
+            player: number;
+            /** Name */
+            name: string;
+            /** Club Uid */
+            club_uid: number;
+            /** Appearances */
+            appearances: number;
+            /** Goals */
+            goals: number;
+            /** Assists */
+            assists: number;
+            /** Average Rating */
+            average_rating?: number | null;
+            /**
+             * Rating Eligible
+             * @description Atingiu 50% das partidas da própria equipe (arredondado para cima).
+             */
+            rating_eligible: boolean;
+            /** Motm */
+            motm: number;
+            /** Yellow Cards */
+            yellow_cards: number;
+            /** Red Cards */
+            red_cards: number;
+        };
         /** PointsSystemOut */
         PointsSystemOut: {
             /** Win */
@@ -1334,6 +1818,14 @@ export interface components {
          * @enum {string}
          */
         Position: "GK" | "DR" | "DL" | "DC" | "DM" | "MC" | "STC";
+        /** PostureIn */
+        PostureIn: {
+            /**
+             * Posture
+             * @enum {string}
+             */
+            posture: "retranca" | "defensiva" | "equilibrada" | "ofensiva" | "ataque_total";
+        };
         /** ProposalCreate */
         ProposalCreate: {
             /** Recipient Club Uid */
@@ -1485,6 +1977,17 @@ export interface components {
              */
             tied_champions: number[];
         };
+        /** SeasonStatsOut */
+        SeasonStatsOut: {
+            /** Session Id */
+            session_id: string;
+            /** Matches Played */
+            matches_played: number;
+            /** Players */
+            players: components["schemas"]["PlayerSeasonStatsOut"][];
+            /** Clubs */
+            clubs: components["schemas"]["ClubSeasonStatsOut"][];
+        };
         /** SeasonSummaryOut */
         SeasonSummaryOut: {
             /** Session Id */
@@ -1586,6 +2089,45 @@ export interface components {
              */
             participants?: number[] | null;
         };
+        /** SquadPlayerOut */
+        SquadPlayerOut: {
+            /** Player */
+            player: number;
+            /** Name */
+            name: string;
+            /** Age */
+            age?: number | null;
+            /**
+             * Position
+             * @description Posição natural (código interno).
+             */
+            position: string;
+            /** Available */
+            available: boolean;
+            /** Unavailable Reason */
+            unavailable_reason?: string | null;
+            /**
+             * Fit
+             * @description Adequação a cada posição (indicador visual do próprio elenco).
+             */
+            fit: {
+                [key: string]: "natural" | "boa" | "regular" | "improvisada";
+            };
+            /** Appearances */
+            appearances: number;
+            /** Goals */
+            goals: number;
+            /** Assists */
+            assists: number;
+            /** Average Rating */
+            average_rating?: number | null;
+            /** Motm */
+            motm: number;
+            /** Yellow Cards */
+            yellow_cards: number;
+            /** Red Cards */
+            red_cards: number;
+        };
         /** StandingRowOut */
         StandingRowOut: {
             /**
@@ -1621,6 +2163,22 @@ export interface components {
              * @description Clubes empatados sem critério de desempate oficial (PC-01 pendente).
              */
             tied_with: number[];
+        };
+        /** TeamLineupOut */
+        TeamLineupOut: {
+            /** Club Uid */
+            club_uid: number;
+            /** Formation */
+            formation: string;
+            /** Starters */
+            starters: components["schemas"]["LineupPlayerOut"][];
+            /**
+             * Bench
+             * @description Reservas (slot = posição natural).
+             */
+            bench: components["schemas"]["LineupPlayerOut"][];
+            /** Initial Posture */
+            initial_posture: string;
         };
         /** TradeRecordOut */
         TradeRecordOut: {
@@ -3816,6 +4374,884 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SeasonSummaryOut"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Request Entity Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unsupported Media Type */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    season_formations_api_sessions__session_id__season_formations_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FormationOut"][];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Request Entity Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unsupported Media Type */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    season_squad_api_sessions__session_id__season_squad_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SquadPlayerOut"][];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Request Entity Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unsupported Media Type */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_lineup_api_sessions__session_id__season_lineup_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LineupOut"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Request Entity Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unsupported Media Type */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    set_lineup_api_sessions__session_id__season_lineup_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Obrigatório: identificador único do comando (8–128 caracteres). */
+                "Idempotency-Key"?: string | null;
+            };
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LineupIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LineupOut"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Request Entity Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unsupported Media Type */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    start_live_api_sessions__session_id__season_live_start_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Obrigatório: identificador único do comando (8–128 caracteres). */
+                "Idempotency-Key"?: string | null;
+            };
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["LiveStartIn"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LiveStateOut"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Request Entity Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unsupported Media Type */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_live_api_sessions__session_id__season_live_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LiveStateOut"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Request Entity Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unsupported Media Type */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    live_posture_api_sessions__session_id__season_live_posture_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Obrigatório: identificador único do comando (8–128 caracteres). */
+                "Idempotency-Key"?: string | null;
+            };
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PostureIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LiveStateOut"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Request Entity Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unsupported Media Type */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    live_speed_api_sessions__session_id__season_live_speed_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Obrigatório: identificador único do comando (8–128 caracteres). */
+                "Idempotency-Key"?: string | null;
+            };
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LiveSpeedIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LiveStateOut"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Request Entity Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unsupported Media Type */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    season_stats_api_sessions__session_id__season_stats_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SeasonStatsOut"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Request Entity Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unsupported Media Type */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    season_calendar_api_sessions__session_id__season_calendar_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarOut"];
                 };
             };
             /** @description Bad Request */

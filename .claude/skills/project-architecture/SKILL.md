@@ -41,6 +41,11 @@ controle de concorrência; SQLite só para bases importadas; progresso temporár
 5. Adicionar testes de contrato e de efeito (ver `testing-validation`).
 6. Atualizar `docs/api/contratos.md` e `docs/architecture/arquitetura.md` (ADR) quando houver decisão nova.
 
+## Configuração de execução
+`SQUADFORCE_MATCH_EXECUTOR` (process|thread), `SQUADFORCE_MATCH_WORKERS` e, SOMENTE para testes/demonstração,
+`SQUADFORCE_CLOCK_SCALE` (acelera relógios do servidor). Workers do pool saem sozinhos se o gateway morrer
+(`exit_with_parent`).
+
 ## Restrições e comportamentos proibidos
 - Introduzir mensageria persistente, Redis, filas ou novos processos sem necessidade demonstrada.
 - Um serviço importar a implementação de outro (use portas).

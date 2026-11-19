@@ -24,8 +24,10 @@ describe("App", () => {
     render(<App />);
     expect(await screen.findByText("Servidor online")).toBeInTheDocument();
     expect(screen.getByText("1574")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Leilão" })).toBeInTheDocument();
-    expect(screen.getAllByText("Leilão")).toHaveLength(2); // aba + lista de serviços
+    // navegação contextual: sem competição ativa não há aba de leilão; Dados fica disponível
+    expect(screen.getByRole("link", { name: "Dados" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Leilão" })).not.toBeInTheDocument();
+    expect(screen.getAllByText("Leilão")).toHaveLength(1); // somente na lista de serviços
   });
 
   it("informa claramente quando o backend está inacessível", async () => {

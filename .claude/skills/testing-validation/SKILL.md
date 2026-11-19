@@ -74,6 +74,11 @@ por hashes; lotes de comportamento (`tests/simulation/test_tactics_batches.py`).
 confrontos, falhas sem consolidação parcial, repetição idêntica, consolidação única, premiações; executor real de
 processos testado na API; temporadas inteiras em `tests/simulation/test_season_batches.py`.
 
+**Entrega 8:** interface com fake API (`Season.test.tsx`), jornada real completa (`journey.e2e.test.ts`, segundo
+backend com `SQUADFORCE_CLOCK_SCALE`), determinismo da partida ao vivo em todas as velocidades e validação no
+navegador real (desktop 1366×900 e celular 390×844, claro/escuro, teclado). Servidores de teste em portas
+isoladas; encerrar a ÁRVORE de processos (pool de partidas) ao final.
+
 ## Referências
 - [Matriz de testes da Entrega 1](../../../docs/architecture/matriz-de-testes.md)
 - [Especificação técnica §8–9](../../../docs/architecture/especificacao-tecnica-v5.2.md)

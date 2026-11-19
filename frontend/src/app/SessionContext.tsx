@@ -33,6 +33,8 @@ interface SessionCtx {
   live: boolean;
   setSession: (s: Session | null) => void;
   reload: () => Promise<void>;
+  /** Recebe os eventos do canal WebSocket (ex.: season.round_played). Retorna a função de cancelamento. */
+  subscribe: (fn: (msg: WsMessage) => void) => () => void;
 }
 
 const Ctx = createContext<SessionCtx | null>(null);
@@ -43,6 +45,13 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [lostMessage, setLostMessage] = useState<string | null>(null);
   const [live, setLive] = useState(false);
   const retryRef = useRef(0);
+  const listeners = useRef(new Set<(msg: WsMessage) => void>());
+  const subscribe = useCallback((fn: (msg: WsMessage) => void) => {
+    listeners.current.add(fn);
+    return () => {
+      listeners.current.delete(fn);
+    };
+  }, []);
 
   const setSession = useCallback((s: Session | null) => {
     setSessionState((prev) => (prev && s && prev.id === s.id && prev.version > s.version ? prev : s));
@@ -89,6 +98,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       };
       ws.onmessage = (ev) => {
         const msg = JSON.parse(String(ev.data)) as WsMessage;
+        listeners.current.forEach((fn) => fn(msg));
         if (msg.type === "session.snapshot" || msg.type === "session.closed") {
           setSession(msg.data as unknown as Session);
           if (msg.type === "session.closed") stopped = true;
@@ -116,7 +126,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, [activeId, reload, setSession]);
 
   return (
-    <Ctx.Provider value={{ session, restoring, lostMessage, live, setSession, reload }}>{children}</Ctx.Provider>
+    <Ctx.Provider value={{ session, restoring, lostMessage, live, setSession, reload, subscribe }}>{children}</Ctx.Provider>
   );
 }
 

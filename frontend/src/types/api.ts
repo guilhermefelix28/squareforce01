@@ -48,6 +48,25 @@ export type SeasonFixture = S["SeasonFixtureOut"];
 export type StandingRow = S["StandingRowOut"];
 export type MatchReport = S["MatchReportOut"];
 export type SeasonSummary = S["SeasonSummaryOut"];
+export type MatchEvent = S["MatchEventOut"];
+export type PlayerRating = S["PlayerRatingOut"];
+export type AwardEntry = S["AwardEntryOut"];
+export type ClubCampaign = S["ClubCampaignOut"];
+export type Formation = S["FormationOut"];
+export type SquadPlayer = S["SquadPlayerOut"];
+export type Lineup = S["LineupOut"];
+export type LineupIn = S["LineupIn"];
+export type LineupSlot = S["LineupSlotOut"];
+export type LineupPlayer = S["LineupPlayerOut"];
+export type TeamLineup = S["TeamLineupOut"];
+export type LiveState = S["LiveStateOut"];
+export type SeasonStats = S["SeasonStatsOut"];
+export type PlayerSeasonStats = S["PlayerSeasonStatsOut"];
+export type ClubSeasonStats = S["ClubSeasonStatsOut"];
+export type Calendar = S["CalendarOut"];
+export type FitLevel = "natural" | "boa" | "regular" | "improvisada";
+export type Posture = "retranca" | "defensiva" | "equilibrada" | "ofensiva" | "ataque_total";
+export type Speed = "15s" | "30s" | "60s" | "instant";
 
 export type ImportBase = "clubs" | "players";
 

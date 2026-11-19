@@ -64,7 +64,7 @@ export function SessionPage({ onSessionChanged }: { onSessionChanged: () => void
               onCreated={(s) => {
                 setSession(s);
                 onSessionChanged();
-                setSuccess("Competição criada: participantes definidos e calendário gerado. Leilão e partidas chegam nas próximas entregas.");
+                setSuccess("Competição criada: participantes definidos e calendário gerado. Próximo passo: o leilão de jogadores.");
               }}
             />
           ) : (

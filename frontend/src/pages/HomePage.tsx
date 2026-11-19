@@ -20,6 +20,7 @@ export function HomePage({
   session,
   onRetry,
   go,
+  continueTo,
 }: {
   health: Health | null;
   connection: Connection;
@@ -27,6 +28,7 @@ export function HomePage({
   session: Session | null;
   onRetry: () => void;
   go: (page: "data" | "session") => void;
+  continueTo?: () => void;
 }) {
   const db = health?.database;
   const ready = !!db && (db.clubs ?? 0) >= 2 && (db.players ?? 0) > 0;
@@ -35,13 +37,17 @@ export function HomePage({
       <section className="hero card">
         <h2>Central de gerenciamento</h2>
         <p className="muted">
-          Importe as bases, confira o catálogo e configure sua competição. Leilão, negociações e partidas chegam nas
-          próximas entregas.
+          Configure a competição, monte o elenco no leilão, negocie no mercado e dispute a Liga ou a Copa contra os
+          bots. O estado da competição vive só na memória do servidor: não há salvamento persistente.
         </p>
         <div className="hero__actions">
-          <button type="button" className="btn btn--primary" onClick={() => go(ready ? "session" : "data")}>
-            {session?.status === "active" ? "Ver competição ativa" : ready ? "Configurar competição" : "Importar bases"}
-          </button>
+          {session?.status === "active" && continueTo ? (
+            <button type="button" className="btn btn--primary" onClick={continueTo}>Continuar competição</button>
+          ) : (
+            <button type="button" className="btn btn--primary" onClick={() => go(ready ? "session" : "data")}>
+              {ready ? "Configurar competição" : "Importar bases"}
+            </button>
+          )}
           <button type="button" className="btn btn--ghost" onClick={() => go("data")}>
             Gerenciar dados
           </button>
@@ -77,7 +83,7 @@ export function HomePage({
               <li key={k}>
                 <span>{SERVICE_LABELS[k] ?? k}</span>
                 <span className={`pill ${v === "ready" ? "pill--ok" : "pill--muted"}`}>
-                  {v === "ready" ? "pronto" : "próximas entregas"}
+                  {v === "ready" ? "pronto" : "indisponível"}
                 </span>
               </li>
             ))}
