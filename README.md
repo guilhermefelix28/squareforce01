@@ -32,6 +32,22 @@ Dados/ Graphics/       fontes originais (somente leitura, fora do Git)
 
 ## Como executar
 
+### Para jogar (executor)
+
+Dê dois cliques no atalho **SquadForce** da área de trabalho. Ele roda `scripts/launcher/iniciar-jogo.ps1`, que:
+1. faz o build de produção da interface quando o código mudou;
+2. sobe o servidor na porta 8000 e a interface na 5173;
+3. abre o jogo no navegador.
+
+- **Encerrar:** pressione Enter na janela do executor.
+- **Porta ocupada:** o executor mostra quando o processo foi iniciado e pergunta se deve reiniciá-lo com a versão atual.
+- **Registros:** `%TEMP%\squadforce\`.
+- **Recriar o atalho:** aponte para
+  `powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts\launcher\iniciar-jogo.ps1`, com o ícone
+  `scripts\launcher\squadforce.ico`.
+
+### Desenvolvimento
+
 ```bash
 # 1. Backend (na raiz)
 python -m venv .venv                       # Windows: use o caminho completo do Python 3.12 se não estiver no PATH
