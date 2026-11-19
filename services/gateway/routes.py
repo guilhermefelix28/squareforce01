@@ -91,8 +91,8 @@ def health(c: C) -> HealthResponse:
             "competition": "ready",
             "auction": "ready" if c.auction_model is not None else "planned",
             "trading": "ready" if c.auction_model is not None else "planned",
-            "bot_ai": "planned",
-            "match_engine": "planned",
+            "bot_ai": "ready",
+            "match_engine": "ready",
         },
     )
 
