@@ -16,7 +16,7 @@ import dataclasses
 import math
 import threading
 from dataclasses import dataclass, field
-from typing import Callable
+from typing import Callable, Sequence
 
 from services.bot_ai.tactics import TacticalBot
 from services.match_engine.engine import MatchSimulation
@@ -44,20 +44,28 @@ class LiveMatch:
     sim: MatchSimulation | None = None
     decisions: list[PostureChange] = field(default_factory=list)
     lock: threading.Lock = field(default_factory=threading.Lock)
+    # DR-06: demais partidas da rodada (bot × bot), com a MESMA tarefa/semente da execução da rodada, reveladas
+    # pelo mesmo relógio de jogo. Sem decisões do usuário, o resultado é idêntico ao consolidado.
+    others: list[tuple[FixtureTask, MatchSimulation]] = field(default_factory=list)
 
-    @classmethod
-    def start(cls, task: FixtureTask, user_club: int, speed: str, clock: Callable[[], float]) -> "LiveMatch":
-        if speed not in SPEEDS:
-            raise LiveError("INVALID_SPEED", f"Velocidade inválida: {speed}. Use 15s, 30s, 60s ou instant.")
-        side = 0 if task.home_club == user_club else 1
+    @staticmethod
+    def _simulation(task: FixtureTask) -> MatchSimulation:
         controllers = {}
         if task.home_context is not None:
             controllers[0] = TacticalBot(task.home_context)
         if task.away_context is not None:
             controllers[1] = TacticalBot(task.away_context)
-        sim = MatchSimulation(match_input(task), decisions=task.user_decisions, controllers=controllers)
+        return MatchSimulation(match_input(task), decisions=task.user_decisions, controllers=controllers)
+
+    @classmethod
+    def start(cls, task: FixtureTask, user_club: int, speed: str, clock: Callable[[], float],
+              others: Sequence[FixtureTask] = ()) -> "LiveMatch":
+        if speed not in SPEEDS:
+            raise LiveError("INVALID_SPEED", f"Velocidade inválida: {speed}. Use 15s, 30s, 60s ou instant.")
+        side = 0 if task.home_club == user_club else 1
+        sim = cls._simulation(task)
         live = cls(task=task, user_side=side, clock=clock, speed=speed, anchor_real=clock(), sim=sim,
-                   decisions=list(task.user_decisions))
+                   decisions=list(task.user_decisions), others=[(t, cls._simulation(t)) for t in others])
         live._advance()
         return live
 
@@ -71,6 +79,8 @@ class LiveMatch:
     def _advance(self) -> float:
         target = self.game_second()
         self.sim.advance_to(target)
+        for _, other in self.others:
+            other.advance_to(target)
         return target
 
     @property
@@ -128,6 +138,19 @@ class LiveMatch:
             own = [{"player": p.player.unique_id, "name": p.player.name, "slot": p.slot.value,
                     "condition": round(p.condition, 1), "on_field": p.active, "yellow_cards": p.yellow}
                    for p in team.players]
+            opp = self.sim.teams[1 - self.user_side]
+            # adversário: informação pública (escalação, cartões); SEM condição física
+            opponent = [{"player": p.player.unique_id, "name": p.player.name, "slot": p.slot.value,
+                         "on_field": p.active, "yellow_cards": p.yellow} for p in opp.players]
+            others = []
+            for t, other in self.others:
+                shown = [e for e in other.events if e.second <= target]
+                goals = [0, 0]
+                for e in shown:
+                    if e.type == "goal":
+                        goals[e.side] += 1
+                others.append({"match_id": t.match_id, "home_club_uid": t.home_club, "away_club_uid": t.away_club,
+                               "score": tuple(goals), "finished": other.finished and len(shown) == len(other.events)})
             now = min(target, revealed[-1].second if finished and revealed else target)
             return {
                 "game_second": 0.0 if not revealed else (revealed[-1].second if finished else now),
@@ -138,6 +161,8 @@ class LiveMatch:
                 "stats": compute_stats(revealed),
                 "postures": tuple(postures),
                 "own_players": own,
+                "opponent": opponent,
+                "others": others,
                 "own_bench": [{"player": p.unique_id, "name": p.name} for p in team.bench],
                 "substitutions_used": team.subs_used,
                 "speed": self.speed,

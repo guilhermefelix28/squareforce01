@@ -362,3 +362,23 @@ def test_league_draw_has_no_penalties():
         assert res.shootout is None
         if res.score[0] == res.score[1]:
             assert res.winner_side is None
+
+
+# ------------------------------------------------------------------ desgaste do goleiro (decisão DR-03)
+def test_goalkeepers_tire_much_less_than_outfield_players():
+    """Decisão do responsável (2026-11-19): goleiros cansam pouco durante o jogo."""
+    from squadforce_shared.domain.positions import Position
+
+    assert P.gk_fatigue_multiplier == 0.35
+    gk_final, outfield = [], []
+    for seed in range(1, 21):
+        sim = MatchSimulation(match(seed))
+        sim.advance_to(10_000)
+        for team_state in sim.teams:
+            for pl in team_state.players:
+                if pl.active and pl.slot is Position.GK:
+                    gk_final.append(pl.condition)
+                elif pl.active:
+                    outfield.append(pl.condition)
+    assert min(gk_final) >= 85
+    assert sum(gk_final) / len(gk_final) > sum(outfield) / len(outfield) + 10

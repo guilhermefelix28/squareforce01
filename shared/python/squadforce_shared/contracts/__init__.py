@@ -160,6 +160,21 @@ class SessionOut(_Model):
     participants: list[int] | None = Field(
         None, description="club_uid dos participantes (inclui o clube do usuário), na ordem de seleção/sorteio."
     )
+    user_formation: str | None = Field(
+        None, description="Formação oficial escolhida pelo usuário antes do leilão (decisão DR-02); None = não escolhida."
+    )
+
+
+class AdminLoginIn(_Model):
+    password: str
+
+
+class AdminLoginOut(_Model):
+    token: str = Field(description="Enviar em X-Admin-Token nas importações. Vale até o servidor reiniciar.")
+
+
+class UserFormationIn(_Model):
+    formation: str = Field(description="Nome de uma das 11 formações oficiais (ex.: '4-4-2').")
 
 
 # ---------------------------------------------------------------- competições
@@ -682,6 +697,26 @@ class LivePlayerOut(_Model):
     yellow_cards: int
 
 
+class LiveOpponentOut(_Model):
+    """Atleta do adversário na partida ao vivo: informação pública (sem condição física)."""
+
+    player: int
+    name: str
+    slot: str
+    on_field: bool
+    yellow_cards: int
+
+
+class LiveOtherMatchOut(_Model):
+    """Outra partida da mesma rodada, revelada pelo mesmo relógio de jogo (DR-06)."""
+
+    match_id: str
+    home_club_uid: int
+    away_club_uid: int
+    score: tuple[int, int]
+    finished: bool
+
+
 class LiveStateOut(_Model):
     session_id: str
     match_id: str
@@ -701,6 +736,8 @@ class LiveStateOut(_Model):
     own_bench: list[LineupPlayerOut]
     substitutions_used: int
     max_substitutions: int = 5
+    opponent_players: list[LiveOpponentOut] = Field(default_factory=list, description="Escalação pública do adversário (DR-06).")
+    other_matches: list[LiveOtherMatchOut] = Field(default_factory=list, description="Demais jogos da rodada (DR-06).")
 
 
 class PlayerSeasonStatsOut(_Model):

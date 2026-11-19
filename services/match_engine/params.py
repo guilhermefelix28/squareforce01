@@ -80,7 +80,7 @@ class PostureEffect:
 
 @dataclass(frozen=True)
 class MatchParams:
-    version: str = "provisorio-0.6"
+    version: str = "calibrado-0.7"  # 0.6 + desgaste do goleiro (DR-03)
     status: str = "PROVISÓRIO — pendente de calibração estatística e aprovação (PM-02)"
 
     # ---------------------------------------------------------------- tempo
@@ -153,6 +153,7 @@ class MatchParams:
     fatigue_floor: float = 25.0
     fatigue_effect: float = 0.30  # condição 0 => atributos sensíveis × (1 − 0,30)
     action_fatigue: float = 0.35  # custo extra por disputa
+    gk_fatigue_multiplier: float = 0.35  # DR-03 (decisão do responsável, 2026-11-19): goleiros cansam pouco
     form_sd: float = 0.04  # variação de forma do dia, reduzida pela consistência
 
     # ---------------------------------------------------------------- posição

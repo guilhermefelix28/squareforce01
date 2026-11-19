@@ -46,10 +46,50 @@ export const listPlayers = (params: {
   offset?: number;
 }) => apiRequest<PlayerPage>("/api/catalog/players", { query: params });
 
+/* Área oculta de dados (DR-04): a senha é verificada no servidor; o token vale até o servidor reiniciar. */
+const ADMIN_KEY = "squadforce.admin";
+let adminToken: string | null = null;
+
+export function getAdminToken(): string | null {
+  if (adminToken) return adminToken;
+  try {
+    adminToken = sessionStorage.getItem(ADMIN_KEY);
+  } catch {
+    /* sem armazenamento: só nesta aba */
+  }
+  return adminToken;
+}
+
+export function clearAdminToken() {
+  adminToken = null;
+  try {
+    sessionStorage.removeItem(ADMIN_KEY);
+  } catch {
+    /* ignora */
+  }
+}
+
+export async function adminLogin(password: string, idempotencyKey = newIdempotencyKey()) {
+  const out = await apiRequest<{ token: string }>("/api/admin/login", { method: "POST", json: { password }, idempotencyKey });
+  adminToken = out.token;
+  try {
+    sessionStorage.setItem(ADMIN_KEY, out.token);
+  } catch {
+    /* ignora */
+  }
+  return out.token;
+}
+
 export function importBase(base: ImportBase, file: File, idempotencyKey = newIdempotencyKey()) {
   const form = new FormData();
   form.append("file", file, file.name);
-  return apiRequest<ImportReport>(`/api/imports/${base}`, { method: "POST", form, idempotencyKey });
+  const token = getAdminToken();
+  return apiRequest<ImportReport>(`/api/imports/${base}`, {
+    method: "POST",
+    form,
+    idempotencyKey,
+    headers: token ? { "X-Admin-Token": token } : undefined,
+  });
 }
 
 export const createSession = (body: SessionCreate, idempotencyKey = newIdempotencyKey()) =>

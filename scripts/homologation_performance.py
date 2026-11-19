@@ -116,6 +116,10 @@ class Server:
             headers["Content-Type"] = "application/json"
         if method == "POST" and idem:
             headers["Idempotency-Key"] = uuid.uuid4().hex
+        if path.startswith("/api/imports/"):  # área oculta de dados (DR-04)
+            if getattr(self, "admin_token", None) is None:
+                self.admin_token = self.req("POST", "/api/admin/login", {"password": "9153"})[1]["token"]
+            headers["X-Admin-Token"] = self.admin_token
         r = urllib.request.Request(self.base + path, data=data, method=method, headers=headers)
         t0 = time.perf_counter()
         try:

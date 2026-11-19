@@ -25,6 +25,7 @@ from squadforce_shared.domain.competition import (
     validate_competition_config,
 )
 from squadforce_shared.errors import AppError, ErrorCode
+from squadforce_shared.domain.formations import formation_by_name
 
 MAX_CLOSED_TOMBSTONES = 50
 
@@ -60,6 +61,7 @@ class SessionState:
     participants: tuple[int, ...] | None = None
     structure: Structure | None = None
     seed: int | None = field(default=None, repr=False)  # semente automática (GDD §16); não exposta
+    user_formation: str | None = None  # tática escolhida antes do leilão (DR-02)
 
     def to_competition_out(self) -> CompetitionOut:
         assert self.structure is not None
@@ -82,6 +84,7 @@ class SessionState:
             updated_at=self.updated_at,
             closed_at=self.closed_at,
             participants=list(self.participants) if self.participants is not None else None,
+            user_formation=self.user_formation,
         )
 
 
@@ -191,6 +194,21 @@ class SessionManager:
                 structure=structure,
                 seed=seed,
             )
+            self._s.active = state
+            return state
+
+    def set_user_formation(self, session_id: str, formation: str) -> SessionState:
+        """Tática do usuário antes do leilão (DR-02). Somente na fase `setup` da sessão ativa."""
+        if formation_by_name(formation) is None:
+            raise AppError(422, ErrorCode.INVALID_FORMATION, f"Formação desconhecida: {formation}.",
+                           details={"field": "formation"})
+        with self._lock:
+            current = self.get(session_id)
+            if current.status != "active" or current.phase != "setup":
+                raise AppError(409, ErrorCode.INVALID_PHASE,
+                               f"A tática é escolhida antes do leilão (fase atual: {current.phase}).",
+                               details={"phase": current.phase, "expected": "setup"})
+            state = replace(current, user_formation=formation, version=current.version + 1, updated_at=_now())
             self._s.active = state
             return state
 

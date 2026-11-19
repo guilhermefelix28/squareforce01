@@ -17,6 +17,7 @@ import {
   startAuction,
   getHealth,
   getSession,
+  adminLogin,
   importBase,
   listClubs,
   listPlayers,
@@ -46,6 +47,7 @@ describe("frontend <-> backend real", () => {
   });
 
   it.runIf(hasReal)("importa as bases reais e consulta o catálogo", async () => {
+    await adminLogin("9153");
     const clubs = await importBase("clubs", xlsx());
     expect(clubs.rows_imported).toBe(40);
     const players = await importBase("players", xlsx());

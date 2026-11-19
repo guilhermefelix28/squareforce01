@@ -174,3 +174,17 @@ def test_clock_scale_is_opt_in_and_only_speeds_up_server_time(tmp_path):
     assert c.trading.clock is c.clock and c.auctions.clock is c.clock
     normal = build_container(Settings(db_path=tmp_path / "c.db"), clock=base, auction_model=None)
     assert normal.clock is base
+
+
+def test_live_shows_opponent_and_simultaneous_matches_identical_to_the_round(env):
+    """DR-06: campo das duas equipes e placares simultâneos da rodada."""
+    c, clock, sid = env
+    st = LiveStateOut.model_validate(post(c, sid, "live/start", {"speed": "30s"}).json())
+    assert len([p for p in st.opponent_players if p.on_field]) == 11
+    assert "condition" not in st.opponent_players[0].model_dump()
+    assert len(st.other_matches) == 1 and st.other_matches[0].match_id != st.match_id
+    final = LiveStateOut.model_validate(post(c, sid, "live/speed", {"speed": "instant"}).json())
+    assert all(o.finished for o in final.other_matches)
+    s = SeasonStateOut.model_validate(post(c, sid, "play").json())
+    played = {f.match_id: tuple(f.score) for f in s.fixtures if not f.is_user_match}
+    assert {o.match_id: tuple(o.score) for o in final.other_matches} == played

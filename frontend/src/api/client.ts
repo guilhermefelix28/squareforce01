@@ -60,6 +60,8 @@ export interface RequestOptions {
   /** Quantidade de repetições após a primeira tentativa. */
   retries?: number;
   query?: Record<string, string | number | undefined | null>;
+  /** Cabeçalhos extras (ex.: X-Admin-Token da área oculta de dados). */
+  headers?: Record<string, string>;
 }
 
 const RETRYABLE_STATUS = new Set([502, 503, 504]);
@@ -87,7 +89,7 @@ export async function apiRequest<T>(path: string, opts: RequestOptions = {}): Pr
   let lastError: ApiError | null = null;
   for (let attempt = 0; attempt <= retries; attempt++) {
     if (attempt > 0) await sleep(config.retryDelayMs * 2 ** (attempt - 1));
-    const headers: Record<string, string> = { Accept: "application/json" };
+    const headers: Record<string, string> = { Accept: "application/json", ...opts.headers };
     if (opts.idempotencyKey) headers["Idempotency-Key"] = opts.idempotencyKey;
     let body: BodyInit | undefined;
     if (opts.form) body = opts.form;

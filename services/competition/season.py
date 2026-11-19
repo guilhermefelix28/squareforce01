@@ -173,6 +173,7 @@ class Season:
         tiebreakers: Sequence[str] = BRASILEIRAO_TIEBREAKERS,
         runner: Callable[[FixtureTask], FixtureOutcome] = play_fixture,
         round_timeout: float = 600.0,
+        user_formation: Sequence[Position] | None = None,
     ):
         if not formations:
             raise SeasonError("NO_FORMATIONS", "Nenhuma formação disponível.")
@@ -191,6 +192,8 @@ class Season:
         self.user_club = user_club
         self.personalities = dict(personalities)
         self.formations = [tuple(f) for f in formations]
+        # tática do usuário antes do leilão (DR-02): formação da escalação automática do usuário
+        self.user_formation = tuple(user_formation) if user_formation else None
         self.seed = seed
         self.points = points
         self.tiebreakers = tuple(tiebreakers)
@@ -288,7 +291,8 @@ class Season:
                 if club == self.user_club and self.user_lineup is not None:
                     sheet, self.lineup_note = self._user_sheet(self.user_lineup)
                 if sheet is None:
-                    choice = choose_lineup(club, list(self.squads[club]), self.formations, ctx, led, comp,
+                    forms = [self.user_formation] if club == self.user_club and self.user_formation else self.formations
+                    choice = choose_lineup(club, list(self.squads[club]), forms, ctx, led, comp,
                                            recent_ratings=self._recent_ratings(club))
                     sheet = choice.sheet
                     if club == self.user_club:  # sem escalação válida do usuário: sugestão automática, equilibrada

@@ -19,6 +19,7 @@ from services.competition.worker import exit_with_parent
 from services.data.service import DataService
 from services.session.manager import SessionManager
 
+from .admin import AdminAuth
 from .idempotency import IdempotencyStore
 from .realtime import SessionHub
 from .settings import Settings
@@ -36,6 +37,7 @@ class Container:
     seasons: SeasonService
     clock: Callable[[], float]
     auction_model: AuctionModel | None  # None = fórmulas pendentes: leilão bloqueado
+    admin: AdminAuth
 
 
 _UNSET = object()
@@ -73,6 +75,7 @@ def build_container(
         seasons=SeasonService(lambda: _match_executor(settings)),
         clock=clock,
         auction_model=load_auction_model() if auction_model is _UNSET else auction_model,  # type: ignore[arg-type]
+        admin=AdminAuth(settings.admin_password),
     )
 
 

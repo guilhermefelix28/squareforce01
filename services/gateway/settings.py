@@ -21,6 +21,8 @@ class Settings:
     graphics_dir: Path = field(
         default_factory=lambda: Path(os.environ.get("SQUADFORCE_GRAPHICS_DIR", ROOT / "Graphics"))
     )
+    # Área oculta de dados (DR-04): senha verificada no servidor; padrão definido pelo responsável.
+    admin_password: str = field(default_factory=lambda: os.environ.get("SQUADFORCE_ADMIN_PASSWORD", "9153"))
     max_upload_mb: int = field(default_factory=lambda: int(os.environ.get("SQUADFORCE_MAX_UPLOAD_MB", "25")))
     cors_origins: list[str] = field(
         default_factory=lambda: _env_list(

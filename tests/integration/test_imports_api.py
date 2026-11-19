@@ -4,7 +4,7 @@ import sqlite3
 
 import pytest
 
-from conftest import build_xlsx, club_row, create_session, key, player_row, post_import, squad
+from conftest import admin_token, build_xlsx, club_row, create_session, key, player_row, post_import, squad
 from services.data import service as data_service
 
 
@@ -205,5 +205,6 @@ def test_duplicate_import_command_is_replayed_not_reexecuted(loaded_client, monk
 
 
 def test_import_requires_idempotency_key(client):
-    r = client.post("/api/imports/clubs", files={"file": ("a.xlsx", build_xlsx(squad(1)))})
+    r = client.post("/api/imports/clubs", files={"file": ("a.xlsx", build_xlsx(squad(1)))},
+                    headers={"X-Admin-Token": admin_token(client)})
     assert r.status_code == 400 and r.json()["error"]["code"] == "IDEMPOTENCY_KEY_REQUIRED"

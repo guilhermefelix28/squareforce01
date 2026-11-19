@@ -327,6 +327,128 @@
         }
       }
     },
+    "/api/admin/login": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Admin Login",
+        "description": "Login da área oculta de dados. A senha é verificada somente no servidor.",
+        "operationId": "admin_login_api_admin_login_post",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Obrigatório: identificador único do comando (8–128 caracteres).",
+              "title": "Idempotency-Key"
+            },
+            "description": "Obrigatório: identificador único do comando (8–128 caracteres)."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminLoginIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminLoginOut"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
     "/api/imports/clubs": {
       "post": {
         "tags": [
@@ -352,6 +474,24 @@
               "title": "Idempotency-Key"
             },
             "description": "Obrigatório: identificador único do comando (8–128 caracteres)."
+          },
+          {
+            "name": "X-Admin-Token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Token de /api/admin/login.",
+              "title": "X-Admin-Token"
+            },
+            "description": "Token de /api/admin/login."
           }
         ],
         "requestBody": {
@@ -473,6 +613,24 @@
               "title": "Idempotency-Key"
             },
             "description": "Obrigatório: identificador único do comando (8–128 caracteres)."
+          },
+          {
+            "name": "X-Admin-Token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Token de /api/admin/login.",
+              "title": "X-Admin-Token"
+            },
+            "description": "Token de /api/admin/login."
           }
         ],
         "requestBody": {
@@ -944,6 +1102,137 @@
                   }
                 ],
                 "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionOut"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/sessions/{session_id}/formation": {
+      "post": {
+        "tags": [
+          "sessions"
+        ],
+        "summary": "Choose User Formation",
+        "description": "Tática do usuário antes do leilão (decisão DR-02): uma das 11 formações oficiais, somente na fase `setup`.\nVira a formação inicial da escalação automática do usuário.",
+        "operationId": "choose_user_formation_api_sessions__session_id__formation_post",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Obrigatório: identificador único do comando (8–128 caracteres).",
+              "title": "Idempotency-Key"
+            },
+            "description": "Obrigatório: identificador único do comando (8–128 caracteres)."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserFormationIn"
               }
             }
           }
@@ -4098,6 +4387,35 @@
   },
   "components": {
     "schemas": {
+      "AdminLoginIn": {
+        "properties": {
+          "password": {
+            "type": "string",
+            "title": "Password"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "password"
+        ],
+        "title": "AdminLoginIn"
+      },
+      "AdminLoginOut": {
+        "properties": {
+          "token": {
+            "type": "string",
+            "title": "Token",
+            "description": "Enviar em X-Admin-Token nas importações. Vale até o servidor reiniciar."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "token"
+        ],
+        "title": "AdminLoginOut"
+      },
       "AuctionBidAck": {
         "properties": {
           "round": {
@@ -6103,6 +6421,86 @@
         ],
         "title": "LineupSlotOut"
       },
+      "LiveOpponentOut": {
+        "properties": {
+          "player": {
+            "type": "integer",
+            "title": "Player"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "slot": {
+            "type": "string",
+            "title": "Slot"
+          },
+          "on_field": {
+            "type": "boolean",
+            "title": "On Field"
+          },
+          "yellow_cards": {
+            "type": "integer",
+            "title": "Yellow Cards"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "player",
+          "name",
+          "slot",
+          "on_field",
+          "yellow_cards"
+        ],
+        "title": "LiveOpponentOut",
+        "description": "Atleta do adversário na partida ao vivo: informação pública (sem condição física)."
+      },
+      "LiveOtherMatchOut": {
+        "properties": {
+          "match_id": {
+            "type": "string",
+            "title": "Match Id"
+          },
+          "home_club_uid": {
+            "type": "integer",
+            "title": "Home Club Uid"
+          },
+          "away_club_uid": {
+            "type": "integer",
+            "title": "Away Club Uid"
+          },
+          "score": {
+            "prefixItems": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "type": "array",
+            "maxItems": 2,
+            "minItems": 2,
+            "title": "Score"
+          },
+          "finished": {
+            "type": "boolean",
+            "title": "Finished"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "match_id",
+          "home_club_uid",
+          "away_club_uid",
+          "score",
+          "finished"
+        ],
+        "title": "LiveOtherMatchOut",
+        "description": "Outra partida da mesma rodada, revelada pelo mesmo relógio de jogo (DR-06)."
+      },
       "LivePlayerOut": {
         "properties": {
           "player": {
@@ -6313,6 +6711,22 @@
             "type": "integer",
             "title": "Max Substitutions",
             "default": 5
+          },
+          "opponent_players": {
+            "items": {
+              "$ref": "#/components/schemas/LiveOpponentOut"
+            },
+            "type": "array",
+            "title": "Opponent Players",
+            "description": "Escalação pública do adversário (DR-06)."
+          },
+          "other_matches": {
+            "items": {
+              "$ref": "#/components/schemas/LiveOtherMatchOut"
+            },
+            "type": "array",
+            "title": "Other Matches",
+            "description": "Demais jogos da rodada (DR-06)."
           }
         },
         "additionalProperties": false,
@@ -7558,6 +7972,18 @@
             ],
             "title": "Participants",
             "description": "club_uid dos participantes (inclui o clube do usuário), na ordem de seleção/sorteio."
+          },
+          "user_formation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Formation",
+            "description": "Formação oficial escolhida pelo usuário antes do leilão (decisão DR-02); None = não escolhida."
           }
         },
         "additionalProperties": false,
@@ -8045,6 +8471,21 @@
           "clubs"
         ],
         "title": "TradingStateOut"
+      },
+      "UserFormationIn": {
+        "properties": {
+          "formation": {
+            "type": "string",
+            "title": "Formation",
+            "description": "Nome de uma das 11 formações oficiais (ex.: '4-4-2')."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "formation"
+        ],
+        "title": "UserFormationIn"
       },
       "ValidationError": {
         "properties": {

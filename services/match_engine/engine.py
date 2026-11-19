@@ -236,12 +236,15 @@ class MatchSimulation:
                 drain = (self.p.fatigue_per_minute * dt / 60 * mult
                          * (1 - self.p.stamina_slope * ((stamina + fitness) / 2 - 50))
                          * (0.8 + 0.4 * work / 100))
+                if pl.slot is Position.GK:
+                    drain *= self.p.gk_fatigue_multiplier
                 pl.condition = max(self.p.fatigue_floor, pl.condition - max(0.0, drain))
 
     def _exert(self, *players: OnField | None) -> None:
         for pl in players:
             if pl is not None:
-                pl.condition = max(self.p.fatigue_floor, pl.condition - self.p.action_fatigue)
+                cost = self.p.action_fatigue * (self.p.gk_fatigue_multiplier if pl.slot is Position.GK else 1.0)
+                pl.condition = max(self.p.fatigue_floor, pl.condition - cost)
 
     # ================================================================ laço principal
     def set_posture(self, side: int, posture: str) -> None:

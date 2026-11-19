@@ -93,8 +93,15 @@ def key() -> str:
     return f"test-{uuid.uuid4().hex}"
 
 
+def admin_token(client: TestClient, password: str = "9153") -> str:
+    """Área oculta de dados (DR-04): login de administrador para as importações."""
+    r = client.post("/api/admin/login", json={"password": password}, headers={"Idempotency-Key": key()})
+    assert r.status_code == 200, r.json()
+    return r.json()["token"]
+
+
 def post_import(client: TestClient, base: str, content: bytes, idem: str | None = None, name: str = "base.xlsx"):
-    headers = {"Idempotency-Key": idem or key()}
+    headers = {"Idempotency-Key": idem or key(), "X-Admin-Token": admin_token(client)}
     return client.post(f"/api/imports/{base}", files={"file": (name, content)}, headers=headers)
 
 

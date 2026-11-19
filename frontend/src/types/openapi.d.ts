@@ -55,6 +55,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Admin Login
+         * @description Login da área oculta de dados. A senha é verificada somente no servidor.
+         */
+        post: operations["admin_login_api_admin_login_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/imports/clubs": {
         parameters: {
             query?: never;
@@ -154,6 +174,27 @@ export interface paths {
         put?: never;
         /** Close Session */
         post: operations["close_session_api_sessions__session_id__close_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sessions/{session_id}/formation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Choose User Formation
+         * @description Tática do usuário antes do leilão (decisão DR-02): uma das 11 formações oficiais, somente na fase `setup`.
+         *     Vira a formação inicial da escalação automática do usuário.
+         */
+        post: operations["choose_user_formation_api_sessions__session_id__formation_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -674,6 +715,19 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AdminLoginIn */
+        AdminLoginIn: {
+            /** Password */
+            password: string;
+        };
+        /** AdminLoginOut */
+        AdminLoginOut: {
+            /**
+             * Token
+             * @description Enviar em X-Admin-Token nas importações. Vale até o servidor reiniciar.
+             */
+            token: string;
+        };
         /** AuctionBidAck */
         AuctionBidAck: {
             /** Round */
@@ -1508,6 +1562,41 @@ export interface components {
              */
             fit: "natural" | "boa" | "regular" | "improvisada";
         };
+        /**
+         * LiveOpponentOut
+         * @description Atleta do adversário na partida ao vivo: informação pública (sem condição física).
+         */
+        LiveOpponentOut: {
+            /** Player */
+            player: number;
+            /** Name */
+            name: string;
+            /** Slot */
+            slot: string;
+            /** On Field */
+            on_field: boolean;
+            /** Yellow Cards */
+            yellow_cards: number;
+        };
+        /**
+         * LiveOtherMatchOut
+         * @description Outra partida da mesma rodada, revelada pelo mesmo relógio de jogo (DR-06).
+         */
+        LiveOtherMatchOut: {
+            /** Match Id */
+            match_id: string;
+            /** Home Club Uid */
+            home_club_uid: number;
+            /** Away Club Uid */
+            away_club_uid: number;
+            /** Score */
+            score: [
+                number,
+                number
+            ];
+            /** Finished */
+            finished: boolean;
+        };
         /** LivePlayerOut */
         LivePlayerOut: {
             /** Player */
@@ -1606,6 +1695,16 @@ export interface components {
              * @default 5
              */
             max_substitutions: number;
+            /**
+             * Opponent Players
+             * @description Escalação pública do adversário (DR-06).
+             */
+            opponent_players?: components["schemas"]["LiveOpponentOut"][];
+            /**
+             * Other Matches
+             * @description Demais jogos da rodada (DR-06).
+             */
+            other_matches?: components["schemas"]["LiveOtherMatchOut"][];
         };
         /** MatchEventOut */
         MatchEventOut: {
@@ -2088,6 +2187,11 @@ export interface components {
              * @description club_uid dos participantes (inclui o clube do usuário), na ordem de seleção/sorteio.
              */
             participants?: number[] | null;
+            /**
+             * User Formation
+             * @description Formação oficial escolhida pelo usuário antes do leilão (decisão DR-02); None = não escolhida.
+             */
+            user_formation?: string | null;
         };
         /** SquadPlayerOut */
         SquadPlayerOut: {
@@ -2274,6 +2378,14 @@ export interface components {
             history: components["schemas"]["TradeRecordOut"][];
             /** Clubs */
             clubs: components["schemas"]["TradingClubOut"][];
+        };
+        /** UserFormationIn */
+        UserFormationIn: {
+            /**
+             * Formation
+             * @description Nome de uma das 11 formações oficiais (ex.: '4-4-2').
+             */
+            formation: string;
         };
         /** ValidationError */
         ValidationError: {
@@ -2494,12 +2606,104 @@ export interface operations {
             };
         };
     };
+    admin_login_api_admin_login_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Obrigatório: identificador único do comando (8–128 caracteres). */
+                "Idempotency-Key"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminLoginIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminLoginOut"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Request Entity Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unsupported Media Type */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     import_clubs_api_imports_clubs_post: {
         parameters: {
             query?: never;
             header?: {
                 /** @description Obrigatório: identificador único do comando (8–128 caracteres). */
                 "Idempotency-Key"?: string | null;
+                /** @description Token de /api/admin/login. */
+                "X-Admin-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -2590,6 +2794,8 @@ export interface operations {
             header?: {
                 /** @description Obrigatório: identificador único do comando (8–128 caracteres). */
                 "Idempotency-Key"?: string | null;
+                /** @description Token de /api/admin/login. */
+                "X-Admin-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -2949,6 +3155,98 @@ export interface operations {
         requestBody?: {
             content: {
                 "application/json": components["schemas"]["SessionCloseRequest"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionOut"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Request Entity Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unsupported Media Type */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    choose_user_formation_api_sessions__session_id__formation_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Obrigatório: identificador único do comando (8–128 caracteres). */
+                "Idempotency-Key"?: string | null;
+            };
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserFormationIn"];
             };
         };
         responses: {

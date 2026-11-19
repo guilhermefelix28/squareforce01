@@ -25,11 +25,13 @@ Contrato formal: [`openapi.json`](openapi.json) (gerado por `scripts/export_open
 | GET | `/api/health` | Estado do gateway, banco (versão do esquema, contagens), sessão ativa e serviços (`ready`/`planned`). | — |
 | GET | `/api/catalog/clubs?search&limit&offset` | Clubes paginados (sem reputação), com `division` (`A`/`B`/`null`). | 422 |
 | GET | `/api/catalog/players?club_uid&position&search&limit&offset` | Jogadores paginados; `position` aceita GK… ou GOL… (posição natural); `id_generated` indica ID gerado. | 422 |
-| POST | `/api/imports/clubs` | `multipart/form-data` campo `file` (.xlsx). Substitui só a base de clubes. | 400, 409 `IMPORT_BLOCKED_ACTIVE_COMPETITION` / `IMPORT_IN_PROGRESS`, 413, 415, 422 `IMPORT_VALIDATION_FAILED` / `INVALID_WORKBOOK`, 500 `IMPORT_FAILED` |
+| POST | `/api/admin/login` | `{password}` → `{token}`. Área oculta de dados (DR-04); senha verificada no servidor (padrão 9153, `SQUADFORCE_ADMIN_PASSWORD`). | 401 `ADMIN_AUTH_FAILED` |
+| POST | `/api/imports/clubs` | `multipart/form-data` campo `file` (.xlsx). Substitui só a base de clubes. **Exige `X-Admin-Token`.** | 401 `ADMIN_AUTH_FAILED`, 400, 409 `IMPORT_BLOCKED_ACTIVE_COMPETITION` / `IMPORT_IN_PROGRESS`, 413, 415, 422 `IMPORT_VALIDATION_FAILED` / `INVALID_WORKBOOK`, 500 `IMPORT_FAILED` |
 | POST | `/api/imports/players` | Idem para jogadores. | idem |
 | POST | `/api/sessions` | Cria a competição (`format`, `num_clubs`, `user_club_uid`, `league_rounds`, `confirm_replace`), seleciona/sorteia os participantes e gera calendário ou chaveamento. 201. | 409 `SESSION_ALREADY_ACTIVE` / `CATALOG_EMPTY` / `IMPORT_IN_PROGRESS`, 422 `INVALID_COMPETITION_CONFIG` / `CLUB_NOT_FOUND` / `CLUB_NOT_ELIGIBLE` / `VALIDATION_ERROR`, 500 `COMPETITION_PLANNING_FAILED` (retryable) |
 | GET | `/api/sessions/{id}` | Estado da sessão (ativa ou encerrada recentemente). | 404 `SESSION_NOT_FOUND` |
 | GET | `/api/sessions/{id}/competition` | **(Entrega 2)** Estrutura da competição: `LeagueSchedule` ou `CupBracket` (campo `kind`). | 404 `SESSION_NOT_FOUND` |
+| POST | `/api/sessions/{id}/formation` | `{formation}` → `SessionOut` com `user_formation`. Tática do usuário antes do leilão (DR-02), só na fase `setup`. Idempotente. | 404, 409 `INVALID_PHASE`, 422 `INVALID_FORMATION` |
 | POST | `/api/sessions/{id}/close` | Encerra (corpo opcional `{"expected_version": n}`). Idempotente. | 404, 409 `VERSION_CONFLICT` |
 | GET | `/api/competitions/options` | Formatos válidos, `available_clubs`, `eligible_clubs`, `division_counts`, `catalog_ready`, `imports_blocked`. | — |
 | GET | `/api/assets/clubs/{club_uid}` · `/api/assets/players/{unique_id}` | Escudo/foto por identificador (`Graphics/`). | 404 |
@@ -172,7 +174,7 @@ Detalhes em [interface](../architecture/interface.md). Todo POST exige `Idempote
 | GET | `/api/sessions/{id}/season/lineup` | `LineupOut` (escalação atual, postura, adversário público, `locked`) | 404 |
 | POST | `/api/sessions/{id}/season/lineup` | `LineupOut` | 422 `INVALID_LINEUP`, 409 `MATCH_IN_PROGRESS` / `NO_USER_MATCH` |
 | POST | `/api/sessions/{id}/season/live/start` | `LiveStateOut` (201) | 409 `INVALID_PHASE` / `NO_USER_MATCH`, 422 velocidade |
-| GET | `/api/sessions/{id}/season/live` | `LiveStateOut` (somente eventos já ocorridos) | 404 `LIVE_NOT_FOUND` |
+| GET | `/api/sessions/{id}/season/live` | `LiveStateOut` (somente eventos já ocorridos). Inclui `opponent_players` (escalação pública, sem condição) e `other_matches` (placares simultâneos da rodada, mesmo relógio; DR-06) | 404 `LIVE_NOT_FOUND` |
 | POST | `/api/sessions/{id}/season/live/posture` | `LiveStateOut` | 409 `SAME_POSTURE` / `MATCH_FINISHED` |
 | POST | `/api/sessions/{id}/season/live/speed` | `LiveStateOut` | 422 velocidade inválida |
 | GET | `/api/sessions/{id}/season/stats` | `SeasonStatsOut` (jogadores e clubes) | 404 |

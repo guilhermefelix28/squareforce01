@@ -5,6 +5,8 @@
   isso prova que o CÓDIGO do motor não mudou desde então.
 - `CALIBRATED`: hashes com os parâmetros atuais `provisorio-0.6` (Entrega 9: calibração do intercepto do xG
   0,75 → 0,88 contra as faixas de docs/homologacao/criterios.md). Única diferença: esse parâmetro.
+- `CURRENT`: parâmetros `calibrado-0.7` = `provisorio-0.6` + desgaste do goleiro × 0,35 (decisão DR-03 do
+  responsável, 2026-11-19). `LEGACY` e `CALIBRATED` rodam com `gk_fatigue_multiplier=1.0` e continuam idênticos.
 Se um hash mudar, o comportamento do motor mudou: só atualize com justificativa registrada e nova versão.
 """
 
@@ -52,7 +54,13 @@ CALIBRATED = {
     "base-7": "007338e7615adf56", "base-42": "391c89419d0770ef", "posture-21": "0a56522412d79da9",
     "knockout-5": "e7f491174f31f381", "uneven-9": "4eb3d477bd09fe01",
 }
-LEGACY_PARAMS = dataclasses.replace(DEFAULT_PARAMS, xg_intercept=0.75)
+CURRENT = {
+    "base-1": "5fba1010a5c04e87", "base-2": "0190d4c025f15f09", "base-3": "c353ef8ce2814aa8",
+    "base-7": "007338e7615adf56", "base-42": "391c89419d0770ef", "posture-21": "0a56522412d79da9",
+    "knockout-5": "e7f491174f31f381", "uneven-9": "4eb3d477bd09fe01",
+}
+V06_PARAMS = dataclasses.replace(DEFAULT_PARAMS, gk_fatigue_multiplier=1.0)
+LEGACY_PARAMS = dataclasses.replace(V06_PARAMS, xg_intercept=0.75)
 
 
 @pytest.mark.parametrize("name", sorted(SCENARIOS))
@@ -62,5 +70,10 @@ def test_engine_code_unchanged_since_delivery_5(name):
 
 @pytest.mark.parametrize("name", sorted(SCENARIOS))
 def test_engine_output_with_calibrated_parameters(name):
-    assert DEFAULT_PARAMS.version == "provisorio-0.6"
-    assert digest(SCENARIOS[name](DEFAULT_PARAMS)) == CALIBRATED[name]
+    assert digest(SCENARIOS[name](V06_PARAMS)) == CALIBRATED[name]
+
+
+@pytest.mark.parametrize("name", sorted(SCENARIOS))
+def test_engine_output_with_current_parameters(name):
+    assert DEFAULT_PARAMS.version == "calibrado-0.7"
+    assert digest(SCENARIOS[name](DEFAULT_PARAMS)) == CURRENT[name]

@@ -91,3 +91,37 @@ def test_errors_and_own_team_only_condition():
     live.view()
     with pytest.raises(LiveError):
         live.change_posture("retranca")  # terminada
+
+
+# ------------------------------------------------------------------ DR-06: adversário e outros jogos da rodada
+def test_opponent_lineup_is_public_without_condition():
+    _, task = user_task()
+    live = LiveMatch.start(task, USER, "30s", ManualClock())
+    v = live.view()
+    on_field = [p for p in v["opponent"] if p["on_field"]]
+    assert len(on_field) == 11
+    assert all("condition" not in p for p in v["opponent"])
+    opp_sheet = task.away if live.user_side == 0 else task.home
+    assert {p["player"] for p in on_field} == {p.unique_id for p in opp_sheet.starters}
+
+
+def test_other_matches_follow_the_same_clock_and_match_the_round_results():
+    s, task = user_task(4)
+    others = [t for t in s.snapshot.tasks if t.match_id != task.match_id]
+    assert others  # Liga de 4: 1 outro jogo por rodada
+    clock = ManualClock()
+    live = LiveMatch.start(task, USER, "30s", clock, others=others)
+    v0 = live.view()
+    assert [o["score"] for o in v0["others"]] == [(0, 0)] * len(others)
+    assert not any(o["finished"] for o in v0["others"])
+    clock.advance(40)
+    v = live.view()
+    assert all(o["finished"] for o in v["others"])
+    for o, t in zip(v["others"], others):
+        assert o["match_id"] == t.match_id and (o["home_club_uid"], o["away_club_uid"]) == (t.home_club, t.away_club)
+        assert o["score"] == play_fixture(t).result.score  # o mesmo resultado que a rodada consolidará
+
+
+def test_live_without_other_matches_has_empty_list():
+    _, task = user_task()
+    assert LiveMatch.start(task, USER, "instant", ManualClock()).view()["others"] == []

@@ -31,6 +31,7 @@ import {
   getSquad,
   getTrading,
   getTradingSquads,
+  adminLogin,
   importBase,
   placeBid,
   playRound,
@@ -62,6 +63,7 @@ beforeAll(() => {
 describe.runIf(hasReal)("jornada completa contra o backend real", () => {
   it("do leilão ao encerramento e nova competição", async () => {
     const xlsx = () => new File([readFileSync(REAL_XLSX)], "jogadores.xlsx");
+    await adminLogin("9153");
     expect((await importBase("clubs", xlsx())).rows_imported).toBe(40);
     expect((await importBase("players", xlsx())).rows_imported).toBeGreaterThan(1500);
 

@@ -8,7 +8,7 @@ from services.match_engine.engine import LINE
 from services.match_engine.types import MatchPlayer, TeamSheet
 from squadforce_shared.contracts import (
     CalendarOut, CalendarRoundOut, ClubSeasonStatsOut, FormationOut, LineupOut, LineupPlayerOut, LineupSlotOut,
-    LivePlayerOut, LiveStateOut, MatchEventOut, OpponentPreviewOut, PlayerSeasonStatsOut, SeasonFixtureOut,
+    LiveOpponentOut, LiveOtherMatchOut, LivePlayerOut, LiveStateOut, MatchEventOut, OpponentPreviewOut, PlayerSeasonStatsOut, SeasonFixtureOut,
     SeasonStatsOut, SquadPlayerOut, TeamLineupOut,
 )
 from squadforce_shared.domain.formations import OFFICIAL_FORMATIONS, official_name
@@ -94,7 +94,8 @@ class SeasonViewsMixin:
 
     def start_live(self, session_id: str, s: Season, speed: str, clock) -> LiveMatch:
         task = s.user_task()
-        live = LiveMatch.start(task, s.user_club, speed, clock)
+        others = [t for t in s.snapshot.tasks if t.match_id != task.match_id]
+        live = LiveMatch.start(task, s.user_club, speed, clock, others=others)
         with self._lock:
             self._live[session_id] = (s.snapshot.snapshot_id, live)
         return live
@@ -169,6 +170,8 @@ class SeasonViewsMixin:
             own_players=[LivePlayerOut(**p) for p in v["own_players"]],
             own_bench=[LineupPlayerOut(player=p["player"], name=p["name"], slot="BENCH") for p in v["own_bench"]],
             substitutions_used=v["substitutions_used"],
+            opponent_players=[LiveOpponentOut(**p) for p in v["opponent"]],
+            other_matches=[LiveOtherMatchOut(**o) for o in v["others"]],
         )
 
     def stats(self, session_id: str, s: Season) -> SeasonStatsOut:

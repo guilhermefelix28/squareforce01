@@ -12,6 +12,7 @@ from typing import Callable, Mapping
 
 from services.match_engine.lineup import to_match_player
 from services.trading.engine import TradingEngine
+from squadforce_shared.domain.formations import formation_by_name
 from squadforce_shared.contracts import (
     AwardEntryOut,
     ClubCampaignOut,
@@ -29,6 +30,11 @@ from .live import LiveMatch
 from .season import MAIN_EVENTS, PlayedMatch, PlayerStats, Season
 from .views import SEASON_FORMATIONS, SeasonViewsMixin
 
+
+def formation_slots(name: str | None):
+    """Vagas da formação oficial escolhida pelo usuário antes do leilão (DR-02), ou None."""
+    f = formation_by_name(name) if name else None
+    return f.slots if f else None
 
 
 class SeasonService(SeasonViewsMixin):
@@ -55,7 +61,7 @@ class SeasonService(SeasonViewsMixin):
                 self._executor = None
 
     def create(self, session_id: str, *, competition_id: str, structure, market: TradingEngine,
-               names: Mapping[int, str], seed: int) -> Season:
+               names: Mapping[int, str], seed: int, user_formation: str | None = None) -> Season:
         with market.lock:
             squads = {u: [to_match_player(market.players[k.player_id]) for k in c.contracts]
                       for u, c in market.clubs.items()}
@@ -64,7 +70,8 @@ class SeasonService(SeasonViewsMixin):
             ages = {pid: p.age for pid, p in market.players.items()}
         season = Season(competition_id=competition_id, structure=structure,
                         squads={c: squads[c] for c in structure.participants}, names=names, user_club=user,
-                        personalities=personalities, formations=SEASON_FORMATIONS, seed=seed)
+                        personalities=personalities, formations=SEASON_FORMATIONS, seed=seed,
+                        user_formation=formation_slots(user_formation))
         with self._lock:
             self._seasons[session_id] = season
             self._locks[session_id] = threading.Lock()

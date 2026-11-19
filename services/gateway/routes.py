@@ -48,6 +48,9 @@ from squadforce_shared.contracts import (
     ImportReport,
     PlayerPage,
     SessionCloseRequest,
+    AdminLoginIn,
+    AdminLoginOut,
+    UserFormationIn,
     SessionCreateRequest,
     SessionOut,
     WsEnvelope,
@@ -120,8 +123,28 @@ def list_players(
     return c.data.list_players(club_uid, position, search, limit, offset)
 
 
+# ------------------------------------------------------------------ área oculta de dados (DR-04)
+AdminToken = Annotated[str | None, Header(alias="X-Admin-Token", description="Token de /api/admin/login.")]
+
+
+def _require_admin(c: Container, token: str | None) -> None:
+    if not c.admin.check(token):
+        raise AppError(401, ErrorCode.ADMIN_AUTH_FAILED, "Acesso restrito: entre com a senha da área de dados.")
+
+
+@router.post("/admin/login", response_model=AdminLoginOut, responses=ERR, tags=["admin"])
+def admin_login(c: C, body: AdminLoginIn, idempotency_key: IdemKey = None):
+    """Login da área oculta de dados. A senha é verificada somente no servidor."""
+    validate_key(idempotency_key)
+    token = c.admin.login(body.password)
+    if token is None:
+        raise AppError(401, ErrorCode.ADMIN_AUTH_FAILED, "Senha incorreta.")
+    return AdminLoginOut(token=token)
+
+
 # ------------------------------------------------------------------ importações
-def _run_import(c: Container, base: str, file: UploadFile, key: str | None) -> JSONResponse:
+def _run_import(c: Container, base: str, file: UploadFile, key: str | None, token: str | None = None) -> JSONResponse:
+    _require_admin(c, token)
     key = validate_key(key)
     limit = c.data.max_upload_bytes
     content = file.file.read(limit + 1)  # somente memória: nenhuma cópia em disco
@@ -138,13 +161,15 @@ def _run_import(c: Container, base: str, file: UploadFile, key: str | None) -> J
 
 
 @router.post("/imports/clubs", response_model=ImportReport, responses=ERR, tags=["imports"])
-def import_clubs(c: C, file: Annotated[UploadFile, File(description="Planilha .xlsx com colunas club_*")], idempotency_key: IdemKey = None):
-    return _run_import(c, "clubs", file, idempotency_key)
+def import_clubs(c: C, file: Annotated[UploadFile, File(description="Planilha .xlsx com colunas club_*")],
+                 idempotency_key: IdemKey = None, admin_token: AdminToken = None):
+    return _run_import(c, "clubs", file, idempotency_key, admin_token)
 
 
 @router.post("/imports/players", response_model=ImportReport, responses=ERR, tags=["imports"])
-def import_players(c: C, file: Annotated[UploadFile, File(description="Planilha jogadores.xlsx")], idempotency_key: IdemKey = None):
-    return _run_import(c, "players", file, idempotency_key)
+def import_players(c: C, file: Annotated[UploadFile, File(description="Planilha jogadores.xlsx")],
+                   idempotency_key: IdemKey = None, admin_token: AdminToken = None):
+    return _run_import(c, "players", file, idempotency_key, admin_token)
 
 
 # ------------------------------------------------------------------ sessões
@@ -208,6 +233,21 @@ async def close_session(
             WsEnvelope(type="session.closed", session_id=session_id, version=out["version"], data=out),
             close_after=True,
         )
+    return _respond(status, out, replayed)
+
+
+@router.post("/sessions/{session_id}/formation", response_model=SessionOut, responses=ERR, tags=["sessions"])
+async def choose_user_formation(c: C, request: Request, session_id: str, body: UserFormationIn,
+                                idempotency_key: IdemKey = None):
+    """Tática do usuário antes do leilão (decisão DR-02): uma das 11 formações oficiais, somente na fase `setup`.
+    Vira a formação inicial da escalação automática do usuário."""
+    key = validate_key(idempotency_key)
+    raw = await request.body()
+
+    def run() -> tuple[int, dict[str, Any]]:
+        return 200, c.sessions.set_user_formation(session_id, body.formation).to_out().model_dump(mode="json")
+
+    status, out, replayed = c.idempotency.execute(f"sessions:formation:{session_id}", key, fingerprint(raw), run)
     return _respond(status, out, replayed)
 
 
@@ -562,7 +602,8 @@ async def start_season(c: C, request: Request, session_id: str, idempotency_key:
             raise AppError(409, ErrorCode.INVALID_PHASE, "A competição desta sessão já foi iniciada.")
         try:
             season = c.seasons.create(session_id, competition_id=state.config.format.value, structure=state.structure,
-                                      market=market, names=_club_names(c), seed=(state.seed or 0) + 3)
+                                      market=market, names=_club_names(c), seed=(state.seed or 0) + 3,
+                                      user_formation=state.user_formation)
         except SeasonError as exc:
             raise _season_error(exc) from exc
         return 201, c.seasons.state(session_id, season).model_dump(mode="json")
