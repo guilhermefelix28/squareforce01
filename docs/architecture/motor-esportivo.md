@@ -8,6 +8,10 @@ Implementação de GDD v5.2 §9–§16. Código: `services/match_engine/`. Lotes
 > cartões ficaram dentro das faixas derivadas de referências públicas (`docs/homologacao/criterios.md`,
 > `docs/homologacao/calibracao.md`); único ajuste: `xg_intercept` 0,75 → 0,88. As referências ainda não foram
 > aprovadas oficialmente pelo responsável (PM-02) e várias métricas não têm referência (não validadas).
+>
+> **2026-11-19 (DR-03):** versão `calibrado-0.7` = `provisorio-0.6` + `gk_fatigue_multiplier = 0,35` (goleiros cansam
+> pouco, decisão do responsável). Re-medido em 20.250 partidas: todos os critérios continuam aprovados
+> (gols 2,368, empates 25,4%, xG 2,344; `docs/homologacao/calibracao.md`).
 
 ## Módulos
 

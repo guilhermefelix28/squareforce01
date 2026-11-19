@@ -5,7 +5,8 @@ import { ClubCrest } from "../../components/ClubCrest";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { Notice } from "../../components/Notice";
 import { formatClock, formatMoney, formatMoneyShort, parseMoney } from "../../domain/money";
-import { POSITION_ORDER, displayPosition } from "../../domain/positions";
+import { PositionBadge } from "../../components/PlayerCard";
+import { POSITION_ORDER, byPosition, displayPosition } from "../../domain/positions";
 import type { Club, Proposal, TradingPlayer, TradingSquad, TradingState } from "../../types/api";
 
 const ERRORS: Record<string, string> = {
@@ -26,7 +27,7 @@ const errText = (e: unknown) => (e instanceof ApiError ? ERRORS[e.code] ?? e.mes
 function PlayerLine({ p }: { p: TradingPlayer }) {
   return (
     <span className="pline">
-      <span className="tag">{displayPosition(p.position)}</span> <strong>{p.name}</strong>
+      <PositionBadge position={p.position} size="sm" /> <strong>{p.name}</strong>
       <span className="muted small"> {p.age} anos</span>
     </span>
   );
@@ -68,7 +69,10 @@ export function TradingBoard({
     return rivals
       .filter((s) => clubFilter === "" || s.club_uid === clubFilter)
       .flatMap((s) => s.players.map((p) => ({ squad: s, p })))
-      .filter(({ p }) => (!posFilter || p.position === posFilter) && (!term || p.name.toLocaleLowerCase("pt-BR").includes(term)));
+      .filter(({ p }) => (!posFilter || p.position === posFilter) && (!term || p.name.toLocaleLowerCase("pt-BR").includes(term)))
+      .map((x, i) => [x, i] as const)
+      .sort((a, b) => POSITION_ORDER.indexOf(a[0].p.position) - POSITION_ORDER.indexOf(b[0].p.position) || a[1] - b[1])
+      .map(([x]) => x);
   }, [rivals, search, clubFilter, posFilter]);
 
   const offeredPlayer = mine?.players.find((p) => p.unique_id === offered) ?? null;
@@ -174,7 +178,7 @@ export function TradingBoard({
                 {results.slice(0, 120).map(({ squad, p }) => (
                   <tr key={p.unique_id} className={wanted?.unique_id === p.unique_id ? "is-user" : ""}>
                     <td>{p.name}</td>
-                    <td>{displayPosition(p.position)}</td>
+                    <td><PositionBadge position={p.position} size="sm" /></td>
                     <td className="num">{p.age}</td>
                     <td><span className="club-name"><ClubCrest clubUid={squad.club_uid} name={clubName(squad.club_uid)} size={18} /><span>{clubName(squad.club_uid)}</span></span></td>
                     <td>
@@ -196,7 +200,7 @@ export function TradingBoard({
               <span>Jogador oferecido (seu elenco)</span>
               <select value={offered ?? ""} onChange={(e) => setOffered(e.target.value ? Number(e.target.value) : null)}>
                 <option value="">Selecione…</option>
-                {mine?.players.map((p) => (
+                {byPosition(mine?.players ?? [], (p) => p.position).map((p) => (
                   <option key={p.unique_id} value={p.unique_id}>{displayPosition(p.position)} · {p.name}</option>
                 ))}
               </select>

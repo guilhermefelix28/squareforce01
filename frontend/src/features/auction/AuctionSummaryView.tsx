@@ -1,7 +1,8 @@
 import { useMemo } from "react";
 import { ClubCrest } from "../../components/ClubCrest";
 import { formatMoneyShort } from "../../domain/money";
-import { POSITION_ORDER, displayPosition } from "../../domain/positions";
+import { PositionBadge } from "../../components/PlayerCard";
+import { POSITION_ORDER } from "../../domain/positions";
 import type { AuctionSummary, Club } from "../../types/api";
 
 const SOURCE: Record<string, string> = { auction: "leilão", improvement: "melhoria", basic: "reserva básica" };
@@ -51,7 +52,7 @@ export function AuctionSummaryView({ summary, clubs }: { summary: AuctionSummary
                 <tbody>
                   {sorted.map((k) => (
                     <tr key={k.player_id}>
-                      <td>{displayPosition(k.position)}</td>
+                      <td><PositionBadge position={k.position} size="sm" /></td>
                       <td>{k.name}</td>
                       <td className="hide-sm muted small">{SOURCE[k.source]}</td>
                       <td className="num">{formatMoneyShort(k.price)}</td>

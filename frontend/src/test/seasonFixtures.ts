@@ -1,3 +1,4 @@
+import { FORMATIONS as OFFICIAL_FORMATIONS } from "./fakeApi";
 /** Respostas de exemplo da API de temporada (formato idêntico ao contrato OpenAPI). */
 import { CLUBS, SESSION, json } from "./fakeApi";
 
@@ -33,10 +34,7 @@ export const SEASON_PLAYED = {
 export const SEASON_FINISHED = { ...SEASON_PLAYED, phase: "finished", champion_club_uid: USER, round_number: 3 };
 
 const POS = ["GK", "DR", "DC", "DC", "DL", "DM", "MC", "MC", "STC", "STC", "STC"];
-export const FORMATIONS = [
-  { id: "4-3-3", positions: POS },
-  { id: "4-4-2", positions: ["GK", "DR", "DC", "DC", "DL", "DM", "MC", "MC", "MC", "STC", "STC"] },
-];
+export const FORMATIONS = OFFICIAL_FORMATIONS; // as 11 oficiais (4-3-3 = POS)
 const fitAll = (natural: string) =>
   Object.fromEntries(["GK", "DR", "DL", "DC", "DM", "MC", "STC"].map((p) => [p, p === natural ? "natural" : "improvisada"]));
 
@@ -66,10 +64,13 @@ const stats = { possession_pct: 55, shots: 7, shots_on_target: 3, xg: 1.2, big_c
 export const LIVE = {
   session_id: SID, match_id: "L-R01-M01", home_club_uid: USER, away_club_uid: OPP, user_side: 0, speed: "30s",
   minute: 34, game_second: 2010, finished: false, score: [1, 0], shootout: null,
-  events: [ev(10, 12, "goal"), ev(20, 30, "yellow_card", { side: 1, club_uid: OPP, player_name: "Rival" })],
+  events: [ev(10, 12, "goal"), ev(20, 30, "yellow_card", { side: 1, club_uid: OPP, player_name: "Rival" }),
+    ev(25, 31, "penalty_awarded", { player_name: "Atleta 9", other_name: "Rival 4", other: 2003 })],
   stats: { home: stats, away: { ...stats, possession_pct: 45 } }, postures: ["equilibrada", "defensiva"],
   own_players: POS.map((p, i) => ({ player: 1000 + i, name: `Atleta ${i + 1}`, slot: p, condition: 90 - i * 3, on_field: true, yellow_cards: 0 })),
   own_bench: [], substitutions_used: 0, max_substitutions: 5,
+  opponent_players: POS.map((p, i) => ({ player: 2000 + i, name: `Rival ${i + 1}`, slot: p, on_field: true, yellow_cards: 0 })),
+  other_matches: [{ match_id: "L-R01-M02", home_club_uid: 102496, away_club_uid: 333, score: [0, 2], finished: false }],
 };
 
 export const REPORT = {

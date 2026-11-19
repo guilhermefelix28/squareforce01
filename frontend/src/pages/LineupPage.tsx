@@ -1,6 +1,7 @@
 /** Escalação e preparação tática (GDD §9): formação, titulares, reservas, adequação e postura inicial. */
 import { useEffect, useMemo, useState } from "react";
 import { getLineup, getSquad, saveLineup } from "../api/endpoints";
+import { ActionBar, PhaseBanner } from "../components/GameUi";
 import { Notice } from "../components/Notice";
 import { Pitch, type Arrangement } from "../features/season/Pitch";
 import { POSTURES } from "../features/season/labels";
@@ -68,20 +69,22 @@ export function LineupPage({ navigate }: { navigate: (h: string) => void }) {
     setDirty(true);
   };
   const formationId = lineup.formations.find((f) => f.positions.join() === arr.formation.join())?.id ?? lineup.formation ?? "";
+  const ready = !lineup.locked && missing === 0 && blocked.length === 0;
 
-  const save = () =>
+  const save = (then?: () => void) =>
     void cmd.run(async (k) => {
       const l = await saveLineup(sid, { formation: formationId, starters: arr.starters as number[], bench: arr.bench, posture }, k);
       apply(l);
       setSaved(true);
+      then?.();
     });
+  const play = () => (dirty ? save(() => navigate("#/partida")) : navigate("#/partida"));
 
   return (
     <div className="stack">
-      <div className="season-head">
-        <h2>Escalação e preparação tática</h2>
-        <button type="button" className="btn btn--ghost btn--small" onClick={() => navigate("#/temporada/central")}>← Central</button>
-      </div>
+      <PhaseBanner kicker={state?.round_label ?? "Escalação"} title="Escalação e tática">
+        Arraste os jogadores pelo campinho. Leve um titular para outra linha e a formação muda sozinha.
+      </PhaseBanner>
       {lineup.locked && <Notice kind="info" title="Escalação fechada">A partida já começou: durante o jogo a formação é fixa e só a postura pode mudar.</Notice>}
       {lineup.note && <Notice kind="warning" title="Sua escalação anterior não pôde ser usada">{lineup.note}</Notice>}
       {cmd.error && <Notice kind="error" title="Escalação não salva">{cmd.error.message}</Notice>}
@@ -102,26 +105,16 @@ export function LineupPage({ navigate }: { navigate: (h: string) => void }) {
             </label>
           ))}
         </fieldset>
-        <p className="muted small">Arraste os atletas ou toque em dois para trocá-los. Atletas podem jogar fora da posição natural; a cor indica a adequação.</p>
         <ul className="fit-legend" aria-label="Legenda de adequação">
           <li className="fit--natural">Natural</li><li className="fit--boa">Boa</li><li className="fit--regular">Regular</li><li className="fit--improvisada">Improvisado</li>
         </ul>
       </section>
 
-      <Pitch arrangement={arr} squad={squad} locked={lineup.locked} onChange={(a) => { setArr(a); setDirty(true); }} />
+      <Pitch arrangement={arr} squad={squad} locked={lineup.locked} formations={lineup.formations}
+        onChange={(a) => { setArr(a); setDirty(true); }} />
 
       {missing > 0 && <Notice kind="warning">Faltam {missing} titular(es) para completar as 11 vagas.</Notice>}
       {blocked.length > 0 && <Notice kind="error">Há atletas indisponíveis na lista: retire-os antes de salvar.</Notice>}
-
-      <div className="hero__actions">
-        <button type="button" className="btn btn--primary" disabled={lineup.locked || cmd.busy || missing > 0 || blocked.length > 0 || !dirty} onClick={save}>
-          {cmd.busy ? "Salvando…" : dirty ? "Salvar escalação" : "Escalação salva"}
-        </button>
-        <button type="button" className="btn btn--ghost" disabled={dirty && !lineup.locked} onClick={() => navigate("#/partida")}
-          title={dirty ? "Salve a escalação antes de jogar" : undefined}>
-          Ir para a partida
-        </button>
-      </div>
 
       {lineup.opponent && (
         <section className="card">
@@ -129,6 +122,16 @@ export function LineupPage({ navigate }: { navigate: (h: string) => void }) {
           <OpponentInfo lineup={lineup} names={names} />
         </section>
       )}
+
+      <ActionBar hint={`${formationId}${dirty ? " · alterações não salvas" : ""}`}>
+        <button type="button" className="btn btn--ghost" onClick={() => navigate("#/temporada/central")}>← Central</button>
+        <button type="button" className="btn btn--ghost" disabled={!ready || cmd.busy || !dirty} onClick={() => save()}>
+          {cmd.busy ? "Salvando…" : dirty ? "Salvar escalação" : "Escalação salva"}
+        </button>
+        <button type="button" className="btn btn--cta" disabled={lineup.locked ? false : !ready || cmd.busy} onClick={lineup.locked ? () => navigate("#/partida") : play}>
+          {lineup.locked ? "Voltar à partida ▶" : dirty ? "Salvar e jogar ▶" : "Ir para o jogo ▶"}
+        </button>
+      </ActionBar>
     </div>
   );
 }

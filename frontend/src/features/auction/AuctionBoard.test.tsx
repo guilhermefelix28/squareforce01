@@ -2,7 +2,7 @@ import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { formatClock, formatMoneyShort, parseMoney } from "../../domain/money";
-import { CLUBS, SESSION, apiError, fakeApi, json } from "../../test/fakeApi";
+import { CLUBS, FORMATIONS, SESSION, apiError, fakeApi, json } from "../../test/fakeApi";
 import type { AuctionState, Club } from "../../types/api";
 import { AuctionBoard } from "./AuctionBoard";
 
@@ -36,9 +36,9 @@ const STATE: AuctionState = {
   bid_increments: [100_000, 500_000, 1_000_000],
 };
 
-function renderBoard(state = STATE, onChanged = vi.fn()) {
+function renderBoard(state = STATE, onChanged = vi.fn(), formation: (typeof FORMATIONS)[number] | null = null) {
   render(
-    <AuctionBoard sessionId={SESSION.id} state={state} clubs={CLUBS as Club[]} roundRemainingMs={8_000} globalRemainingMs={540_000} onChanged={onChanged} />,
+    <AuctionBoard sessionId={SESSION.id} state={state} clubs={CLUBS as Club[]} formation={formation} roundRemainingMs={8_000} globalRemainingMs={540_000} onChanged={onChanged} />,
   );
   return onChanged;
 }
@@ -59,14 +59,14 @@ describe("AuctionBoard", () => {
   it("mostra rodada, temporizadores, saldo e resultados sem dados ocultos", () => {
     fakeApi({});
     renderBoard();
-    expect(screen.getByText(/Rodada 7 · ATA/)).toBeInTheDocument();
-    expect(screen.getByText("0:08")).toBeInTheDocument();
+    expect(screen.getByText("Rodada 7")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /ATA em disputa/ })).toBeInTheDocument();
+    expect(screen.getByRole("timer", { name: "Tempo da rodada: 8 segundos" })).toHaveTextContent("8");
     expect(screen.getByText("9:00")).toBeInTheDocument();
     expect(screen.getAllByRole("button", { pressed: false })).toHaveLength(5);
-    const panel = screen.getByRole("form", { name: "Fazer lance" });
-    expect(within(panel).getByText("R$ 120 mi")).toBeInTheDocument();
-    expect(within(panel).getByText("R$ 111,5 mi")).toBeInTheDocument();
-    const results = screen.getByRole("complementary", { name: "Resultados" });
+    expect(screen.getAllByText("R$ 120 mi").length).toBeGreaterThan(0);
+    expect(screen.getByText("R$ 111,5 mi")).toBeInTheDocument();
+    const results = screen.getByRole("complementary", { name: "Seu elenco e resultados" });
     expect(within(results).getByText("Goleiro X")).toBeInTheDocument();
     expect(within(results).getByText("2 sem lance vencedor")).toBeInTheDocument();
     expect(document.body.textContent).not.toMatch(/overall|atributo/i);
@@ -87,7 +87,7 @@ describe("AuctionBoard", () => {
     await user.click(screen.getByRole("button", { name: "+500 mil" }));
     await user.click(screen.getByRole("button", { name: "+1 mi" }));
     expect(input).toHaveValue("4000000");
-    await user.click(screen.getByRole("button", { name: "Lance mínimo" }));
+    await user.click(screen.getByRole("button", { name: "Mínimo" }));
     await user.click(screen.getByRole("button", { name: "+100 mil" }));
     await user.click(screen.getByRole("button", { name: "Confirmar lance" }));
     expect(await screen.findByText(/Lance de R\$\s2\.600\.000 em Atacante Dois confirmado/)).toBeInTheDocument();
@@ -113,13 +113,40 @@ describe("AuctionBoard", () => {
     expect(await screen.findByText(/preservar R\$ 500 mil por vaga restante/)).toBeInTheDocument();
   });
 
-  it("destaca a oferta ativa do usuário e sugere aumento no mesmo atleta", async () => {
+  it("destaca a oferta ativa e permite REDUZIR o lance no mesmo atleta (DR-01)", async () => {
     const user = userEvent.setup();
-    fakeApi({});
+    const { calls } = fakeApi({
+      [`POST /api/sessions/${SESSION.id}/auction/bids`]: (_u, init) => {
+        const b = JSON.parse(String(init.body));
+        return json(200, { round: 7, player_id: b.player_id, amount: b.amount, seq: 13, replaced_player_id: null, replayed: false });
+      },
+    });
     renderBoard({ ...STATE, active_bid: { round: 7, player_id: 3, amount: 900_000, seq: 4 } });
     expect(screen.getByText("seu lance: R$ 900 mil")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /Três/ }));
-    expect(screen.getByLabelText(/Valor para Três/)).toHaveValue("1000000");
+    const input = screen.getByLabelText(/Valor para Três/);
+    expect(input).toHaveValue("900000"); // parte do lance atual
+    await user.click(screen.getByRole("button", { name: "Reduzir R$ 500 mil" }));
+    expect(input).toHaveValue("400000");
+    await user.click(screen.getByRole("button", { name: "Reduzir R$ 500 mil" }));
+    expect(input).toHaveValue("300000"); // nunca abaixo do mínimo
+    expect(screen.getByRole("button", { name: "Diminuir lance" })).toBeDisabled();
+    expect(screen.getByText(/Você está reduzindo seu lance/)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Confirmar novo valor" }));
+    await screen.findByText(/confirmado/);
+    expect(JSON.parse(String(calls.find((c) => c.method === "POST")!.init.body))).toMatchObject({ player_id: 3, amount: 300_000 });
+  });
+
+  it("mostra o elenco agrupado GOL-LD-ZAG-LE-VOL-ME-ATA e as vagas da formação", () => {
+    fakeApi({});
+    const k = (id: number, name: string, position: string) => ({ player_id: id, name, position, price: 1_000_000, source: "auction" });
+    renderBoard({ ...STATE, squad: [k(1, "Ata", "STC"), k(2, "Lat Esq", "DL"), k(3, "Gol", "GK"), k(4, "Zag", "DC"), k(5, "Lat Dir", "DR")] as never }, vi.fn(), FORMATIONS[0]);
+    const side = screen.getByRole("complementary", { name: "Seu elenco e resultados" });
+    const names = [...side.querySelectorAll(".pos-group .chip > span:first-child")].map((e) => e.textContent);
+    expect(names).toEqual(["Gol", "Lat Dir", "Zag", "Lat Esq", "Ata"]);
+    const vac = within(side).getByLabelText("Vagas da formação 4-4-2");
+    expect(vac).toHaveTextContent("ZAG 1/2");
+    expect(vac).toHaveTextContent("GOL 1/1");
   });
 
   it("bloqueia lances com elenco completo", () => {
@@ -139,15 +166,16 @@ describe("AuctionPage", () => {
         database: { status: "ok", schema_version: 2, clubs: 40, players: 1583 }, active_session: true, services: {} }),
       [`GET /api/sessions/${SESSION.id}`]: () => json(200, SESSION),
       "GET /api/catalog/clubs": () => json(200, { items: CLUBS, total: 3, limit: 200, offset: 0 }),
+      "GET /api/formations": () => json(200, FORMATIONS),
       [`POST /api/sessions/${SESSION.id}/auction/start`]: () =>
         apiError(409, "AUCTION_MODEL_NOT_CONFIGURED", "O leilão está desligado neste servidor."),
     });
     window.location.hash = "#/auction";
     const { App } = await import("../../app/App");
     render(<App />);
-    await user.click(await screen.findByRole("button", { name: "Iniciar leilão" }));
-    await user.click(within(screen.getByRole("alertdialog")).getByRole("button", { name: "Iniciar" }));
+    await user.click(await screen.findByRole("button", { name: /Começar leilão/ }));
+    await user.click(within(screen.getByRole("alertdialog")).getByRole("button", { name: "Começar" }));
     expect(await screen.findByText("Leilão desligado neste servidor")).toBeInTheDocument();
-    await waitFor(() => expect(screen.getByRole("button", { name: "Iniciar leilão" })).toBeEnabled());
+    await waitFor(() => expect(screen.getByRole("button", { name: /Começar leilão/ })).toBeEnabled());
   });
 });

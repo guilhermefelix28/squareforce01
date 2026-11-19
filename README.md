@@ -42,6 +42,11 @@ Dê dois cliques no atalho **SquadForce** da área de trabalho. Ele roda `script
 - **Encerrar:** pressione Enter na janela do executor.
 - **Porta ocupada:** o executor mostra quando o processo foi iniciado e pergunta se deve reiniciá-lo com a versão atual.
 - **Registros:** `%TEMP%\squadforce\`.
+- **Fluxo do jogo:** abertura → *Nova partida* (formato e clube) → tática → leilão → mercado → temporada
+  (central da rodada → escalação → jogo ao vivo → pós-jogo) → encerramento. Cada tela tem uma ação principal no rodapé.
+- **Atualizar as bases (área oculta):** `http://localhost:5173/#/admin`, senha `9153` (troque com
+  `SQUADFORCE_ADMIN_PASSWORD`). A senha é verificada pelo servidor; a área não aparece em nenhum menu.
+- **Som da torcida:** botão 🔊 na barra superior (lembrado no navegador).
 - **Recriar o atalho:** aponte para
   `powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts\launcher\iniciar-jogo.ps1`, com o ícone
   `scripts\launcher\squadforce.ico`.
@@ -62,11 +67,11 @@ npm run dev
 #   http://localhost:5173  (proxy de /api e /ws para o backend)
 ```
 
-Fluxo inicial na interface: **Dados** → importar `jogadores.xlsx` em *Base de clubes* e depois em
-*Base de jogadores* → **Competição** → escolher formato e clube → *Iniciar sessão*.
+Primeira carga das bases: `#/admin` (senha `9153`) → importar `jogadores.xlsx` em *Base de clubes* e depois em
+*Base de jogadores*. Depois, na abertura: **Nova partida** → formato e clube → tática → leilão.
 
 Variáveis opcionais: `SQUADFORCE_DB_PATH` (padrão `database/squadforce.db`), `SQUADFORCE_GRAPHICS_DIR`
-(padrão `Graphics/`), `SQUADFORCE_MAX_UPLOAD_MB` (25), `SQUADFORCE_CORS_ORIGINS`.
+(padrão `Graphics/`), `SQUADFORCE_MAX_UPLOAD_MB` (25), `SQUADFORCE_CORS_ORIGINS`, `SQUADFORCE_ADMIN_PASSWORD` (9153).
 
 ## Testes
 

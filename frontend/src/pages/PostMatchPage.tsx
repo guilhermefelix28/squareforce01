@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { ApiError } from "../api/client";
 import { advanceRound, getMatchReport } from "../api/endpoints";
+import { ActionBar, PhaseBanner } from "../components/GameUi";
 import { Notice } from "../components/Notice";
 import { MatchReportView, StandingsTable } from "../features/season/SeasonParts";
 import { useCommand } from "../features/season/useCommand";
@@ -34,13 +35,16 @@ export function PostMatchPage({ matchId, navigate }: { matchId: string; navigate
 
   return (
     <div className="stack">
-      <div className="season-head">
-        <h2>Pós-partida</h2>
-        <button type="button" className="btn btn--ghost btn--small" onClick={() => navigate("#/temporada/resultados")}>← Resultados</button>
-      </div>
+      <PhaseBanner kicker="Pós-jogo" title="Resumo da partida" />
       {error && <Notice kind="error">{error}</Notice>}
       {!report && !error && <p className="muted" role="status">Carregando partida…</p>}
       {report && <MatchReportView report={report} names={names} user={state.user_club_uid} />}
+      {!canAdvance && (
+        <ActionBar>
+          <button type="button" className="btn btn--ghost" onClick={() => navigate("#/temporada/resultados")}>← Resultados</button>
+          <button type="button" className="btn btn--cta" onClick={() => navigate("#/temporada/central")}>Central da rodada ▶</button>
+        </ActionBar>
+      )}
       {canAdvance && (
         <section className="card">
           <h3>Rodada concluída</h3>
@@ -50,9 +54,11 @@ export function PostMatchPage({ matchId, navigate }: { matchId: string; navigate
               <a href="#/temporada/classificacao">Ver chaveamento</a></p>
           )}
           {cmd.error && <Notice kind="error">{cmd.error.message}</Notice>}
-          <button type="button" className="btn btn--primary" onClick={advance} disabled={cmd.busy}>
-            {state.round_number >= state.total_rounds ? "Encerrar competição" : "Próximo confronto"}
-          </button>
+          <ActionBar>
+            <button type="button" className="btn btn--cta" onClick={advance} disabled={cmd.busy}>
+              {state.round_number >= state.total_rounds ? "Encerrar competição ▶" : "Próxima rodada ▶"}
+            </button>
+          </ActionBar>
         </section>
       )}
     </div>

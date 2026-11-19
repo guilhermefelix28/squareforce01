@@ -77,3 +77,5 @@ export interface WsMessage {
   version?: number | null;
   data: Record<string, unknown>;
 }
+export type LiveOpponent = S["LiveOpponentOut"];
+export type LiveOtherMatch = S["LiveOtherMatchOut"];

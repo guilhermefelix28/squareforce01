@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState, type FormEvent } from "react";
 import { ApiError, newIdempotencyKey } from "../../api/client";
 import { createSession } from "../../api/endpoints";
+import { ClubCrest } from "../../components/ClubCrest";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { Notice } from "../../components/Notice";
 import type { Club, CompetitionFormat, CompetitionOptions, LeagueRounds, Session, SessionCreate } from "../../types/api";
@@ -68,7 +69,7 @@ export function SessionForm({
 
   return (
     <form className="card session-form" onSubmit={submit} noValidate aria-labelledby="new-session-title">
-      <h3 id="new-session-title">Nova competição</h3>
+      <h3 id="new-session-title">1 · Competição</h3>
       <fieldset className="segmented">
         <legend>Formato</legend>
         {(["league", "cup"] as const).map((f) => (
@@ -113,23 +114,26 @@ export function SessionForm({
         </label>
       )}
 
-      <label className="field">
-        <span>Seu clube</span>
-        <select value={userClub} onChange={(e) => setUserClub(e.target.value ? Number(e.target.value) : "")}>
-          <option value="">Selecione…</option>
-          {(["A", "B"] as const).map((d) =>
-            byDivision[d].length ? (
-              <optgroup key={d} label={"Série " + d}>
+      <fieldset className="club-picker" role="radiogroup" aria-label="Seu clube">
+        <legend><h3>2 · Seu clube</h3></legend>
+        {(["A", "B"] as const).map((d) =>
+          byDivision[d].length ? (
+            <div key={d} className="club-picker__division">
+              <span className="muted small">Série {d}</span>
+              <div className="club-picker__grid">
                 {byDivision[d].map((c) => (
-                  <option key={c.club_uid} value={c.club_uid}>
-                    {c.short_name}
-                  </option>
+                  <label key={c.club_uid} className={`club-pick${userClub === c.club_uid ? " is-on" : ""}`}>
+                    <input type="radio" name="user-club" value={c.club_uid} checked={userClub === c.club_uid}
+                      onChange={() => setUserClub(c.club_uid)} aria-label={c.short_name} />
+                    <ClubCrest clubUid={c.club_uid} name={c.short_name} size={44} />
+                    <span>{c.short_name}</span>
+                  </label>
                 ))}
-              </optgroup>
-            ) : null,
-          )}
-        </select>
-      </label>
+              </div>
+            </div>
+          ) : null,
+        )}
+      </fieldset>
       <p className="muted small">
         Seu clube participa obrigatoriamente.{" "}
         {format === "league"
@@ -138,8 +142,8 @@ export function SessionForm({
       </p>
 
       {error && <Notice kind="error">{error}</Notice>}
-      <button type="submit" className="btn btn--primary btn--block" disabled={busy}>
-        {busy ? "Iniciando…" : "Iniciar sessão"}
+      <button type="submit" className="btn btn--cta btn--block" disabled={busy}>
+        {busy ? "Preparando…" : "Começar partida ▶"}
       </button>
 
       <ConfirmDialog

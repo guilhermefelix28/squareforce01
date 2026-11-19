@@ -1,7 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useSound } from "../audio/crowd";
+import { PhaseStepper, phaseStep } from "../components/GameUi";
 import { useHealth } from "../hooks/useHealth";
+import { AdminPage } from "../pages/AdminPage";
 import { AuctionPage } from "../pages/AuctionPage";
-import { DataPage } from "../pages/DataPage";
 import { EndPage } from "../pages/EndPage";
 import { HomePage } from "../pages/HomePage";
 import { LineupPage } from "../pages/LineupPage";
@@ -9,31 +11,34 @@ import { MatchPage } from "../pages/MatchPage";
 import { PostMatchPage } from "../pages/PostMatchPage";
 import { SeasonPage, type SeasonTab } from "../pages/SeasonPage";
 import { SessionPage } from "../pages/SessionPage";
+import { TacticPage } from "../pages/TacticPage";
 import { TradingPage } from "../pages/TradingPage";
 import type { Session } from "../types/api";
+import { phaseHome } from "./phase";
 import { SessionProvider, useSession } from "./SessionContext";
 import { useTheme } from "./theme";
 
 export type Route =
-  | { page: "home" | "data" | "session" | "auction" | "trading" | "escalacao" | "partida" | "encerramento" }
+  | { page: "home" | "admin" | "session" | "tatica" | "auction" | "trading" | "escalacao" | "partida" | "encerramento" }
   | { page: "temporada"; tab: SeasonTab }
   | { page: "pos"; matchId: string };
 
 const SEASON_TABS: SeasonTab[] = ["central", "elenco", "calendario", "classificacao", "estatisticas", "resultados"];
-const SIMPLE = ["home", "data", "session", "auction", "trading", "escalacao", "partida", "encerramento"] as const;
+const SIMPLE = ["home", "admin", "session", "tatica", "auction", "trading", "escalacao", "partida", "encerramento"] as const;
 
 export function parseHash(hash: string): Route {
   const [head, arg] = hash.replace(/^#\/?/, "").split("/");
   if (head === "temporada") return { page: "temporada", tab: SEASON_TABS.includes(arg as SeasonTab) ? (arg as SeasonTab) : "central" };
   if (head === "pos" && arg) return { page: "pos", matchId: decodeURIComponent(arg) };
+  if (head === "nova") return { page: "session" };
   return { page: (SIMPLE as readonly string[]).includes(head) ? (head as (typeof SIMPLE)[number]) : "home" };
 }
 
-/** Navegação contextual (GDD §22): cada fase mostra as telas que fazem sentido nela. */
+/** Atalhos do menu "⋯" para a fase atual (a navegação principal é a ação de cada tela). */
 export function navItems(session: Session | null): { hash: string; page: string; label: string }[] {
   const phase = session?.status === "active" ? session.phase : null;
   const items = [{ hash: "#/home", page: "home", label: "Início" }];
-  items.push({ hash: "#/session", page: "session", label: "Competição" });
+  if (phase === "setup") items.push({ hash: "#/tatica", page: "tatica", label: "Tática" });
   if (phase === "setup" || phase === "auction" || phase === "squad_completion") items.push({ hash: "#/auction", page: "auction", label: "Leilão" });
   if (phase === "squad_completion" || phase === "trading") items.push({ hash: "#/trading", page: "trading", label: "Mercado" });
   if (phase === "competition" || phase === "finished") {
@@ -43,32 +48,49 @@ export function navItems(session: Session | null): { hash: string; page: string;
       items.push({ hash: "#/partida", page: "partida", label: "Partida" });
     } else items.push({ hash: "#/encerramento", page: "encerramento", label: "Encerramento" });
   }
-  if (!phase) items.push({ hash: "#/data", page: "data", label: "Dados" });
+  items.push({ hash: "#/session", page: "session", label: phase ? "Competição (detalhes e encerrar)" : "Nova partida" });
   return items;
 }
 
-/** Tela principal da fase atual (botão "Continuar"). */
-export function phaseHome(session: Session | null): string {
-  if (session?.status !== "active") return "#/session";
-  switch (session.phase) {
-    case "setup":
-    case "auction":
-      return "#/auction";
-    case "squad_completion":
-    case "trading":
-      return "#/trading";
-    case "competition":
-      return "#/temporada/central";
-    case "finished":
-      return "#/encerramento";
-    default:
-      return "#/session";
-  }
+export { phaseHome };
+
+function Menu({ items, current }: { items: ReturnType<typeof navItems>; current: string }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const close = (e: MouseEvent | KeyboardEvent) => {
+      if (e instanceof KeyboardEvent ? e.key === "Escape" : !ref.current?.contains(e.target as Node)) setOpen(false);
+    };
+    window.addEventListener("mousedown", close);
+    window.addEventListener("keydown", close);
+    return () => {
+      window.removeEventListener("mousedown", close);
+      window.removeEventListener("keydown", close);
+    };
+  }, [open]);
+  return (
+    <div className="menu" ref={ref}>
+      <button type="button" className="btn btn--ghost btn--small icon-btn" aria-haspopup="true" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+        ☰ <span className="visually-hidden">Menu</span>
+      </button>
+      {open && (
+        <nav className="menu__list" aria-label="Menu do jogo">
+          {items.map((p) => (
+            <a key={p.hash} href={p.hash} aria-current={current === p.page ? "page" : undefined} onClick={() => setOpen(false)}>
+              {p.label}
+            </a>
+          ))}
+        </nav>
+      )}
+    </div>
+  );
 }
 
 function Shell() {
   const [route, setRoute] = useState<Route>(() => parseHash(window.location.hash));
   const { theme, toggle } = useTheme();
+  const sound = useSound();
   const { health, connection, error, refresh } = useHealth();
   const { session, live, lostMessage, restoring } = useSession();
 
@@ -86,9 +108,23 @@ function Shell() {
   };
   const go = (p: string) => navigate(`#/${p}`);
 
+  // mudança de fase vinda do servidor: o jogo conduz à tela da nova fase
+  const phaseKey = session?.status === "active" ? `${session.id}:${session.phase}:${session.user_formation ?? ""}` : null;
+  const lastPhase = useRef(phaseKey);
+  useEffect(() => {
+    const prev = lastPhase.current;
+    lastPhase.current = phaseKey;
+    if (!prev || !phaseKey || prev === phaseKey || prev.split(":")[0] !== phaseKey.split(":")[0]) return;
+    const target = phaseHome(session);
+    const here = window.location.hash || "#/home";
+    // no leilão/mercado, a própria tela mostra o resumo e oferece o próximo passo
+    if (here.startsWith("#/auction") || here.startsWith("#/trading") || here.startsWith("#/temporada") || here.startsWith("#/partida") || here.startsWith("#/pos")) return;
+    if (here !== target) navigate(target);
+  }, [phaseKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const importsBlocked = session?.status === "active" || !!health?.active_session;
   const active = session?.status === "active";
-  const items = navItems(session);
+  const step = active ? phaseStep(session.phase, !!session.user_formation) : null;
 
   return (
     <div className="app">
@@ -106,28 +142,29 @@ function Shell() {
         <a href="#/home" className="brand" aria-label="SquadForce — início">
           <img src={theme === "dark" ? "/brand/logo-dark.png" : "/brand/logo-light.png"} alt="SquadForce" />
         </a>
-        <nav className="tabs" aria-label="Navegação principal">
-          {items.map((p) => (
-            <a key={p.hash} href={p.hash} className={route.page === p.page ? "is-active" : ""} aria-current={route.page === p.page ? "page" : undefined}>
-              {p.label}
-            </a>
-          ))}
-        </nav>
+        {step && <PhaseStepper current={step} />}
         <div className="topbar__end">
-          <span className={`conn conn--${connection}`} role="status" aria-live="polite">
+          <span className={`conn conn--${connection}`} role="status" aria-live="polite" title="Conexão com o servidor">
             <span className="conn__dot" aria-hidden />
-            {connection === "online" ? (active && !live ? "Reconectando sessão…" : "Servidor online") : connection === "offline" ? "Servidor offline" : "Conectando…"}
+            <span className="hide-sm">
+              {connection === "online" ? (active && !live ? "Reconectando sessão…" : "Servidor online") : connection === "offline" ? "Servidor offline" : "Conectando…"}
+            </span>
           </span>
-          <button type="button" className="btn btn--ghost btn--small" onClick={toggle} aria-label={`Alternar para tema ${theme === "dark" ? "claro" : "escuro"}`}>
-            {theme === "dark" ? "☀ Claro" : "☾ Escuro"}
+          <button type="button" className="btn btn--ghost btn--small icon-btn" onClick={sound.toggle} aria-pressed={sound.on}
+            aria-label={sound.on ? "Desligar som da torcida" : "Ligar som da torcida"} title="Som da torcida">
+            {sound.on ? "🔊" : "🔇"}
           </button>
+          <button type="button" className="btn btn--ghost btn--small icon-btn" onClick={toggle} aria-label={`Alternar para tema ${theme === "dark" ? "claro" : "escuro"}`}>
+            {theme === "dark" ? "☀" : "☾"}
+          </button>
+          <Menu items={navItems(session)} current={route.page} />
         </div>
       </header>
       <main className="content" id="conteudo" tabIndex={-1}>
         {lostMessage && route.page !== "session" && (
           <div className="banner banner--warning" role="alert">
             <strong>Sua competição não pode mais ser recuperada.</strong> {lostMessage} O servidor não guarda progresso
-            (sem salvamento persistente). <a href="#/session">Iniciar nova competição</a>
+            (sem salvamento persistente). <a href="#/session">Iniciar nova partida</a>
           </div>
         )}
         {restoring ? (
@@ -135,13 +172,14 @@ function Shell() {
         ) : (
           <>
             {route.page === "home" && (
-              <HomePage health={health} connection={connection} error={error} session={session} onRetry={refresh} go={go}
-                continueTo={() => navigate(phaseHome(session))} />
+              <HomePage health={health} connection={connection} error={error} session={session} onRetry={refresh}
+                onStart={() => navigate("#/session")} continueTo={() => navigate(phaseHome(session))} />
             )}
-            {route.page === "data" && <DataPage importsBlocked={importsBlocked} onDataChanged={refresh} />}
-            {route.page === "session" && <SessionPage onSessionChanged={refresh} />}
-            {route.page === "auction" && <AuctionPage go={go} />}
-            {route.page === "trading" && <TradingPage go={go} />}
+            {route.page === "admin" && <AdminPage importsBlocked={importsBlocked} onDataChanged={refresh} health={health} />}
+            {route.page === "session" && <SessionPage onSessionChanged={refresh} navigate={navigate} />}
+            {route.page === "tatica" && <TacticPage navigate={navigate} />}
+            {route.page === "auction" && <AuctionPage go={go} navigate={navigate} />}
+            {route.page === "trading" && <TradingPage go={go} navigate={navigate} />}
             {route.page === "temporada" && <SeasonPage tab={route.tab} navigate={navigate} />}
             {route.page === "escalacao" && <LineupPage navigate={navigate} />}
             {route.page === "partida" && <MatchPage navigate={navigate} />}
@@ -150,7 +188,6 @@ function Shell() {
           </>
         )}
       </main>
-      <footer className="footer muted small">SquadForce · Football Strategy Game</footer>
     </div>
   );
 }

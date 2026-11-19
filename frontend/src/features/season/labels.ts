@@ -29,7 +29,7 @@ const EVENT_LABEL: Record<string, string> = {
   red_card: "Cartão vermelho",
   injury: "Lesão",
   substitution: "Substituição",
-  penalty_awarded: "Pênalti marcado",
+  penalty_awarded: "Pênalti!",
   save: "Defesa",
   shootout_kick: "Cobrança de pênalti",
   shootout_end: "Fim da disputa de pênaltis",
@@ -81,6 +81,9 @@ export function describeEvent(e: { type: string; player_name?: string | null; ot
       return `Entra ${e.player_name ?? "?"}, sai ${e.other_name ?? "?"}`;
     case "injury":
       return `${who} lesionado`;
+    case "penalty_awarded":
+      // o motor registra quem sofreu (player) e quem cometeu (other); hoje não há pênalti por toque de mão (DR-06)
+      return e.other_name ? `Falta de ${e.other_name} em ${who}` : `${who} sofre a falta`;
     case "posture_change":
       return `Nova postura: ${postureLabel(String(e.data?.posture ?? ""))}`;
     case "shootout_kick":

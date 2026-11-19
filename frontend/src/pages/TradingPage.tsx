@@ -3,13 +3,14 @@ import { ApiError, newIdempotencyKey } from "../api/client";
 import { getSession, listClubs, startTrading } from "../api/endpoints";
 import { useSession } from "../app/SessionContext";
 import { ConfirmDialog } from "../components/ConfirmDialog";
+import { ActionBar, PhaseBanner } from "../components/GameUi";
 import { Notice } from "../components/Notice";
 import { formatMoneyShort } from "../domain/money";
 import { TradingBoard } from "../features/trading/TradingBoard";
 import { useTrading } from "../features/trading/useTrading";
 import type { Club } from "../types/api";
 
-export function TradingPage({ go }: { go: (page: "auction" | "session") => void }) {
+export function TradingPage({ go, navigate }: { go: (page: string) => void; navigate: (h: string) => void }) {
   const { session, setSession } = useSession();
   const [clubs, setClubs] = useState<Club[]>([]);
   const [confirm, setConfirm] = useState(false);
@@ -51,7 +52,9 @@ export function TradingPage({ go }: { go: (page: "auction" | "session") => void 
   const names = new Map(clubs.map((c) => [c.club_uid, c.short_name]));
   return (
     <div className="stack">
-      <h2>Mercado de negociações</h2>
+      <PhaseBanner kicker="Etapa 3" title="Mercado de negociações">
+        {phase === "trading" ? "Troque jogadores com os bots para fechar a sua formação." : undefined}
+      </PhaseBanner>
       {!sid && (
         <Notice kind="info" title="Nenhuma competição ativa">
           <button type="button" className="btn btn--small btn--ghost" onClick={() => go("session")}>Ir para Competição</button>
@@ -67,15 +70,15 @@ export function TradingPage({ go }: { go: (page: "auction" | "session") => void 
       {pollError && visible && <Notice kind="warning">{pollError} Tentando novamente…</Notice>}
 
       {phase === "squad_completion" && (
-        <section className="card">
+        <section className="card" style={{ maxWidth: 720, margin: "0 auto" }}>
           <h3>Elencos completos</h3>
           <p className="muted">
             O mercado dura 3 minutos, sem pausa. Trocas de um jogador por outro, com dinheiro adicional opcional pago por
             quem propõe. Cada clube pode concluir até 3 negociações e ter uma proposta pendente por vez.
           </p>
-          <button type="button" className="btn btn--primary" onClick={() => setConfirm(true)} disabled={busy}>
-            Iniciar negociações
-          </button>
+          <ActionBar>
+            <button type="button" className="btn btn--cta" onClick={() => setConfirm(true)} disabled={busy}>Abrir o mercado ▶</button>
+          </ActionBar>
         </section>
       )}
 
@@ -90,7 +93,9 @@ export function TradingPage({ go }: { go: (page: "auction" | "session") => void 
             {state.history.length} negociações concluídas. Você fez {state.completed_trades} e terminou com saldo de{" "}
             {formatMoneyShort(state.budget)}.
           </p>
-          <a className="btn btn--primary" href="#/temporada/central">Ir para a competição</a>
+          <ActionBar>
+            <button type="button" className="btn btn--cta" onClick={() => navigate("#/temporada/central")}>Começar a temporada ▶</button>
+          </ActionBar>
           <ol className="results">
             {state.history.map((r) => (
               <li key={r.proposal_id}>

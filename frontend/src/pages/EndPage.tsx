@@ -1,6 +1,7 @@
 /** Encerramento (GDD §21): campeão, campanha do usuário, rankings e premiações finais. Nova competição. */
 import { useEffect, useState } from "react";
 import { getSeasonSummary } from "../api/endpoints";
+import { ActionBar, PhaseBanner } from "../components/GameUi";
 import { Notice } from "../components/Notice";
 import { Club, FixtureList } from "../features/season/SeasonParts";
 import { useClubNames, useSeason } from "../features/season/useSeason";
@@ -37,7 +38,9 @@ export function EndPage({ navigate }: { navigate: (h: string) => void }) {
   const mine = summary.user_campaign;
   return (
     <div className="stack">
+      <PhaseBanner kicker="Fim de temporada" title="Encerramento" />
       <section className="card hero champion">
+        <span className="trophy" aria-hidden>🏆</span>
         <span className="muted small">{state.kind === "cup" ? "Campeão da Copa" : "Campeão da Liga"}</span>
         {summary.champion_club_uid != null ? (
           <Club uid={summary.champion_club_uid} names={names} user={user} size={64} />
@@ -98,7 +101,9 @@ export function EndPage({ navigate }: { navigate: (h: string) => void }) {
       <section className="card">
         <h3>Nova competição</h3>
         <p className="muted">O progresso não é salvo: ao iniciar outra competição, esta será encerrada (com confirmação).</p>
-        <button type="button" className="btn btn--primary" onClick={() => navigate("#/session")}>Configurar nova competição</button>
+        <ActionBar>
+          <button type="button" className="btn btn--cta" onClick={() => navigate("#/session")}>Nova partida ▶</button>
+        </ActionBar>
       </section>
     </div>
   );

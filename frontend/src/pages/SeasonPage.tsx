@@ -4,23 +4,26 @@
  */
 import { useEffect, useState } from "react";
 import { advanceRound, getCalendar, getLineup, getSquad, playRound, startSeason } from "../api/endpoints";
+import { Jumbotron } from "../features/match/LiveParts";
+import { ActionBar, Drawer, PhaseBanner } from "../components/GameUi";
 import { Notice } from "../components/Notice";
-import { displayPosition } from "../domain/positions";
+import { PositionBadge } from "../components/PlayerCard";
+import { byPosition } from "../domain/positions";
 import { Club, BracketView, FixtureList, StandingsTable } from "../features/season/SeasonParts";
 import { StatsCenter } from "../features/season/StatsCenter";
 import { postureLabel } from "../features/season/labels";
 import { useCommand } from "../features/season/useCommand";
 import { useClubNames, useSeason } from "../features/season/useSeason";
-import type { Calendar, Lineup, Position, SeasonFixture, SeasonState, SquadPlayer } from "../types/api";
+import type { Calendar, Lineup, SeasonFixture, SeasonState, SquadPlayer } from "../types/api";
 
 export type SeasonTab = "central" | "elenco" | "calendario" | "classificacao" | "estatisticas" | "resultados";
-const TABS: { id: SeasonTab; label: string }[] = [
-  { id: "central", label: "Próximo confronto" },
-  { id: "elenco", label: "Meu elenco" },
-  { id: "calendario", label: "Calendário" },
-  { id: "classificacao", label: "Classificação" },
-  { id: "estatisticas", label: "Estatísticas" },
-  { id: "resultados", label: "Resultados" },
+/** Painéis da central (abrem sobre a central, sem trocar de tela). */
+const TABS: { id: Exclude<SeasonTab, "central">; label: string; icon: string; hint: string }[] = [
+  { id: "elenco", label: "Meu elenco", icon: "👥", hint: "Situação e números" },
+  { id: "calendario", label: "Calendário", icon: "📅", hint: "Todas as rodadas" },
+  { id: "classificacao", label: "Classificação", icon: "🏆", hint: "Tabela completa" },
+  { id: "estatisticas", label: "Estatísticas", icon: "📊", hint: "Rankings da temporada" },
+  { id: "resultados", label: "Resultados", icon: "📋", hint: "Histórico de partidas" },
 ];
 
 export function SeasonPage({ tab, navigate }: { tab: SeasonTab; navigate: (hash: string) => void }) {
@@ -38,42 +41,49 @@ export function SeasonPage({ tab, navigate }: { tab: SeasonTab; navigate: (hash:
   }
   if (notStarted) {
     return (
-      <section className="card hero">
-        <h2>Tudo pronto para a competição</h2>
-        <p className="muted">Os elencos estão fechados. Inicie a Liga/Copa para disputar o primeiro confronto.</p>
+      <div className="stack">
+        <PhaseBanner kicker="Etapa 4" title="Tudo pronto para a temporada">
+          Os elencos estão fechados. Comece a Liga/Copa e dispute o primeiro confronto.
+        </PhaseBanner>
         {cmd.error && <Notice kind="error">{cmd.error.message}</Notice>}
-        <div className="hero__actions">
-          <button type="button" className="btn btn--primary" disabled={cmd.busy}
+        <ActionBar>
+          <button type="button" className="btn btn--cta" disabled={cmd.busy}
             onClick={() => void cmd.run(async (k) => { setState(await startSeason(sid, k)); await refresh(); })}>
-            {cmd.busy ? "Iniciando…" : "Iniciar competição"}
+            {cmd.busy ? "Iniciando…" : "Iniciar competição ▶"}
           </button>
-        </div>
-      </section>
+        </ActionBar>
+      </div>
     );
   }
   if (!state) return <p className="muted" role="status">{error ?? "Carregando competição…"}</p>;
 
   const label = state.kind === "cup" ? "Chaveamento" : "Classificação";
+  const panel = TABS.find((t) => t.id === tab);
+  const close = () => navigate("#/temporada/central");
+  const progress = state.phase === "finished" ? `${state.total_rounds} rodadas` : `rodada ${state.round_number} de ${state.total_rounds}`;
   return (
     <div className="stack">
-      <div className="season-head">
-        <h2>{state.kind === "cup" ? "Copa" : "Liga"} · {state.phase === "finished" ? "Encerrada" : state.round_label}</h2>
-        <span className="muted small">{state.phase === "finished" ? `${state.total_rounds} rodadas` : `${state.round_number} de ${state.total_rounds}`}</span>
-      </div>
-      <nav className="subtabs" aria-label="Central da competição">
+      <PhaseBanner kicker={`${state.kind === "cup" ? "Copa" : "Liga"} · ${progress}`} title={state.phase === "finished" ? "Temporada encerrada" : state.round_label} />
+      <nav className="hub-tiles" aria-label="Central da competição">
         {TABS.map((t) => (
-          <a key={t.id} href={`#/temporada/${t.id}`} className={tab === t.id ? "is-active" : ""} aria-current={tab === t.id ? "page" : undefined}>
-            {t.id === "classificacao" ? label : t.label}
-          </a>
+          <button key={t.id} type="button" className="hub-tile" onClick={() => navigate(`#/temporada/${t.id}`)} aria-current={tab === t.id ? "page" : undefined}>
+            <span className="hub-tile__icon" aria-hidden>{t.icon}</span>
+            <strong>{t.id === "classificacao" ? label : t.label}</strong>
+            <span>{t.hint}</span>
+          </button>
         ))}
       </nav>
       {error && <Notice kind="warning">{error} Tentando sincronizar…</Notice>}
-      {tab === "central" && <NextMatch sid={sid} state={state} names={names} navigate={navigate} onChange={(s) => { setState(s); void refresh(); }} />}
-      {tab === "elenco" && <SquadView sid={sid} />}
-      {tab === "calendario" && <CalendarView sid={sid} state={state} names={names} navigate={navigate} />}
-      {tab === "classificacao" && <TableView sid={sid} state={state} names={names} navigate={navigate} />}
-      {tab === "estatisticas" && <StatsCenter sid={sid} state={state} names={names} />}
-      {tab === "resultados" && <ResultsView sid={sid} state={state} names={names} navigate={navigate} />}
+      <NextMatch sid={sid} state={state} names={names} navigate={navigate} onChange={(s) => { setState(s); void refresh(); }} />
+      {panel && (
+        <Drawer title={panel.id === "classificacao" ? label : panel.label} onClose={close}>
+          {tab === "elenco" && <SquadView sid={sid} />}
+          {tab === "calendario" && <CalendarView sid={sid} state={state} names={names} navigate={navigate} />}
+          {tab === "classificacao" && <TableView sid={sid} state={state} names={names} navigate={navigate} />}
+          {tab === "estatisticas" && <StatsCenter sid={sid} state={state} names={names} />}
+          {tab === "resultados" && <ResultsView sid={sid} state={state} names={names} navigate={navigate} />}
+        </Drawer>
+      )}
     </div>
   );
 }
@@ -102,9 +112,9 @@ function NextMatch({ sid, state, names, navigate, onChange }: {
         ) : (
           <Notice kind="warning" title="Campeão indefinido">Empate no topo não resolvido pelos critérios de desempate.</Notice>
         )}
-        <div className="hero__actions">
-          <button type="button" className="btn btn--primary" onClick={() => navigate("#/encerramento")}>Ver encerramento e premiações</button>
-        </div>
+        <ActionBar>
+          <button type="button" className="btn btn--cta" onClick={() => navigate("#/encerramento")}>Ver encerramento e premiações ▶</button>
+        </ActionBar>
       </section>
     );
   }
@@ -126,20 +136,18 @@ function NextMatch({ sid, state, names, navigate, onChange }: {
 
       {state.phase === "ready" && mine && lineup?.has_match && (
         <section className="card next-match">
-          <span className="muted small">{state.round_label}{lineup.is_home == null ? " · campo neutro" : lineup.is_home ? " · em casa" : " · fora"}</span>
-          <div className="versus">
-            <Club uid={mine.home_club_uid} names={names} user={user} size={44} />
-            <span className="fixture__x">×</span>
-            <Club uid={mine.away_club_uid} names={names} user={user} size={44} />
-          </div>
+          <span className="muted small">Seu próximo jogo · {state.round_label}{lineup.is_home == null ? " · campo neutro" : lineup.is_home ? " · em casa" : " · fora"}</span>
+          <Jumbotron home={mine.home_club_uid} away={mine.away_club_uid} names={names} user={user} label="VS" />
           <p className="muted small">
             {lineup.formation} · postura inicial {postureLabel(lineup.posture ?? "equilibrada")} · escalação {lineup.source === "user" ? "sua" : "sugerida automaticamente"}
           </p>
           {lineup.note && <Notice kind="warning" title="Sua escalação precisou ser refeita">{lineup.note}</Notice>}
-          <div className="hero__actions">
-            <button type="button" className="btn btn--ghost" onClick={() => navigate("#/escalacao")}>Escalação e preparação tática</button>
-            <button type="button" className="btn btn--primary" onClick={() => navigate("#/partida")}>{lineup.locked ? "Voltar à partida" : "Ir para a partida"}</button>
-          </div>
+          <ActionBar>
+            {!lineup.locked && <button type="button" className="btn btn--ghost" onClick={() => navigate("#/partida")}>Jogar com esta escalação</button>}
+            <button type="button" className="btn btn--cta" onClick={() => navigate(lineup.locked ? "#/partida" : "#/escalacao")}>
+              {lineup.locked ? "Voltar à partida ▶" : "Escalar e jogar ▶"}
+            </button>
+          </ActionBar>
           {lineup.opponent && (
             <details>
               <summary>Adversário: informações públicas</summary>
@@ -153,7 +161,9 @@ function NextMatch({ sid, state, names, navigate, onChange }: {
         <section className="card">
           <h3>{state.round_label}</h3>
           <p className="muted">{state.byes.includes(user) ? "Seu clube folga nesta rodada." : "Seu clube não disputa esta fase."} Os demais confrontos serão simulados em paralelo.</p>
-          <button type="button" className="btn btn--primary" onClick={play} disabled={cmd.busy}>{cmd.busy ? "Simulando…" : "Simular rodada"}</button>
+          <ActionBar>
+            <button type="button" className="btn btn--cta" onClick={play} disabled={cmd.busy}>{cmd.busy ? "Simulando…" : "Simular rodada ▶"}</button>
+          </ActionBar>
         </section>
       )}
 
@@ -166,12 +176,12 @@ function NextMatch({ sid, state, names, navigate, onChange }: {
           <h3>Resultados · {state.round_label}</h3>
           <FixtureList fixtures={state.fixtures} names={names} user={user} onOpen={(id) => navigate(`#/pos/${id}`)} />
           {state.byes.length > 0 && <p className="muted small">Folga: {state.byes.map((b) => names.get(b) ?? b).join(", ")}</p>}
-          <div className="hero__actions">
+          <ActionBar>
             {mine && <button type="button" className="btn btn--ghost" onClick={() => navigate(`#/pos/${mine.match_id}`)}>Pós-partida</button>}
-            <button type="button" className="btn btn--primary" onClick={advance} disabled={cmd.busy}>
-              {state.round_number >= state.total_rounds ? "Encerrar competição" : "Próximo confronto"}
+            <button type="button" className="btn btn--cta" onClick={advance} disabled={cmd.busy}>
+              {state.round_number >= state.total_rounds ? "Encerrar competição ▶" : "Próximo confronto ▶"}
             </button>
-          </div>
+          </ActionBar>
         </section>
       )}
 
@@ -220,9 +230,9 @@ function SquadView({ sid }: { sid: string }) {
               <th className="num">Assist.</th><th className="num">Média</th><th className="num">Craque</th><th className="num">CA</th><th className="num">CV</th></tr>
           </thead>
           <tbody>
-            {squad.map((p) => (
+            {byPosition(squad, (p) => p.position).map((p) => (
               <tr key={p.player}>
-                <td><span className="tag">{displayPosition(p.position as Position)}</span></td>
+                <td><PositionBadge position={p.position} size="sm" /></td>
                 <td className="player-name">{p.name}</td>
                 <td className="num">{p.age ?? "—"}</td>
                 <td>{p.available ? <span className="pill pill--ok">Apto</span> : <span className="pill pill--danger">{p.unavailable_reason}</span>}</td>

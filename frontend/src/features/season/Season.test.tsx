@@ -23,13 +23,17 @@ function at(hash: string) {
 describe("navegação contextual", () => {
   it("mostra as telas de cada fase", () => {
     const labels = (phase: string | null) => navItems(phase ? ({ ...SESSION, phase } as never) : null).map((i) => i.label);
-    expect(labels(null)).toEqual(["Início", "Competição", "Dados"]);
+    expect(labels(null)).toEqual(["Início", "Nova partida"]);
+    expect(labels("setup")).toContain("Tática");
     expect(labels("auction")).toContain("Leilão");
     expect(labels("trading")).toContain("Mercado");
     expect(labels("trading")).not.toContain("Leilão");
-    expect(labels("competition")).toEqual(["Início", "Competição", "Central", "Escalação", "Partida"]);
+    expect(labels("competition")).toEqual(["Início", "Central", "Escalação", "Partida", "Competição (detalhes e encerrar)"]);
+    expect(labels(null)).not.toContain("Dados"); // área de dados oculta (DR-04)
     expect(labels("finished")).toContain("Encerramento");
     expect(phaseHome({ ...SESSION, phase: "competition" } as never)).toBe("#/temporada/central");
+    expect(phaseHome({ ...SESSION, phase: "setup" } as never)).toBe("#/tatica");
+    expect(phaseHome({ ...SESSION, phase: "setup", user_formation: "4-4-2" } as never)).toBe("#/auction");
   });
 
   it("pular para o conteúdo move o foco sem trocar de tela", async () => {
@@ -48,6 +52,8 @@ describe("navegação contextual", () => {
     expect(parseHash("#/temporada/xyz")).toEqual({ page: "temporada", tab: "central" });
     expect(parseHash("#/pos/C-R1-M01")).toEqual({ page: "pos", matchId: "C-R1-M01" });
     expect(parseHash("#/qualquer")).toEqual({ page: "home" });
+    expect(parseHash("#/data")).toEqual({ page: "home" }); // a área de dados não é mais uma rota pública
+    expect(parseHash("#/admin")).toEqual({ page: "admin" });
   });
 });
 
@@ -87,8 +93,9 @@ describe("central da temporada", () => {
       [`GET ${S}/season/lineup`]: () => json(200, LINEUP),
     });
     at("#/temporada/central");
-    await userEvent.click(await screen.findByRole("button", { name: "Iniciar competição" }));
-    expect(await screen.findByRole("button", { name: "Ir para a partida" })).toBeInTheDocument();
+    await userEvent.click(await screen.findByRole("button", { name: /Iniciar competição/ }));
+    expect(await screen.findByRole("button", { name: /Escalar e jogar/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Jogar com esta escalação" })).toBeInTheDocument();
     const post = calls.find((c) => c.method === "POST")!;
     expect(header(post.init, "Idempotency-Key")).toBeTruthy();
   });
@@ -105,7 +112,7 @@ describe("central da temporada", () => {
     expect(await screen.findByText("Resultados · Rodada 1")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Ver partida .*2 – 1/ })).toBeInTheDocument();
     expect(calls.some((c) => c.path.endsWith("/advance"))).toBe(false);
-    await userEvent.click(screen.getByRole("button", { name: "Próximo confronto" }));
+    await userEvent.click(screen.getByRole("button", { name: /Próximo confronto/ }));
     expect(await screen.findByRole("heading", { name: /Rodada 2/ })).toBeInTheDocument();
   });
 
@@ -118,7 +125,7 @@ describe("central da temporada", () => {
     });
     at("#/temporada/central");
     expect(await screen.findByText(/Seu clube folga/)).toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: "Simular rodada" }));
+    await userEvent.click(screen.getByRole("button", { name: /Simular rodada/ }));
     expect(await screen.findByText("A rodada não foi consolidada")).toBeInTheDocument();
     expect(screen.getByText(/só as partidas que falharam serão repetidas/)).toBeInTheDocument();
   });
@@ -131,6 +138,8 @@ describe("central da temporada", () => {
       [`GET ${S}/season/calendar`]: () => json(200, CALENDAR),
     });
     at("#/temporada/estatisticas");
+    // painel sobre a central (sem trocar de tela)
+    expect(await screen.findByRole("dialog", { name: "Estatísticas" })).toBeInTheDocument();
     const tabs = await screen.findAllByRole("tab");
     expect(tabs.map((t) => t.textContent)).toEqual(["Classificação", "Jogadores", "Clubes", "Estatísticas avançadas"]);
     await userEvent.click(screen.getByRole("tab", { name: "Jogadores" }));
@@ -157,7 +166,7 @@ describe("central da temporada", () => {
     await userEvent.click(screen.getByRole("checkbox", { name: /Somente meus jogos/ }));
     await userEvent.click(screen.getAllByRole("button", { name: /Ver partida/ })[0]);
     expect(await screen.findByText("Craque da Partida")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Próximo confronto" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Próxima rodada/ })).toBeInTheDocument();
   });
 });
 
@@ -188,6 +197,7 @@ describe("escalação", () => {
     await userEvent.click(screen.getByRole("radio", { name: "Ofensiva" }));
     await userEvent.click(screen.getByRole("button", { name: "Salvar escalação" }));
     expect(await screen.findByText("Escalação salva no servidor.")).toBeInTheDocument();
+    expect(screen.queryByText(/não é oficial/)).not.toBeInTheDocument();
     expect(body!.posture).toBe("ofensiva");
     expect((body!.starters as number[])[0]).toBe(1008);
     expect(header(calls.find((c) => c.method === "POST")!.init, "Idempotency-Key")).toBeTruthy();
@@ -210,6 +220,40 @@ describe("escalação", () => {
     fireEvent.drop(target, { dataTransfer });
     expect(screen.getByRole("button", { name: /Vaga ZAG: Atleta 13,/ })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Salvar escalação" })).toBeEnabled();
+  });
+
+  it("arrastar um titular para outra linha troca a formação; desenho não oficial volta", async () => {
+    fakeApi({
+      ...baseRoutes(),
+      [`GET ${S}/season`]: () => json(200, SEASON_READY),
+      [`GET ${S}/season/lineup`]: () => json(200, LINEUP),
+      [`GET ${S}/season/squad`]: () => json(200, SQUAD),
+    });
+    at("#/escalacao");
+    const zag = await screen.findByRole("button", { name: /Vaga ZAG: Atleta 3,/ });
+    const field = screen.getByRole("group", { name: "Campo: titulares por vaga" });
+    field.getBoundingClientRect = () => ({ left: 0, top: 0, right: 680, bottom: 900, width: 680, height: 900, x: 0, y: 0, toJSON() {} });
+    const data = new Map<string, string>();
+    const dataTransfer = { setData: (k: string, v: string) => data.set(k, v), getData: (k: string) => data.get(k) ?? "", effectAllowed: "" };
+    // jsdom não tem DragEvent com coordenadas: evento de mouse com dataTransfer
+    const dropAt = (type: string, x: number, y: number) => {
+      const e = new MouseEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: y });
+      Object.defineProperty(e, "dataTransfer", { value: dataTransfer });
+      fireEvent(field, e);
+    };
+    // 4-3-3: zagueiro levado à linha do meio (y = 45%) => 3-4-3
+    fireEvent.dragStart(zag, { dataTransfer });
+    dropAt("dragover", 340, 405);
+    dropAt("drop", 340, 405);
+    expect(await screen.findByText("Formação: 3-4-3")).toBeInTheDocument();
+    expect(screen.getByLabelText("Formação")).toHaveValue("3-4-3");
+    expect(screen.getAllByRole("button", { name: /^Vaga ZAG/ })).toHaveLength(3);
+    // meio-campista levado ao ataque (y = 14%) => 3-3-4: não oficial, nada muda
+    const mid = screen.getAllByRole("button", { name: /^Vaga ME/ })[0];
+    fireEvent.dragStart(mid, { dataTransfer });
+    dropAt("drop", 340, 126);
+    expect(await screen.findByText("Essa formação não é oficial")).toBeInTheDocument();
+    expect(screen.getByLabelText("Formação")).toHaveValue("3-4-3");
   });
 
   it("mostra recusa do servidor", async () => {
@@ -247,11 +291,15 @@ describe("partida", () => {
     });
     at("#/partida");
     await userEvent.click(await screen.findByRole("radio", { name: "60 s" }));
-    await userEvent.click(screen.getByRole("button", { name: "Iniciar partida" }));
+    await userEvent.click(screen.getByRole("button", { name: /Iniciar partida/ }));
     expect(await screen.findByText("34'")).toBeInTheDocument();
     expect(screen.getByLabelText("Placar")).toHaveTextContent("1 – 0");
     expect(screen.getAllByRole("meter")).toHaveLength(11);
-    expect(screen.getByText(/substituições 0\/5/)).toBeInTheDocument();
+    expect(screen.getByText(/Substituições 0\/5/)).toBeInTheDocument();
+    // DR-06: campo das duas equipes e outros jogos da rodada
+    expect(screen.getByRole("img", { name: /Campo tático/ })).toBeInTheDocument();
+    expect(within(screen.getByRole("list", { name: "Outros jogos da rodada" })).getAllByRole("listitem")).toHaveLength(1);
+    expect(screen.getByText(/Falta de Rival 4 em Atleta 9/)).toBeInTheDocument(); // autor e vítima do pênalti
     expect(JSON.parse(String(calls.find((c) => c.path.endsWith("/live/start"))!.init.body)).speed).toBe("60s");
     await userEvent.click(screen.getByRole("button", { name: "Ataque Total" }));
     await waitFor(() => expect(screen.getByRole("button", { name: "Ataque Total" })).toHaveAttribute("aria-pressed", "true"));
@@ -274,7 +322,7 @@ describe("encerramento", () => {
     expect(screen.getByText(/Sua campanha · 1º lugar/)).toBeInTheDocument();
     expect(screen.getByText("Artilheiro")).toBeInTheDocument();
     expect(screen.getByText("Melhor média de notas (mín. 50% dos jogos)")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Configurar nova competição" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Nova partida/ })).toBeInTheDocument();
   });
 
   it("campeão indefinido quando o desempate não resolve", async () => {
@@ -301,10 +349,10 @@ describe("sincronização de versão", () => {
       [`GET ${S}/season/summary`]: () => json(200, SUMMARY),
     });
     at("#/temporada/central");
-    expect(await screen.findByRole("link", { name: "Partida" })).toBeInTheDocument();
-    await userEvent.click(await screen.findByRole("button", { name: "Encerrar competição" }));
-    expect(await screen.findByRole("link", { name: "Encerramento" })).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "Partida" })).not.toBeInTheDocument();
+    expect(await screen.findByRole("listitem", { current: "step" })).toHaveTextContent("Temporada");
+    await userEvent.click(await screen.findByRole("button", { name: /Encerrar competição/ }));
+    expect(await screen.findByText("Competição encerrada")).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole("listitem", { current: "step" })).toHaveTextContent("Fim"));
   });
 });
 

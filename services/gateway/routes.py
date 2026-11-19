@@ -707,6 +707,12 @@ def _live_error(exc: LiveError) -> AppError:
     return AppError(status, code, exc.message)
 
 
+@router.get("/formations", response_model=list[FormationOut], tags=["season"])
+def official_formations(c: C) -> list[FormationOut]:
+    """As 11 formações oficiais (PM-01), disponíveis antes do leilão para a escolha da tática (DR-02)."""
+    return c.seasons.formations()
+
+
 @router.get("/sessions/{session_id}/season/formations", response_model=list[FormationOut], responses=ERR, tags=["season"])
 def season_formations(c: C, session_id: str) -> list[FormationOut]:
     """Formações oficiais (PM-01)."""

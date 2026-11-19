@@ -24,7 +24,8 @@ Qualquer alteração em `frontend/src/**`, estilos, tipos gerados ou testes Vite
 
 ## Regras do Game Design aplicáveis
 - §1/§22: web responsiva (computador e celular), temas claro e escuro, central de gerenciamento; leilão, mercado e partidas terão telas próprias (entregas futuras).
-- §3: exibir posições como GOL, LD, LE, ZAG, VOL, ME, ATA.
+- §3: exibir posições como GOL, LD, LE, ZAG, VOL, ME, ATA — **na ordem GOL · LD · ZAG · LE · VOL · ME · ATA** (DR-05);
+  selo colorido por setor (`PositionBadge`); listas agrupadas com `byPosition`.
 - §2: escudo por ID, senão iniciais (`ClubCrest`).
 - §5: nunca exibir overall, atributos ou valor interno no leilão.
 - §23: confirmação para encerrar/substituir competição; aviso de que não há salvamento.
@@ -49,6 +50,17 @@ Qualquer alteração em `frontend/src/**`, estilos, tipos gerados ou testes Vite
 - Eventos WebSocket chegam por `SessionContext.subscribe`. Âncoras `#id` não podem ser usadas como links
   (o hash é rota): use foco programático.
 - Testes: `Season.test.tsx` (fake API) e `src/api/journey.e2e.test.ts` (backend real com relógio acelerado).
+
+## Experiência de jogo (2026-11-19, diretrizes do responsável — spec `docs/superpowers/specs/2026-11-19-experiencia-de-jogo-design.md`)
+- Sem abas: casca de jogo (`app/App.tsx`) com etapas (`PhaseStepper`), menu ☰, som e tema; cada tela tem UMA ação
+  principal em `ActionBar` (`components/GameUi.tsx`); letreiros com `PhaseBanner`; painéis da central em `Drawer`.
+- Rotas: `#/` abertura, `#/session` (= `#/nova`), `#/tatica` (DR-02), `#/auction`, `#/trading`, `#/temporada/<painel>`,
+  `#/escalacao`, `#/partida`, `#/pos/<id>`, `#/encerramento`, `#/admin` (oculta, senha no servidor, DR-04).
+- Estilo "Noite de estádio" em `src/game.css` (tokens de setor, gramado, telão); fonte Oswald local (`@fontsource`).
+- Campo: `features/lineup/layout.ts` (linhas pelo nome da formação, sem sobreposição; `moveToRow` troca a formação
+  oficial ao arrastar um titular de linha). Partida: `features/match/LiveParts.tsx` (campo das duas equipes,
+  telão, outros jogos). Som sintetizado: `audio/crowd.ts` (sem arquivos de áudio).
+- Tema escuro é o padrão (ignora o SO); o claro continua no botão.
 
 ## Restrições e comportamentos proibidos
 - `fetch` direto fora de `api/client.ts`; tipos de API escritos à mão divergentes do OpenAPI.

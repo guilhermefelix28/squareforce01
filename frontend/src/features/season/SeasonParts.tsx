@@ -1,4 +1,5 @@
 import { ClubCrest } from "../../components/ClubCrest";
+import { Jumbotron } from "../match/LiveParts";
 import { displayPosition } from "../../domain/positions";
 import type { CupBracket, MatchReport, Position, SeasonFixture, StandingRow, TeamLineup } from "../../types/api";
 import { EVENT_ICON, STAT_LABELS, describeEvent, eventLabel, formatStat, postureLabel } from "./labels";
@@ -138,19 +139,13 @@ export function MatchReportView({ report, names, user }: { report: MatchReport; 
   const motm = report.man_of_the_match;
   return (
     <div className="stack">
-      <section className="card scoreboard" aria-label="Placar final">
-        <Club uid={sides[0]} names={names} user={user} size={40} />
-        <div className="scoreboard__score">
-          <strong>{report.score[0]} – {report.score[1]}</strong>
-          {report.shootout && <span className="muted small">Pênaltis {report.shootout[0]}–{report.shootout[1]}</span>}
-          {report.status !== "completed" && <span className="pill">Encerramento administrativo · oficial {report.official_score[0]}–{report.official_score[1]}</span>}
-        </div>
-        <Club uid={sides[1]} names={names} user={user} size={40} />
-      </section>
+      <Jumbotron home={sides[0]} away={sides[1]} names={names} user={user} score={report.score} minute="" finished shootout={report.shootout} />
+      {report.status !== "completed" && <span className="pill">Encerramento administrativo · oficial {report.official_score[0]}–{report.official_score[1]}</span>}
       {motm && (
         <section className="card motm">
+          <span className="trophy" style={{ fontSize: "2rem" }} aria-hidden>⭐</span>
           <span className="muted small">Craque da Partida</span>
-          <strong>{motm.name}</strong>
+          <strong className="display">{motm.name}</strong>
           <span>{names.get(motm.club_uid) ?? ""} · nota {motm.rating.toFixed(1)}</span>
         </section>
       )}
@@ -215,18 +210,27 @@ export function StatsCompare({ stats, labels = ["Mandante", "Visitante"] }: { st
   const h = stats.home ?? {};
   const a = stats.away ?? {};
   return (
-    <table className="compact stat-compare">
-      <caption className="visually-hidden">Estatísticas do confronto</caption>
-      <thead><tr><th className="num">{labels[0]}</th><th>Estatística</th><th className="num">{labels[1]}</th></tr></thead>
-      <tbody>
-        {STAT_LABELS.map((s) => (
-          <tr key={s.key}>
-            <td className="num">{formatStat(h[s.key], s)}</td>
-            <td className="muted">{s.label}</td>
-            <td className="num">{formatStat(a[s.key], s)}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <div className="statbars" aria-label={`Estatísticas: ${labels[0]} × ${labels[1]}`}>
+      <div className="live-legend">
+        <b className="home">{labels[0]}</b>
+        <b className="away">{labels[1]}</b>
+      </div>
+      {STAT_LABELS.map((s) => {
+        const hv = Number(h[s.key] ?? 0);
+        const av = Number(a[s.key] ?? 0);
+        const max = s.pct ? 100 : Math.max(hv, av, s.dec ? 0.5 : 1);
+        return (
+          <div key={s.key} className="statbar" role="group" aria-label={`${s.label}: ${formatStat(hv, s)} × ${formatStat(av, s)}`}>
+            <span className="statbar__label">{s.label}</span>
+            <span className="statbar__v">{formatStat(hv, s)}</span>
+            <span className="statbar__track" aria-hidden>
+              <span><i style={{ width: `${(hv / max) * 100}%` }} /></span>
+              <span><i style={{ width: `${(av / max) * 100}%` }} /></span>
+            </span>
+            <span className="statbar__v">{formatStat(av, s)}</span>
+          </div>
+        );
+      })}
+    </div>
   );
 }

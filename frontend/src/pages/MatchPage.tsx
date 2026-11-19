@@ -1,17 +1,52 @@
 /**
- * Partida (GDD §11, §16): placar, relógio, eventos, estatísticas, postura, condição física, substituições,
- * cartões e lesões. O relógio é do SERVIDOR (não pausa); o cliente só recebe eventos já ocorridos.
+ * Partida ao vivo (GDD §11, §16; DR-06): telão, campo tático das duas equipes, outros jogos da rodada, narração,
+ * estatísticas, postura, condição física e substituições. O relógio é do SERVIDOR (não pausa); o cliente só
+ * recebe eventos já ocorridos. Som da torcida nos gols (pode ser desligado na barra superior).
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ApiError } from "../api/client";
 import { changePosture, changeSpeed, getLineup, getLive, playRound, startLive } from "../api/endpoints";
+import { playGoal, playWhistle } from "../audio/crowd";
+import { ActionBar, PhaseBanner } from "../components/GameUi";
 import { Notice } from "../components/Notice";
-import { displayPosition } from "../domain/positions";
-import { Club, EventFeed, StatsCompare } from "../features/season/SeasonParts";
-import { POSTURES, SPEEDS, postureLabel } from "../features/season/labels";
+import { PositionBadge } from "../components/PlayerCard";
+import { Jumbotron, LivePitch, OtherMatches } from "../features/match/LiveParts";
+import { StatsCompare } from "../features/season/SeasonParts";
+import { EVENT_ICON, POSTURES, SPEEDS, describeEvent, eventLabel, postureLabel } from "../features/season/labels";
 import { useCommand } from "../features/season/useCommand";
 import { useClubNames, useSeason } from "../features/season/useSeason";
-import type { Lineup, LiveState, Position, Speed } from "../types/api";
+import type { Lineup, LiveState, Speed } from "../types/api";
+
+const KEY_EVENTS = new Set(["goal", "red_card", "penalty_awarded", "injury", "yellow_card", "substitution", "posture_change", "half_time", "full_time", "shootout_end"]);
+
+/** Efeitos de torcida/apito quando o placar ou o estado mudam (não toca ao reconectar no meio do jogo). */
+function useMatchSounds(live: LiveState | null) {
+  const prev = useRef<{ id: string; score: number[]; finished: boolean } | null>(null);
+  const [burst, setBurst] = useState<"us" | "them" | null>(null);
+  useEffect(() => {
+    if (!live) return;
+    const p = prev.current;
+    prev.current = { id: live.match_id, score: [...live.score], finished: live.finished };
+    if (!p || p.id !== live.match_id) {
+      if (live.minute <= 1 && !live.finished) playWhistle(1);
+      return;
+    }
+    for (const side of [0, 1]) {
+      if (live.score[side] > p.score[side]) {
+        const ours = side === live.user_side;
+        playGoal(ours);
+        setBurst(ours ? "us" : "them");
+      }
+    }
+    if (live.finished && !p.finished) playWhistle(3);
+  }, [live]);
+  useEffect(() => {
+    if (!burst) return;
+    const t = setTimeout(() => setBurst(null), 1800);
+    return () => clearTimeout(t);
+  }, [burst]);
+  return burst;
+}
 
 export function MatchPage({ navigate }: { navigate: (h: string) => void }) {
   const { sid, state, refresh } = useSeason();
@@ -22,6 +57,7 @@ export function MatchPage({ navigate }: { navigate: (h: string) => void }) {
   const [pollError, setPollError] = useState<string | null>(null);
   const cmd = useCommand();
   const inflight = useRef(false);
+  const burst = useMatchSounds(live);
 
   const poll = useCallback(async () => {
     if (!sid || inflight.current) return;
@@ -80,16 +116,9 @@ export function MatchPage({ navigate }: { navigate: (h: string) => void }) {
   if (!live) {
     return (
       <div className="stack">
-        <div className="season-head">
-          <h2>Partida</h2>
-          <button type="button" className="btn btn--ghost btn--small" onClick={() => navigate("#/escalacao")}>Escalação</button>
-        </div>
+        <PhaseBanner kicker={state.round_label} title="Dia de jogo" />
         <section className="card next-match">
-          <div className="versus">
-            <Club uid={mine.home_club_uid} names={names} user={user} size={44} />
-            <span className="fixture__x">×</span>
-            <Club uid={mine.away_club_uid} names={names} user={user} size={44} />
-          </div>
+          <Jumbotron home={mine.home_club_uid} away={mine.away_club_uid} names={names} user={user} label="VS" />
           {lineup?.has_match && <p className="muted small">{lineup.formation} · postura inicial {postureLabel(lineup.posture ?? "equilibrada")}</p>}
           <fieldset className="segmented segmented--wrap">
             <legend>Velocidade de apresentação</legend>
@@ -102,8 +131,11 @@ export function MatchPage({ navigate }: { navigate: (h: string) => void }) {
           </fieldset>
           <p className="muted small">A velocidade muda só a apresentação: com as mesmas decisões, os acontecimentos são idênticos. O relógio não pausa.</p>
           {cmd.error && <Notice kind="error">{cmd.error.message}</Notice>}
-          <button type="button" className="btn btn--primary" onClick={begin} disabled={cmd.busy}>{cmd.busy ? "Iniciando…" : "Iniciar partida"}</button>
         </section>
+        <ActionBar>
+          <button type="button" className="btn btn--ghost" onClick={() => navigate("#/escalacao")}>Escalação</button>
+          <button type="button" className="btn btn--cta" onClick={begin} disabled={cmd.busy}>{cmd.busy ? "Entrando em campo…" : "Iniciar partida ▶"}</button>
+        </ActionBar>
       </div>
     );
   }
@@ -112,80 +144,104 @@ export function MatchPage({ navigate }: { navigate: (h: string) => void }) {
   const myPosture = live.postures[side];
   const setPosture = (p: string) => void cmd.run(async (k) => setLive(await changePosture(sid, p as never, k)));
   const setLiveSpeed = (s: Speed) => void cmd.run(async (k) => setLive(await changeSpeed(sid, s, k)));
-  const clock = live.finished ? "Encerrada" : `${live.minute}'`;
+  const ownOnPitch = live.own_players;
+  const oppOnPitch = live.opponent_players ?? [];
+  const homePlayers = side === 0 ? ownOnPitch : oppOnPitch;
+  const awayPlayers = side === 0 ? oppOnPitch : ownOnPitch;
+  const feed = [...live.events].reverse().filter((e) => KEY_EVENTS.has(e.type));
 
   return (
     <div className="stack match">
-      <section className="card scoreboard" aria-live="polite" aria-label="Placar">
-        <Club uid={live.home_club_uid} names={names} user={user} size={40} />
-        <div className="scoreboard__score">
-          <strong>{live.score[0]} – {live.score[1]}</strong>
-          {live.shootout && <span className="muted small">Pênaltis {live.shootout[0]}–{live.shootout[1]}</span>}
-          <span className={`pill${live.finished ? "" : " pill--ok"}`}>{clock}</span>
+      {burst && (
+        <div className={`goal-burst${burst === "them" ? " goal-burst--them" : ""}`} aria-hidden>
+          <span>{burst === "us" ? "GOOOL!" : "Gol do adversário"}</span>
         </div>
-        <Club uid={live.away_club_uid} names={names} user={user} size={40} />
-      </section>
+      )}
+      <Jumbotron home={live.home_club_uid} away={live.away_club_uid} names={names} user={user} score={live.score}
+        minute={`${live.minute}'`} finished={live.finished} shootout={live.shootout} flash={!!burst} />
       <div className="match-bar" aria-hidden><span style={{ width: `${Math.min(100, (live.game_second / 5400) * 100)}%` }} /></div>
       {pollError && <Notice kind="warning">{pollError} Reconectando… o relógio da partida continua no servidor.</Notice>}
       {cmd.error && <Notice kind="error" onDismiss={() => cmd.setError(null)}>{cmd.error.message}</Notice>}
 
-      <div className="match-grid">
-        <section className="card">
-          <h3>Sua postura</h3>
-          <div className="posture-buttons" role="group" aria-label="Postura tática">
-            {POSTURES.map((p) => (
-              <button key={p.id} type="button" className={`btn btn--small${myPosture === p.id ? " btn--primary" : " btn--ghost"}`}
-                aria-pressed={myPosture === p.id} disabled={live.finished || cmd.busy || myPosture === p.id} onClick={() => setPosture(p.id)}>
-                {p.label}
-              </button>
-            ))}
-          </div>
-          <p className="muted small">Adversário: {postureLabel(live.postures[1 - side])}. A mudança vale a partir do lance seguinte; a formação é fixa.</p>
-          <div className="speed-row">
-            <span className="muted small">Velocidade</span>
-            {SPEEDS.map((s) => (
-              <button key={s.id} type="button" className={`btn btn--small${live.speed === s.id ? " btn--primary" : " btn--ghost"}`}
-                aria-pressed={live.speed === s.id} disabled={live.finished || cmd.busy || live.speed === s.id} onClick={() => setLiveSpeed(s.id)}>
-                {s.label}
-              </button>
-            ))}
-          </div>
-          {live.finished && (
-            <button type="button" className="btn btn--primary btn--block" onClick={finish} disabled={cmd.busy}>
-              {cmd.busy ? "Processando a rodada…" : "Concluir rodada e ver pós-partida"}
-            </button>
-          )}
-        </section>
-
-        <section className="card">
-          <h3>Acontecimentos</h3>
-          <div className="scroll-y">
-            <EventFeed events={[...live.events].reverse().filter((e) => e.type !== "save" || e.minute >= 0)} names={names} />
-          </div>
-        </section>
-
-        <section className="card">
-          <h3>Estatísticas</h3>
-          <StatsCompare stats={live.stats} labels={[names.get(live.home_club_uid) ?? "Mandante", names.get(live.away_club_uid) ?? "Visitante"]} />
-        </section>
-
-        <section className="card">
-          <h3>Condição física · substituições {live.substitutions_used}/{live.max_substitutions}</h3>
-          <ul className="condition-list">
-            {live.own_players.map((p) => (
-              <li key={p.player} className={p.on_field ? "" : "is-off"}>
-                <span className="tag">{displayPosition(p.slot as Position)}</span>
-                <span className="condition-list__name">{p.name}{p.yellow_cards > 0 ? " 🟨" : ""}{p.on_field ? "" : " (fora)"}</span>
-                <span className="condition" role="meter" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(p.condition)} aria-label={`Condição de ${p.name}`}>
-                  <span className={p.condition < 60 ? "is-low" : p.condition < 80 ? "is-mid" : ""} style={{ width: `${p.condition}%` }} />
-                </span>
-                <span className="num small">{Math.round(p.condition)}%</span>
-              </li>
-            ))}
-          </ul>
-          <p className="muted small">Substituições automáticas (até 5) conforme lesões, desgaste e situação do jogo.</p>
-        </section>
+      <div className="live-layout">
+        <div className="live-main">
+          <section className="card">
+            <LivePitch home={homePlayers} away={awayPlayers}
+              homeName={names.get(live.home_club_uid) ?? "Mandante"} awayName={names.get(live.away_club_uid) ?? "Visitante"} userSide={side} />
+          </section>
+          <section className="card">
+            <h3>Sua postura</h3>
+            <div className="posture-buttons" role="group" aria-label="Postura tática">
+              {POSTURES.map((p) => (
+                <button key={p.id} type="button" className={`btn btn--small${myPosture === p.id ? " btn--primary" : " btn--ghost"}`}
+                  aria-pressed={myPosture === p.id} disabled={live.finished || cmd.busy || myPosture === p.id} onClick={() => setPosture(p.id)}>
+                  {p.label}
+                </button>
+              ))}
+            </div>
+            <p className="muted small">Adversário: {postureLabel(live.postures[1 - side])}. A mudança vale a partir do lance seguinte; a formação é fixa.</p>
+            <div className="speed-row">
+              <span className="muted small">Velocidade</span>
+              {SPEEDS.map((s) => (
+                <button key={s.id} type="button" className={`btn btn--small${live.speed === s.id ? " btn--primary" : " btn--ghost"}`}
+                  aria-pressed={live.speed === s.id} disabled={live.finished || cmd.busy || live.speed === s.id} onClick={() => setLiveSpeed(s.id)}>
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          </section>
+          <section className="card">
+            <h3>Lance a lance</h3>
+            {feed.length === 0 ? <p className="muted small">A bola vai rolar…</p> : (
+              <ol className="feed">
+                {feed.map((e) => (
+                  <li key={e.seq} className={e.type === "goal" ? "is-goal" : e.type === "penalty_awarded" || e.type === "red_card" ? "is-key" : ""}>
+                    <span className="feed__min">{e.type === "shootout_kick" ? "pên." : `${e.minute}'`}</span>
+                    <span aria-hidden>{EVENT_ICON[e.type] ?? "•"}</span>
+                    <span>
+                      <strong>{eventLabel(e.type)}</strong> {describeEvent(e)}
+                      {e.club_uid != null && <span className="muted small"> · {names.get(e.club_uid) ?? ""}</span>}
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </section>
+        </div>
+        <aside className="live-side">
+          <section className="card">
+            <h3>Outros jogos</h3>
+            <OtherMatches matches={live.other_matches ?? []} names={names} />
+          </section>
+          <section className="card">
+            <h3>Estatísticas</h3>
+            <StatsCompare stats={live.stats} labels={[names.get(live.home_club_uid) ?? "Mandante", names.get(live.away_club_uid) ?? "Visitante"]} />
+          </section>
+          <section className="card">
+            <h3>Condição física</h3>
+            <span className="muted small">Substituições {live.substitutions_used}/{live.max_substitutions} (automáticas)</span>
+            <ul className="condition-list">
+              {live.own_players.map((p) => (
+                <li key={p.player} className={p.on_field ? "" : "is-off"}>
+                  <PositionBadge position={p.slot} size="sm" />
+                  <span className="condition-list__name">{p.name}{p.yellow_cards > 0 ? " 🟨" : ""}{p.on_field ? "" : " (fora)"}</span>
+                  <span className="condition" role="meter" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(p.condition)} aria-label={`Condição de ${p.name}`}>
+                    <span className={p.condition < 60 ? "is-low" : p.condition < 80 ? "is-mid" : ""} style={{ width: `${p.condition}%` }} />
+                  </span>
+                  <span className="num small">{Math.round(p.condition)}%</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        </aside>
       </div>
+      {live.finished && (
+        <ActionBar hint="Fim de jogo">
+          <button type="button" className="btn btn--cta" onClick={finish} disabled={cmd.busy}>
+            {cmd.busy ? "Processando a rodada…" : "Concluir rodada e ver pós-partida ▶"}
+          </button>
+        </ActionBar>
+      )}
     </div>
   );
 }

@@ -1,17 +1,20 @@
 import { useEffect, useRef, useState } from "react";
 import { ApiError, newIdempotencyKey } from "../api/client";
-import { getAuctionSummary, getSession, listClubs, startAuction } from "../api/endpoints";
+import { getAuctionSummary, getOfficialFormations, getSession, listClubs, startAuction } from "../api/endpoints";
 import { useSession } from "../app/SessionContext";
 import { ConfirmDialog } from "../components/ConfirmDialog";
+import { ActionBar, PhaseBanner } from "../components/GameUi";
 import { Notice } from "../components/Notice";
-import { AuctionBoard } from "../features/auction/AuctionBoard";
+import { AuctionBoard, FormationVacancies } from "../features/auction/AuctionBoard";
 import { AuctionSummaryView } from "../features/auction/AuctionSummaryView";
 import { useAuction } from "../features/auction/useAuction";
-import type { AuctionSummary, Club } from "../types/api";
+import type { AuctionSummary, Club, Formation } from "../types/api";
+import { MiniPitch } from "./TacticPage";
 
-export function AuctionPage({ go }: { go: (page: "session") => void }) {
+export function AuctionPage({ go, navigate }: { go: (page: string) => void; navigate: (h: string) => void }) {
   const { session, setSession } = useSession();
   const [clubs, setClubs] = useState<Club[]>([]);
+  const [formations, setFormations] = useState<Formation[]>([]);
   const [error, setError] = useState<{ code: string; message: string } | null>(null);
   const [confirm, setConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -22,15 +25,17 @@ export function AuctionPage({ go }: { go: (page: "session") => void }) {
   const phase = session?.phase;
   const live = phase === "auction";
   const { state, error: pollError, refresh, roundRemainingMs, globalRemainingMs } = useAuction(sid, live);
+  const formation = formations.find((f) => f.id === session?.user_formation) ?? null;
 
   useEffect(() => {
     listClubs().then((p) => setClubs(p.items)).catch(() => undefined);
+    getOfficialFormations().then(setFormations).catch(() => undefined);
   }, []);
 
   // leilão terminou: atualiza a sessão (fase) e carrega o resumo
   useEffect(() => {
     if (!sid) return;
-    if (state?.phase === "completed" || phase === "squad_completion") {
+    if (state?.phase === "completed" || phase === "squad_completion" || phase === "trading") {
       getSession(sid).then(setSession).catch(() => undefined);
       getAuctionSummary(sid).then(setSummary).catch(() => undefined);
     }
@@ -57,18 +62,18 @@ export function AuctionPage({ go }: { go: (page: "session") => void }) {
   if (!sid) {
     return (
       <div className="stack">
-        <h2>Leilão</h2>
-        <Notice kind="info" title="Nenhuma competição ativa">
-          Crie uma competição antes de participar do leilão.{" "}
-          <button type="button" className="btn btn--small btn--ghost" onClick={() => go("session")}>Ir para Competição</button>
+        <PhaseBanner title="Leilão" />
+        <Notice kind="info" title="Nenhuma partida em andamento">
+          Comece uma nova partida antes de participar do leilão.{" "}
+          <button type="button" className="btn btn--small btn--ghost" onClick={() => go("session")}>Nova partida</button>
         </Notice>
       </div>
     );
   }
 
+  const finished = phase === "squad_completion" || phase === "trading" || state?.phase === "completed";
   return (
     <div className="stack">
-      <h2>Leilão</h2>
       {error && (
         <Notice kind={error.code === "AUCTION_MODEL_NOT_CONFIGURED" ? "warning" : "error"}
           title={error.code === "AUCTION_MODEL_NOT_CONFIGURED" ? "Leilão desligado neste servidor" : "Não foi possível iniciar"}>
@@ -78,16 +83,29 @@ export function AuctionPage({ go }: { go: (page: "session") => void }) {
       {pollError && live && <Notice kind="warning">{pollError} Tentando novamente…</Notice>}
 
       {phase === "setup" && (
-        <section className="card">
-          <h3>Pronto para o leilão</h3>
-          <p className="muted">
-            Rodadas de 10 segundos com 5 jogadores da mesma posição. Cada clube começa com R$ 120 milhões e precisa
-            terminar com 18 jogadores. O relógio é global e não pausa.
-          </p>
-          <button type="button" className="btn btn--primary" onClick={() => setConfirm(true)} disabled={busy}>
-            Iniciar leilão
-          </button>
-        </section>
+        <>
+          <PhaseBanner kicker="Etapa 2" title="Leilão de jogadores">
+            Rodadas de 10 segundos com 5 jogadores da mesma posição. R$ 120 milhões para montar 18 jogadores. O relógio é
+            global e não pausa.
+          </PhaseBanner>
+          {!session?.user_formation && (
+            <Notice kind="info" title="Escolha sua tática primeiro">
+              A formação orienta quantos jogadores de cada posição buscar.{" "}
+              <button type="button" className="btn btn--small btn--ghost" onClick={() => navigate("#/tatica")}>Escolher tática</button>
+            </Notice>
+          )}
+          {formation && (
+            <section className="card" style={{ maxWidth: 420, margin: "0 auto", width: "100%" }}>
+              <h3>Sua tática: {formation.id}</h3>
+              <MiniPitch formation={formation} />
+              <FormationVacancies formation={formation} owned={[]} />
+              <button type="button" className="btn btn--ghost btn--small" onClick={() => navigate("#/tatica")}>Trocar tática</button>
+            </section>
+          )}
+          <ActionBar>
+            <button type="button" className="btn btn--cta" onClick={() => setConfirm(true)} disabled={busy}>Começar leilão ▶</button>
+          </ActionBar>
+        </>
       )}
 
       {live && state && state.phase === "running" && (
@@ -95,20 +113,29 @@ export function AuctionPage({ go }: { go: (page: "session") => void }) {
           sessionId={sid}
           state={state}
           clubs={clubs}
+          formation={formation}
           roundRemainingMs={roundRemainingMs}
           globalRemainingMs={globalRemainingMs}
           onChanged={refresh}
         />
       )}
-      {live && !state && <p className="muted">Conectando ao leilão…</p>}
-      {(phase === "squad_completion" || state?.phase === "completed") && !summary && <p className="muted">Completando elencos…</p>}
-      {summary && <AuctionSummaryView summary={summary} clubs={clubs} />}
+      {live && !state && <p className="muted" role="status">Conectando ao leilão…</p>}
+      {finished && (
+        <>
+          <PhaseBanner kicker="Leilão encerrado" title="Elencos formados" />
+          {!summary && <p className="muted" role="status">Completando elencos…</p>}
+          {summary && <AuctionSummaryView summary={summary} clubs={clubs} />}
+          <ActionBar>
+            <button type="button" className="btn btn--cta" onClick={() => navigate("#/trading")} disabled={!summary}>Ir para o mercado ▶</button>
+          </ActionBar>
+        </>
+      )}
 
       <ConfirmDialog
         open={confirm}
-        title="Iniciar o leilão?"
+        title="Começar o leilão?"
         message="O relógio global começa imediatamente e não pode ser pausado."
-        confirmLabel="Iniciar"
+        confirmLabel="Começar"
         busy={busy}
         onConfirm={() => void begin()}
         onCancel={() => setConfirm(false)}

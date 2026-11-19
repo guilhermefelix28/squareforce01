@@ -175,3 +175,10 @@ export function sessionSocketUrl(id: string): string {
   const base = apiUrl("") || window.location.origin;
   return base.replace(/^http/, "ws") + `/ws/sessions/${encodeURIComponent(id)}`;
 }
+
+/** As 11 formações oficiais (disponíveis antes da temporada). */
+export const getOfficialFormations = () => apiRequest<Formation[]>("/api/formations");
+
+/** Tática do usuário antes do leilão (DR-02). */
+export const chooseFormation = (id: string, formation: string, idempotencyKey = newIdempotencyKey()) =>
+  apiRequest<Session>(`${sid(id)}/formation`, { method: "POST", json: { formation }, idempotencyKey });

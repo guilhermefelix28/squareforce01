@@ -53,3 +53,11 @@ def test_formation_rejected_outside_setup_or_unknown(env):
     r = choose(c, sid, "4-4-2")
     assert r.status_code == 409 and r.json()["error"]["code"] == "INVALID_PHASE"
     assert choose(c, "nao-existe", "4-4-2").status_code == 404
+
+
+def test_official_formations_are_listed_without_a_season(client):
+    r = client.get("/api/formations")
+    assert r.status_code == 200
+    forms = r.json()
+    assert [f["id"] for f in forms][:3] == ["4-4-2", "4-3-3", "4-2-3-1"] and len(forms) == 11
+    assert all(len(f["positions"]) == 11 and f["positions"][0] == "GK" for f in forms)
