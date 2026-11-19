@@ -13,6 +13,7 @@ sys.path[:0] = [str(ROOT), str(ROOT / "shared" / "python"), str(ROOT / "tests")]
 import services  # noqa: E402,F401
 from services.bot_ai.tactics import (  # noqa: E402
     CompetitionSituation, OpponentHistory, PreMatchContext, TacticalBot, choose_lineup)
+from services.match_engine.params import DEFAULT_PARAMS  # noqa: E402
 from services.bot_ai.tactics_params import DEFAULT_TACTICS  # noqa: E402
 from services.bot_ai.tactics_report import run_behaviour  # noqa: E402
 from services.match_engine.calibration import FORMATION_433, FORMATION_442, FORMATION_532  # noqa: E402
@@ -53,8 +54,8 @@ scenarios = [
     ("Copa: empate aos 75', equipe muito inferior", CUP, obs(0.2, 0, 0, level=45, knockout=True)),
 ]
 lines = ["# IA tática dos bots — decisões e lotes de comportamento", "",
-         f"> Parâmetros da IA `{DEFAULT_TACTICS.version}` ({DEFAULT_TACTICS.status}). Motor com parâmetros provisórios",
-         "> (`provisorio-0.5`, não calibrado). Gerado por `scripts/tactics_report.py`.", "",
+         f"> Parâmetros da IA `{DEFAULT_TACTICS.version}` ({DEFAULT_TACTICS.status}). Motor `{DEFAULT_PARAMS.version}`",
+         "> (calibrado contra faixas de referência pública na Entrega 9). Gerado por `scripts/tactics_report.py`.", "",
          "## Decisões em situações típicas (personalidade equilibrada)", "",
          "| Situação | Postura escolhida |", "|---|---|"]
 for name, sit, o in scenarios:

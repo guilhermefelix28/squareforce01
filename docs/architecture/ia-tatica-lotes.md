@@ -1,7 +1,7 @@
 # IA tática dos bots — decisões e lotes de comportamento
 
-> Parâmetros da IA `provisorio-0.7` (PROVISÓRIO — pendente de aprovação (PB-03)). Motor com parâmetros provisórios
-> (`provisorio-0.5`, não calibrado). Gerado por `scripts/tactics_report.py`.
+> Parâmetros da IA `provisorio-0.7` (PROVISÓRIO — pendente de aprovação (PB-03)). Motor `provisorio-0.6`
+> (calibrado contra faixas de referência pública na Entrega 9). Gerado por `scripts/tactics_report.py`.
 
 ## Decisões em situações típicas (personalidade equilibrada)
 
@@ -40,15 +40,15 @@ Em situações claras (perdendo/vencendo) todas concordam; a personalidade deslo
 | Métrica | IA × IA (300 jogos) | IA × estático (400 jogos) |
 |---|---|---|
 | Partidas inválidas | 0 | 0 |
-| Mudanças de postura por equipe/jogo | 1.05 | 0.98 |
+| Mudanças de postura por equipe/jogo | 1.10 | 1.06 |
 | Máximo de mudanças de uma equipe num jogo | 4 | 5 |
-| Mudanças que aumentam o ataque quando perdendo | 100% | 100% |
+| Mudanças que aumentam o ataque quando perdendo | 99% | 100% |
 | Mudanças que protegem quando vencendo | 100% | 100% |
 | Tempo ofensivo após 75', perdendo | 83% | 80% |
 | Tempo defensivo após 75', vencendo | 99% | 99% |
-| Pontos por jogo (lado 0 / lado 1) | 1.39 / 1.29 | IA 1.36 / estático 1.33 |
+| Pontos por jogo (lado 0 / lado 1) | 1.40 / 1.30 | IA 1.39 / estático 1.32 |
 
-Posturas adotadas (IA × IA): {'retranca': 349, 'ataque_total': 266, 'equilibrada': 13, 'ofensiva': 1}
+Posturas adotadas (IA × IA): {'retranca': 361, 'ataque_total': 281, 'equilibrada': 14, 'ofensiva': 2, 'defensiva': 1}
 
 ## Clubes reais: formação e postura inicial escolhidas
 
@@ -74,4 +74,4 @@ fictício: forte (marcou 12, sofreu 3 em 5 jogos) ou fraco (marcou 3, sofreu 12)
 - Estabilidade: poucas mudanças por partida; ganho mínimo, histerese e intervalo de 10 min, com exceções
   só após gols, expulsões e perdas de jogador.
 
-_Tempo de geração: 36 s._
+_Tempo de geração: 37 s._

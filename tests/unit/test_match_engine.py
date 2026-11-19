@@ -159,8 +159,9 @@ def test_shooter_skill_changes_conversion_not_xg():
 
 
 def test_goalkeeper_skill_reduces_goals_without_changing_xg():
-    vs_bad = _conversion("gk", 20)
-    vs_good = _conversion("gk", 95)
+    # amostra de 200 jogos: com 60 o ruído do xG/finalização chegava a ~13% (Entrega 9)
+    vs_bad = _conversion("gk", 20, n=200)
+    vs_good = _conversion("gk", 95, n=200)
     assert vs_good[0] < vs_bad[0]
     assert vs_good[1] == pytest.approx(vs_bad[1], rel=0.12)
 

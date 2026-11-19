@@ -19,6 +19,7 @@
 - [IA tática dos bots](architecture/ia-tatica.md) · [lotes de comportamento](architecture/ia-tatica-lotes.md)
 - [Execução de Liga e Copa](architecture/competicoes.md)
 - [Interface definitiva e integração](architecture/interface.md)
+- Homologação: [relatório final](homologacao/relatorio-final.md) · [critérios](homologacao/criterios.md) · [calibração](homologacao/calibracao.md) · [desempenho](homologacao/desempenho.md)
 - [Matriz de testes](architecture/matriz-de-testes.md)
 
 ## API

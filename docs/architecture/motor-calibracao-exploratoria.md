@@ -1,5 +1,8 @@
 # Motor esportivo — lotes exploratórios
 
+> **HISTÓRICO (Entrega 5).** Substituído pela calibração da homologação: [critérios](../homologacao/criterios.md) ·
+> [calibração](../homologacao/calibracao.md) (motor `provisorio-0.6`).
+
 > **NÃO CALIBRADO.** Motor `0.1.0`, parâmetros `provisorio-0.5` (PROVISÓRIO — pendente de calibração estatística e aprovação (PM-02)).
 > As faixas de referência abaixo são **preliminares** (ordem de grandeza de ligas profissionais) e **não foram
 > aprovadas** (pendência PM-02). Servem apenas para detectar comportamento absurdo.

@@ -46,6 +46,9 @@ Contrapropostas; pagamento pelo receptor; trocas N×M; execução parcial; bots 
 Atomicidade sob concorrência; limite de 3; uma proposta ativa; expiração em 10 s; cancelamento; 18 jogadores e saldo ≥ 0 sempre;
 dinheiro total conservado; dupla aceitação; falha na confirmação; bots sem exploração financeira. Ver `docs/architecture/matriz-de-testes.md`.
 
+## Estado na homologação (Entrega 9)
+Homologação: atomicidade, limites e conservação do dinheiro cobertos pelos testes da Entrega 4; latência de proposta/cancelamento medida em `docs/homologacao/desempenho.md`.
+
 ## Referências
 - [Game Design §8](../../../docs/game-design/game-design-v5.2.md)
 - [README do serviço](../../../services/trading/README.md)

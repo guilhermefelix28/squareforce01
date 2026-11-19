@@ -35,7 +35,8 @@ execução de Liga e Copa; interface definitiva e integração). O leilão está
 essas fórmulas. Os números do motor são provisórios (`services/match_engine/params.py`) — nunca os declare calibrados.
 Parâmetros da IA tática também são provisórios (`services/bot_ai/tactics_params.py`).
 Desempate da Liga pendente (PC-01): nunca aplique critérios não enviados. Pontuação 3/1/0 é provisória (PC-09).
-A versão final só é aprovada na Entrega 9. Não implemente novas entregas (Entrega 9+) sem autorização
+Entrega 9 (homologação) concluída como BLOQUEADA: ver `docs/homologacao/`. Critérios de aceitação são fixos
+(`docs/homologacao/criterios.md`): nunca altere limites depois de ver resultados. Não implemente novas entregas sem autorização
 explícita do usuário para a entrega correspondente.
 
 ## Comandos

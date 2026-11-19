@@ -96,3 +96,12 @@ Legenda: **P** = regra pendente · **D** = decisão técnica provisória (confir
 | PI-04 | D | **Condição física exibida só do próprio time** (a do adversário não é informação pública). | Confirmar |
 | PI-05 | I | **Ícone do app**: o manual pede revisão em tamanho pequeno antes da publicação (arquivo raster). | Aberta |
 | PI-06 | I | `SQUADFORCE_CLOCK_SCALE` e o modelo falso do leilão existem SOMENTE para testes/demonstração. | Informativo |
+
+## Homologação (Entrega 9)
+
+| ID | Tipo | Pendência | Estado |
+|---|---|---|---|
+| PH-01 | D | **"Posturas moderadas" = no máximo ±35% de gols marcados/sofridos em relação à Equilibrada**: interpretação usada como critério de aceitação (medido: −22% a +20%). | Confirmar |
+| PH-02 | D | **Critérios de desempenho** (`docs/homologacao/criterios.md` §4): decisão técnica; o GDD não fixa números. | Confirmar |
+| PH-03 | O | **Métricas sem referência confiável** (não validadas): posse por time muito concentrada (41–58%, desvio 2,3 pontos), grandes chances 1,1 por partida, escanteios 8,5, defesas 6,5, lesões 0,53, notas média 6,18 (DP 0,70). Recomenda-se fornecer referências oficiais (PM-02) para avaliá-las. | Aberta |
+| PH-04 | O | **Referências usadas** são agregados públicos (Opta/The Analyst, ESPN, imprensa); não substituem a base oficial pendente (PM-02). | Aberta |

@@ -54,6 +54,9 @@ pelo WebSocket; a partida ao vivo não pausa por desconexão (relógio do servid
 `tests/unit/test_session_manager.py` (formatos, concorrência: 8 threads → 1 sessão), `tests/integration/test_sessions_api.py`
 (duplicidade, conflito de versão, perda no reinício), `tests/integration/test_websocket.py`, `frontend/src/app/App.test.tsx`.
 
+## Estado na homologação (Entrega 9)
+Homologação: sessão substituída fica isolada (comandos recusados, estado descartado); reconexão do WebSocket no meio da temporada testada; nenhum estado de competição persiste.
+
 ## Referências
 - [Contratos — sessões e WebSocket](../../../docs/api/contratos.md)
 - [Arquitetura ADR-02/03/04](../../../docs/architecture/arquitetura.md)

@@ -309,3 +309,21 @@ def test_failure_during_consolidation_leaves_state_untouched(monkeypatch):
     assert sum(p.appearances for p in s.state.players.values()) == 0
     assert s.state.ledger.history == []
     assert s.snapshot.snapshot_id not in s.consolidated_snapshots
+
+
+def test_cup_final_decided_on_penalties():
+    """Final empatada nos 90 min: campeão é o vencedor dos pênaltis, que não contam como gols."""
+    for seed in range(1, 200):
+        s = make_season("cup", 2, seed=seed)
+        run_all(s, workers=1)
+        final = s.state.history[-1]
+        if final.result.shootout:
+            break
+    else:
+        pytest.fail("nenhuma final foi aos pênaltis em 199 sementes")
+    r = final.result
+    assert r.score[0] == r.score[1]
+    winner = final.home if r.shootout[0] > r.shootout[1] else final.away
+    assert s.champion()[0] == winner == s.state.bracket.champion_club_uid
+    assert s.state.bracket.rounds[-1].matches[0].decided_by == "penalties"
+    assert sum(p.goals for p in s.state.players.values()) == sum(r.score)

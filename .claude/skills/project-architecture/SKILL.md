@@ -56,6 +56,9 @@ controle de concorrência; SQLite só para bases importadas; progresso temporár
 - `tests/contracts/test_openapi_contract.py` verde (endpoints, Idempotency-Key, esquema de erro, OpenAPI sincronizado).
 - `tests/end_to_end/test_server_boot.py` inicia o uvicorn real.
 
+## Estado na homologação (Entrega 9)
+Homologação: 37 rotas reais conferidas contra `docs/api/contratos.md`; cenários adversos (concorrência, retransmissão, isolamento) em `tests/integration/test_homologation_robustness.py`; desempenho medido por `scripts/homologation_performance.py` (`docs/homologacao/desempenho.md`).
+
 ## Referências
 - [Arquitetura e ADRs](../../../docs/architecture/arquitetura.md)
 - [Contratos da API](../../../docs/api/contratos.md)

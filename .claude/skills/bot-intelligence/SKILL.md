@@ -45,6 +45,9 @@ ou o RNG/semente do motor; expor personalidade; dar bônus de atributos; inventa
 ## Critérios de teste
 Teste de "vazamento" (visão pública não contém campos privados); determinismo por semente; coerência por personalidade em simulações em lote.
 
+## Estado na homologação (Entrega 9)
+Homologação: no lote amplo (10.000 partidas com IA nos dois lados) 0 partidas inválidas, 1,17 mudança de postura por time (máx. 7), sem vantagem artificial. Multiplicadores de postura re-medidos com o motor `provisorio-0.6`: diferenças ≤ 4% (mantidos).
+
 ## Referências
 - [Game Design §6, §8, §15](../../../docs/game-design/game-design-v5.2.md)
 - [README do serviço](../../../services/bot_ai/README.md)

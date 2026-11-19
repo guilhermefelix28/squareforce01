@@ -80,7 +80,7 @@ class PostureEffect:
 
 @dataclass(frozen=True)
 class MatchParams:
-    version: str = "provisorio-0.5"
+    version: str = "provisorio-0.6"
     status: str = "PROVISÓRIO — pendente de calibração estatística e aprovação (PM-02)"
 
     # ---------------------------------------------------------------- tempo
@@ -109,7 +109,7 @@ class MatchParams:
         "individual": (15.0, 4.0), "long_shot": (24.0, 4.0), "corner_header": (8.0, 2.0), "free_kick": (23.0, 3.0),
         "rebound": (8.0, 2.5),
     }))
-    xg_intercept: float = 0.75
+    xg_intercept: float = 0.88  # Entrega 9: calibrado para gols/xG da faixa de referência (criterios.md); era 0.75
     xg_distance: float = -0.155
     xg_angle: float = 1.05  # bônus para ângulo central (0 = linha de fundo, 1 = frontal)
     xg_header: float = -0.85

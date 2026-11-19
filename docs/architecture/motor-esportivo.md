@@ -3,9 +3,11 @@
 Implementação de GDD v5.2 §9–§16. Código: `services/match_engine/`. Lotes exploratórios:
 [motor-calibracao-exploratoria.md](motor-calibracao-exploratoria.md).
 
-> **Estado:** regras do GDD implementadas e verificadas; **todos os números são provisórios** e estão em
-> `services/match_engine/params.py` (`MatchParams`, versão `provisorio-0.5`). O motor **não está calibrado** com
-> referências oficiais do futebol real (pendência PM-02).
+> **Estado:** regras do GDD implementadas e verificadas; os números estão em `services/match_engine/params.py`
+> (`MatchParams`, versão `provisorio-0.6`). **Entrega 9:** em 20.250 partidas, gols, empates, finalizações, xG, faltas e
+> cartões ficaram dentro das faixas derivadas de referências públicas (`docs/homologacao/criterios.md`,
+> `docs/homologacao/calibracao.md`); único ajuste: `xg_intercept` 0,75 → 0,88. As referências ainda não foram
+> aprovadas oficialmente pelo responsável (PM-02) e várias métricas não têm referência (não validadas).
 
 ## Módulos
 

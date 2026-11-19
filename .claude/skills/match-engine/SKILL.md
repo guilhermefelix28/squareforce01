@@ -52,6 +52,9 @@ estatísticas fora dos eventos; usar overall na nota; atributo inexistente na ba
 ## Critérios de teste
 Determinismo bit a bit; distribuições estatísticas (gols, empates, 0×0, goleadas) dentro das faixas aprovadas; regra dos 7 jogadores; limites de substituições; notas no intervalo.
 
+## Estado na homologação (Entrega 9)
+Homologação: parâmetros `provisorio-0.6` (único ajuste: `xg_intercept` 0,75 → 0,88) atendem às faixas de `docs/homologacao/criterios.md` em 20.250 partidas (`docs/homologacao/calibracao.md`). Regressão: hashes da Entrega 5 reproduzidos com o parâmetro antigo (código inalterado) + hashes calibrados. Métricas sem referência (escanteios, defesas, lesões, grandes chances, notas, dispersão de posse) NÃO validadas.
+
 ## Referências
 - [Game Design §9–16](../../../docs/game-design/game-design-v5.2.md)
 - [Pendências PM-*](../../../docs/game-design/pendencias.md)

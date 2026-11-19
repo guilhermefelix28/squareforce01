@@ -79,6 +79,9 @@ backend com `SQUADFORCE_CLOCK_SCALE`), determinismo da partida ao vivo em todas 
 navegador real (desktop 1366×900 e celular 390×844, claro/escuro, teclado). Servidores de teste em portas
 isoladas; encerrar a ÁRVORE de processos (pool de partidas) ao final.
 
+## Estado na homologação (Entrega 9)
+Homologação (Entrega 9): critérios fixados ANTES das medições (`docs/homologacao/criterios.md`, commit próprio); calibração `scripts/homologation_calibration.py`; desempenho `scripts/homologation_performance.py`; relatório `docs/homologacao/relatorio-final.md`. Nunca ajustar limites depois de ver resultados.
+
 ## Referências
 - [Matriz de testes da Entrega 1](../../../docs/architecture/matriz-de-testes.md)
 - [Especificação técnica §8–9](../../../docs/architecture/especificacao-tecnica-v5.2.md)

@@ -52,6 +52,9 @@ preservação da base anterior em qualquer falha.
 `tests/integration/test_imports_api.py`, `tests/integration/test_real_spreadsheet.py` — incluindo duplicatas,
 tipos inválidos, relacionamentos inválidos, normalização de posições, rollback e bloqueio com sessão ativa.
 
+## Estado na homologação (Entrega 9)
+Homologação: o SQLite NÃO muda durante uma competição inteira (impressão digital lógica das tabelas antes/depois, `test_no_persistence_of_competition_in_sqlite`); importações bloqueadas com sessão ativa.
+
 ## Referências
 - [Importação Excel (mapeamento e achados)](../../../docs/architecture/importacao-excel.md)
 - [Pendências PD-01…PD-06](../../../docs/game-design/pendencias.md)

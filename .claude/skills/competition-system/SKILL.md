@@ -58,6 +58,9 @@ usar `random` global ou semente dependente da ordem de execução.
 ## Critérios de teste
 `tests/unit/test_competition_planner.py` (Ligas 2/3/5/7/10/19/20 × turnos × sementes; Copas 2–32; corrupções; determinismo), `tests/integration/test_competition_api.py`, `test_session_manager.py`, `CompetitionView.test.tsx`. Entrega 7: `test_standings.py`, `test_season.py`, `tests/integration/test_season_api.py`, `tests/simulation/test_season_batches.py`.
 
+## Estado na homologação (Entrega 9)
+Homologação: Ligas 2–20 (ímpares, turno/returno), Copa 32, final nos pênaltis, eliminação do usuário, falhas paralelas, consolidação única concorrente e reconexão testadas; Liga 20 e Copa 32 completas pela API medidas em desempenho.
+
 ## Referências
 - [Game Design §2, §17–21](../../../docs/game-design/game-design-v5.2.md)
 - [Pendências PC-*, PD-01](../../../docs/game-design/pendencias.md)

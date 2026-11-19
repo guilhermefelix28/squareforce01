@@ -58,6 +58,9 @@ Qualquer alteração em `frontend/src/**`, estilos, tipos gerados ou testes Vite
 ## Critérios de teste
 `npm test` (Vitest + Testing Library) e `npm run test:e2e` (cliente real contra uvicorn real); `npm run build` sem erros de tipo.
 
+## Estado na homologação (Entrega 9)
+Homologação: jornada real completa (e2e), navegador real em desktop/celular, temas e teclado (Entrega 8); pacote JS de produção 91,7 kB gzip.
+
 ## Referências
 - [Identidade visual](../../../docs/game-design/identidade-visual.md)
 - [Contratos da API](../../../docs/api/contratos.md)

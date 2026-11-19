@@ -154,3 +154,15 @@
 | Acessibilidade (teclado) | `Season.test.tsx::pular para o conteúdo…` + verificação no navegador real |
 | **Jornada real completa** | `frontend/src/api/journey.e2e.test.ts` (backend real, relógio acelerado: leilão → complementação → mercado → escalação → partida ao vivo → rodadas → encerramento → nova competição) |
 | Desktop e celular | navegador real (agent-browser) 1366×900 e 390×844, temas claro e escuro |
+
+## Entrega 9 — Homologação
+
+| Requisito | Evidência |
+|---|---|
+| Critérios fixados antes das medições | `docs/homologacao/criterios.md` (commit `d2cda8e`) |
+| Calibração (≥ 10.000 partidas) | `scripts/homologation_calibration.py` → `docs/homologacao/calibracao.md` (20.250 partidas) |
+| Regressão do motor (código inalterado + parâmetros calibrados) | `tests/unit/test_match_engine_regression.py` |
+| Concorrência, retransmissão, isolamento, persistência, reconexão, entradas | `tests/integration/test_homologation_robustness.py` |
+| Final nos pênaltis | `tests/unit/test_season.py::test_cup_final_decided_on_penalties` |
+| Desempenho | `scripts/homologation_performance.py` → `docs/homologacao/desempenho.md` |
+| Relatório | `docs/homologacao/relatorio-final.md` |

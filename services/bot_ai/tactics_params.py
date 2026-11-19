@@ -10,6 +10,8 @@ Os multiplicadores de gols por postura NÃO são opinião: foram MEDIDOS no pró
 degrau (os efeitos das posturas no motor são lineares: "ofensiva" = metade de "ataque total"), o que remove o
 ruído de amostragem (~±2%). Medido: ataque 0,785/0,897/1/1,103/1,199; sofridos 0,810/0,900/1/1,141/1,199.
 Inclinação ajustada: +10,3% de gols marcados e +10,2% de sofridos por degrau. Se o motor mudar, medir de novo.
+Entrega 9 (motor `provisorio-0.6`): re-medido no lote B da homologação (5.000 partidas) — marcados 0,78/0,89/1/1,11/1,20 e
+sofridos 0,83/0,90/1/1,10/1,16 relativos à Equilibrada; diferenças ≤ 4% dos valores abaixo, mantidos.
 """
 
 from __future__ import annotations

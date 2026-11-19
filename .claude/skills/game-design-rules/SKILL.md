@@ -58,6 +58,9 @@ Game Design v5.2 e que lacunas sejam registradas — nunca inventadas. As demais
 - Valores do GDD aparecem como constantes nomeadas em um único lugar, e há teste que as compara ao GDD
   (ex.: `test_table_is_exactly_the_official_one`, `test_options_contract_matches_game_design`).
 
+## Estado na homologação (Entrega 9)
+Homologação: regras do GDD conferidas por testes; nenhuma regra alterada para aprovar. Bloqueios externos: fórmulas do leilão (`AuctionModel`) e critérios de desempate (PC-01). Novas decisões a confirmar: PH-01 a PH-03 em `pendencias.md`.
+
 ## Referências
 - [Game Design v5.2](../../../docs/game-design/game-design-v5.2.md)
 - [Pendências](../../../docs/game-design/pendencias.md)

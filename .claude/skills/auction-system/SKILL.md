@@ -53,6 +53,9 @@ antecipado, complementação automática e resumo final de elencos e saldos.
 Saldo nunca negativo; sem duplicatas; desempate por timestamp e sequência; reserva por vaga; elencos finais = 18;
 limite de complementação; determinismo com relógio simulado; concorrência de lances.
 
+## Estado na homologação (Entrega 9)
+Homologação: lógica, concorrência e finanças testadas com o MODELO FALSO; a validação das decisões financeiras reais dos bots continua BLOQUEADA até o `AuctionModel` aprovado (fórmulas não inventadas).
+
 ## Referências
 - [Game Design §4, §5, §7](../../../docs/game-design/game-design-v5.2.md)
 - [Pendências PE-*](../../../docs/game-design/pendencias.md)
