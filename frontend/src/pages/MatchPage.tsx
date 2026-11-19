@@ -6,7 +6,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ApiError } from "../api/client";
 import { changePosture, changeSpeed, getLineup, getLive, playRound, startLive } from "../api/endpoints";
-import { playGoal, playWhistle } from "../audio/crowd";
+import { playGoal, playWhistle, preloadGoal } from "../audio/crowd";
 import { ActionBar, PhaseBanner } from "../components/GameUi";
 import { Notice } from "../components/Notice";
 import { PositionBadge } from "../components/PlayerCard";
@@ -17,7 +17,18 @@ import { useCommand } from "../features/season/useCommand";
 import { useClubNames, useSeason } from "../features/season/useSeason";
 import type { Lineup, LiveState, Speed } from "../types/api";
 
-const KEY_EVENTS = new Set(["goal", "red_card", "penalty_awarded", "injury", "yellow_card", "substitution", "posture_change", "half_time", "full_time", "shootout_end"]);
+const KEY_EVENTS = new Set(["goal", "red_card", "penalty_awarded", "injury", "yellow_card", "substitution", "posture_change", "half_time", "full_time",
+  "shootout_start", "shootout_kick", "shootout_end"]);
+
+/** Numera as cobranças de cada time (1ª, 2ª, ...) para narrar a disputa de pênaltis lance a lance. */
+export function numberKicks<T extends { type: string; side?: number | null; data?: Record<string, unknown> }>(events: T[]): T[] {
+  const count = [0, 0];
+  return events.map((e) => {
+    if (e.type !== "shootout_kick" || e.side == null) return e;
+    count[e.side] += 1;
+    return { ...e, data: { ...(e.data ?? {}), kick: count[e.side] } };
+  });
+}
 
 /** Efeitos de torcida/apito quando o placar ou o estado mudam (não toca ao reconectar no meio do jogo). */
 function useMatchSounds(live: LiveState | null) {
@@ -58,6 +69,7 @@ export function MatchPage({ navigate }: { navigate: (h: string) => void }) {
   const cmd = useCommand();
   const inflight = useRef(false);
   const burst = useMatchSounds(live);
+  useEffect(() => preloadGoal(), []);
 
   const poll = useCallback(async () => {
     if (!sid || inflight.current) return;
@@ -148,7 +160,7 @@ export function MatchPage({ navigate }: { navigate: (h: string) => void }) {
   const oppOnPitch = live.opponent_players ?? [];
   const homePlayers = side === 0 ? ownOnPitch : oppOnPitch;
   const awayPlayers = side === 0 ? oppOnPitch : ownOnPitch;
-  const feed = [...live.events].reverse().filter((e) => KEY_EVENTS.has(e.type));
+  const feed = numberKicks(live.events).reverse().filter((e) => KEY_EVENTS.has(e.type));
 
   return (
     <div className="stack match">
@@ -167,7 +179,8 @@ export function MatchPage({ navigate }: { navigate: (h: string) => void }) {
         <div className="live-main">
           <section className="card">
             <LivePitch home={homePlayers} away={awayPlayers}
-              homeName={names.get(live.home_club_uid) ?? "Mandante"} awayName={names.get(live.away_club_uid) ?? "Visitante"} userSide={side} />
+              homeName={names.get(live.home_club_uid) ?? "Mandante"} awayName={names.get(live.away_club_uid) ?? "Visitante"}
+              homeUid={live.home_club_uid} awayUid={live.away_club_uid} userSide={side} />
           </section>
           <section className="card">
             <h3>Sua postura</h3>
@@ -195,7 +208,8 @@ export function MatchPage({ navigate }: { navigate: (h: string) => void }) {
             {feed.length === 0 ? <p className="muted small">A bola vai rolar…</p> : (
               <ol className="feed">
                 {feed.map((e) => (
-                  <li key={e.seq} className={e.type === "goal" ? "is-goal" : e.type === "penalty_awarded" || e.type === "red_card" ? "is-key" : ""}>
+                  <li key={e.seq} className={e.type === "goal" || (e.type === "shootout_kick" && e.data?.scored) ? "is-goal"
+                    : ["penalty_awarded", "red_card", "shootout_kick", "shootout_start", "shootout_end"].includes(e.type) ? "is-key" : ""}>
                     <span className="feed__min">{e.type === "shootout_kick" ? "pên." : `${e.minute}'`}</span>
                     <span aria-hidden>{EVENT_ICON[e.type] ?? "•"}</span>
                     <span>

@@ -1,7 +1,9 @@
 /** Peças da partida ao vivo: campo tático com as duas equipes, telão e outros jogos da rodada (DR-06). */
 import { useEffect, useRef, useState } from "react";
-import { ClubCrest, clubInitials } from "../../components/ClubCrest";
+import { ClubCrest } from "../../components/ClubCrest";
+import { displayPosition } from "../../domain/positions";
 import type { LiveOtherMatch } from "../../types/api";
+import { css, inkFor, useKitColors } from "./clubColors";
 
 type OnPitch = { player: number; name: string; slot: string; on_field: boolean; yellow_cards: number };
 
@@ -39,12 +41,14 @@ export function teamDots(players: OnPitch[], home: boolean): { p: OnPitch; x: nu
 
 const surname = (n: string) => n.trim().split(/\s+/).slice(-1)[0];
 
-export function LivePitch({ home, away, homeName, awayName, userSide = 0 }: {
-  home: OnPitch[]; away: OnPitch[]; homeName: string; awayName: string; userSide?: number;
+export function LivePitch({ home, away, homeName, awayName, homeUid, awayUid, userSide = 0 }: {
+  home: OnPitch[]; away: OnPitch[]; homeName: string; awayName: string; homeUid: number; awayUid: number; userSide?: number;
 }) {
-  // o seu time sempre em verde-lima; o adversário em prata
-  const cls = (side: number) => (side === userSide ? "dot--user" : "dot--opp");
-  const dots = [...teamDots(home, true).map((d) => ({ ...d, cls: cls(0) })), ...teamDots(away, false).map((d) => ({ ...d, cls: cls(1) }))];
+  // cores dos uniformes: primária do mandante; visitante com a primária ou, se parecida, a secundária (do escudo)
+  const kits = useKitColors(homeUid, awayUid);
+  const kitStyle = (side: number) => ({ ["--kit" as string]: css(kits[side]), ["--kit-ink" as string]: inkFor(kits[side]) });
+  const cls = (side: number) => `dot--side${side}${side === userSide ? " dot--user" : ""}`;
+  const dots = [...teamDots(home, true).map((d) => ({ ...d, side: 0 })), ...teamDots(away, false).map((d) => ({ ...d, side: 1 }))];
   return (
     <figure className="stack" style={{ margin: 0, gap: "0.4rem" }}>
       <div className="live-pitch" role="img" aria-label={`Campo tático: ${homeName} (esquerda) e ${awayName} (direita)`}>
@@ -57,16 +61,17 @@ export function LivePitch({ home, away, homeName, awayName, userSide = 0 }: {
           <rect className="ln" x="2" y="24.84" width="5.5" height="18.32" />
           <rect className="ln" x="97.5" y="24.84" width="5.5" height="18.32" />
         </svg>
-        {dots.map(({ p, x, y, cls }) => (
-          <span key={`${cls}-${p.player}`} className={`dot ${cls}`} style={{ left: `${2 + x * 0.96}%`, top: `${4 + y * 0.92}%` }} title={p.name}>
-            <span className="dot__chip">{clubInitials(surname(p.name)).slice(0, 2)}</span>
+        {dots.map(({ p, x, y, side }) => (
+          <span key={`${side}-${p.player}`} className={`dot ${cls(side)}`} style={{ left: `${2 + x * 0.96}%`, top: `${4 + y * 0.92}%`, ...kitStyle(side) }}
+            title={`${p.name} (${displayPosition(p.slot)})`}>
+            <span className="dot__chip">{displayPosition(p.slot)}</span>
             <span className="dot__name">{surname(p.name)}{p.yellow_cards > 0 ? " 🟨" : ""}</span>
           </span>
         ))}
       </div>
       <figcaption className="live-legend">
-        <b className={userSide === 0 ? "user" : "opp"}>{homeName}</b>
-        <b className={userSide === 1 ? "user" : "opp"}>{awayName}</b>
+        <b className="kit" style={kitStyle(0)}>{homeName}{userSide === 0 ? " (você)" : ""}</b>
+        <b className="kit" style={kitStyle(1)}>{awayName}{userSide === 1 ? " (você)" : ""}</b>
       </figcaption>
     </figure>
   );

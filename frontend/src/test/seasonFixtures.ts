@@ -34,7 +34,7 @@ export const SEASON_PLAYED = {
 export const SEASON_FINISHED = { ...SEASON_PLAYED, phase: "finished", champion_club_uid: USER, round_number: 3 };
 
 const POS = ["GK", "DR", "DC", "DC", "DL", "DM", "MC", "MC", "STC", "STC", "STC"];
-export const FORMATIONS = OFFICIAL_FORMATIONS; // as 11 oficiais (4-3-3 = POS)
+export const FORMATIONS = OFFICIAL_FORMATIONS; // as 11 oficiais (4-1-2-3 = POS)
 const fitAll = (natural: string) =>
   Object.fromEntries(["GK", "DR", "DL", "DC", "DM", "MC", "STC"].map((p) => [p, p === natural ? "natural" : "improvisada"]));
 
@@ -45,12 +45,12 @@ export const SQUAD = [...POS, "GK", "DC", "MC", "STC", "DM", "DR", "MC"].map((po
 }));
 
 export const LINEUP = {
-  has_match: true, match_id: "L-R01-M01", is_home: true, formation: "4-3-3", posture: "equilibrada", source: "auto",
+  has_match: true, match_id: "L-R01-M01", is_home: true, formation: "4-1-2-3", posture: "equilibrada", source: "auto",
   note: null, locked: false, formations: FORMATIONS,
   starters: POS.map((p, i) => ({ index: i, position: p, player: 1000 + i, name: `Atleta ${i + 1}`, fit: "natural" })),
   bench: [11, 12, 13].map((i) => ({ player: 1000 + i, name: `Atleta ${i + 1}`, slot: SQUAD[i].position })),
   opponent: {
-    club_uid: OPP, previous_formations: ["4-4-2"], top_players: [],
+    club_uid: OPP, previous_formations: ["4-2-2-2"], top_players: [],
     campaign: { club_uid: OPP, played: 0, wins: 0, draws: 0, losses: 0, goals_for: 0, goals_against: 0, shootouts_won: 0, shootouts_lost: 0, result: "1º lugar", matches: [] },
   },
 };

@@ -125,3 +125,33 @@ def test_other_matches_follow_the_same_clock_and_match_the_round_results():
 def test_live_without_other_matches_has_empty_list():
     _, task = user_task()
     assert LiveMatch.start(task, USER, "instant", ManualClock()).view()["others"] == []
+
+
+def test_shootout_kicks_are_revealed_one_by_one():
+    """Copa empatada: cada cobrança aparece em sequência (não o resultado de uma vez); instantâneo mostra tudo."""
+    s = make_season("cup", 4, seed=3)
+    task = s.user_task()
+    full = play_fixture(task).result
+    assert full.shootout is not None
+    clock = ManualClock()
+    live = LiveMatch.start(task, USER, "30s", clock)
+    seen: list[int] = []
+    partials = []
+    for _ in range(400):
+        clock.advance(0.5)
+        v = live.view()
+        kicks = sum(1 for e in v["events"] if e.type == "shootout_kick")
+        if any(e.type == "full_time" for e in v["events"]):
+            seen.append(kicks)
+            partials.append(v["shootout"])
+            assert v["game_second"] == next(e.second for e in v["events"] if e.type == "full_time")  # relógio parado
+        if v["finished"]:
+            break
+    assert v["finished"] and v["shootout"] == full.shootout and v["score"] == full.score
+    total = sum(1 for e in full.events if e.type == "shootout_kick")
+    assert seen[0] == 0 and seen[-1] == total
+    assert all(b - a <= 1 for a, b in zip(seen, seen[1:]))  # no máximo uma cobrança nova por meio segundo
+    assert len(set(seen)) == total + 1 and partials[0] is None
+    assert events_digest(live.result()) == events_digest(full)
+    instant = LiveMatch.start(task, USER, "instant", ManualClock()).view()
+    assert instant["finished"] and instant["shootout"] == full.shootout

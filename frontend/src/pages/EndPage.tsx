@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { getSeasonSummary } from "../api/endpoints";
 import { ActionBar, PhaseBanner } from "../components/GameUi";
 import { Notice } from "../components/Notice";
+import { QuitToHome } from "../components/QuitToHome";
 import { Club, FixtureList } from "../features/season/SeasonParts";
 import { useClubNames, useSeason } from "../features/season/useSeason";
 import type { AwardEntry, SeasonSummary } from "../types/api";
@@ -102,6 +103,7 @@ export function EndPage({ navigate }: { navigate: (h: string) => void }) {
         <h3>Nova competição</h3>
         <p className="muted">O progresso não é salvo: ao iniciar outra competição, esta será encerrada (com confirmação).</p>
         <ActionBar>
+          <QuitToHome navigate={navigate} />
           <button type="button" className="btn btn--cta" onClick={() => navigate("#/session")}>Nova partida ▶</button>
         </ActionBar>
       </section>

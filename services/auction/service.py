@@ -100,7 +100,8 @@ class AuctionService:
                     players=[
                         AuctionPlayerOut(
                             unique_id=pid, name=e.players[pid].name, age=e.players[pid].age,
-                            club_short_name=e.players[pid].club_short_name, position=e.players[pid].main_position,
+                            club_short_name=e.players[pid].club_short_name,
+                            club_uid=e.players[pid].club_uid, position=e.players[pid].main_position,
                             minimum_bid=r.minimum_bids[pid], has_photo=self._has_photo(pid),
                         )
                         for pid in r.player_ids

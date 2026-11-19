@@ -6,6 +6,7 @@ import { phaseHome } from "../app/phase";
 import { useSession } from "../app/SessionContext";
 import { ActionBar, PhaseBanner } from "../components/GameUi";
 import { Notice } from "../components/Notice";
+import { QuitToHome } from "../components/QuitToHome";
 import { CompetitionView } from "../features/competition/CompetitionView";
 import { SessionForm } from "../features/session/SessionForm";
 import { SessionPanel } from "../features/session/SessionPanel";
@@ -80,6 +81,7 @@ export function SessionPage({ onSessionChanged, navigate }: { onSessionChanged: 
       {active && competition && <CompetitionView competition={competition} clubs={clubs} />}
       {active && session && (
         <ActionBar>
+          {session.phase === "finished" && <QuitToHome navigate={navigate} />}
           <button type="button" className="btn btn--cta" onClick={() => navigate(phaseHome(session))}>Voltar ao jogo ▶</button>
         </ActionBar>
       )}

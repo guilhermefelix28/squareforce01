@@ -174,7 +174,7 @@ class AdminLoginOut(_Model):
 
 
 class UserFormationIn(_Model):
-    formation: str = Field(description="Nome de uma das 11 formações oficiais (ex.: '4-4-2').")
+    formation: str = Field(description="Nome de uma das 11 formações oficiais (ex.: '4-2-2-2').")
 
 
 # ---------------------------------------------------------------- competições
@@ -284,6 +284,7 @@ class AuctionPlayerOut(_Model):
     name: str
     age: int
     club_short_name: str = Field(description="Clube de origem do atleta (base importada).")
+    club_uid: int | None = Field(None, description="ID do clube de origem (escudo em /api/assets/clubs/{club_uid}).")
     position: Position = Field(description="Posição principal.")
     minimum_bid: int
     has_photo: bool = Field(False, description="Há foto em /api/assets/players/{unique_id}.")
@@ -368,6 +369,19 @@ class AuctionBidAck(_Model):
     amount: int
     seq: int
     replaced_player_id: int | None = Field(None, description="Alvo anterior, quando o lance trocou de atleta.")
+    replayed: bool = False
+
+
+class AuctionBidCancelIn(_Model):
+    round_number: int | None = Field(None, description="Rodada visível ao usuário; recusado se já encerrada.")
+
+
+class AuctionBidCancelOut(_Model):
+    """Lance retirado pelo usuário (DR-07)."""
+
+    round: int
+    player_id: int
+    amount: int
     replayed: bool = False
 
 

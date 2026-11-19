@@ -7,7 +7,7 @@ import type { AuctionState, Club } from "../../types/api";
 import { AuctionBoard } from "./AuctionBoard";
 
 const player = (id: number, name: string, min: number) => ({
-  unique_id: id, name, age: 24, club_short_name: "Origem", position: "STC" as const, minimum_bid: min, has_photo: false,
+  unique_id: id, name, age: 24, club_short_name: "Origem", club_uid: 900, position: "STC" as const, minimum_bid: min, has_photo: false,
 });
 
 const STATE: AuctionState = {
@@ -84,15 +84,22 @@ describe("AuctionBoard", () => {
     await user.click(screen.getByRole("button", { name: /Atacante Dois/ }));
     const input = screen.getByLabelText(/Valor para Atacante Dois/);
     expect(input).toHaveValue("2500000");
+    // atalhos do negativo para o positivo; sem "Mínimo" nem ±100 mil (o − e o + já andam de 100 em 100 mil)
+    const shortcuts = within(screen.getByRole("group", { name: "Atalhos de valor" })).getAllByRole("button");
+    expect(shortcuts.map((b) => b.textContent)).toEqual(["−1 mi", "−500 mil", "+500 mil", "+1 mi"]);
+    expect(screen.queryByRole("button", { name: "Mínimo" })).toBeNull();
     await user.click(screen.getByRole("button", { name: "+500 mil" }));
     await user.click(screen.getByRole("button", { name: "+1 mi" }));
     expect(input).toHaveValue("4000000");
-    await user.click(screen.getByRole("button", { name: "Mínimo" }));
-    await user.click(screen.getByRole("button", { name: "+100 mil" }));
+    await user.click(screen.getByRole("button", { name: "Aumentar lance" }));
+    expect(input).toHaveValue("4100000");
+    await user.click(screen.getByRole("button", { name: "Reduzir R$ 1 mi" }));
+    await user.click(screen.getByRole("button", { name: "Diminuir lance" }));
+    expect(input).toHaveValue("3000000");
     await user.click(screen.getByRole("button", { name: "Confirmar lance" }));
-    expect(await screen.findByText(/Lance de R\$\s2\.600\.000 em Atacante Dois confirmado/)).toBeInTheDocument();
+    expect(await screen.findByText(/Lance de R\$\s3\.000\.000 em Atacante Dois confirmado/)).toBeInTheDocument();
     const call = calls.find((c) => c.method === "POST")!;
-    expect(JSON.parse(String(call.init.body))).toEqual({ player_id: 2, amount: 2_600_000, round_number: 7 });
+    expect(JSON.parse(String(call.init.body))).toEqual({ player_id: 2, amount: 3_000_000, round_number: 7 });
     expect((call.init.headers as Record<string, string>)["Idempotency-Key"]).toMatch(/^sf-/);
     expect(onChanged).toHaveBeenCalled();
   });
@@ -137,6 +144,28 @@ describe("AuctionBoard", () => {
     expect(JSON.parse(String(calls.find((c) => c.method === "POST")!.init.body))).toMatchObject({ player_id: 3, amount: 300_000 });
   });
 
+  it("cancela o próprio lance durante a rodada (DR-07)", async () => {
+    const user = userEvent.setup();
+    const { calls } = fakeApi({
+      [`POST /api/sessions/${SESSION.id}/auction/bids/cancel`]: () => json(200, { round: 7, player_id: 3, amount: 900_000, replayed: false }),
+    });
+    const onChanged = renderBoard({ ...STATE, active_bid: { round: 7, player_id: 3, amount: 900_000, seq: 4 } });
+    await user.click(screen.getByRole("button", { name: /Cancelar meu lance/ }));
+    expect(await screen.findByText(/Lance em Três cancelado/)).toBeInTheDocument();
+    const call = calls.find((c) => c.method === "POST")!;
+    expect(JSON.parse(String(call.init.body))).toEqual({ round_number: 7 });
+    expect((call.init.headers as Record<string, string>)["Idempotency-Key"]).toMatch(/^sf-/);
+    expect(onChanged).toHaveBeenCalled();
+  });
+
+  it("sem lance ativo não há botão de cancelar; a carta destaca o clube de origem", () => {
+    fakeApi({});
+    renderBoard();
+    expect(screen.queryByRole("button", { name: /Cancelar meu lance/ })).toBeNull();
+    expect(screen.getAllByTitle("Clube de origem: Origem")).toHaveLength(5);
+    expect(screen.getAllByTestId("player-silhouette")).toHaveLength(5); // sem foto: silhueta genérica
+  });
+
   it("mostra o elenco agrupado GOL-LD-ZAG-LE-VOL-ME-ATA e as vagas da formação", () => {
     fakeApi({});
     const k = (id: number, name: string, position: string) => ({ player_id: id, name, position, price: 1_000_000, source: "auction" });
@@ -144,7 +173,7 @@ describe("AuctionBoard", () => {
     const side = screen.getByRole("complementary", { name: "Seu elenco e resultados" });
     const names = [...side.querySelectorAll(".pos-group .chip > span:first-child")].map((e) => e.textContent);
     expect(names).toEqual(["Gol", "Lat Dir", "Zag", "Lat Esq", "Ata"]);
-    const vac = within(side).getByLabelText("Vagas da formação 4-4-2");
+    const vac = within(side).getByLabelText("Vagas da formação 4-2-2-2");
     expect(vac).toHaveTextContent("ZAG 1/2");
     expect(vac).toHaveTextContent("GOL 1/1");
   });

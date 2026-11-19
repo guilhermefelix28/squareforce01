@@ -49,7 +49,7 @@ def test_squad_and_formations(env):
     assert len(squad) == 18 and all(p.available for p in squad)
     assert all(p.fit[p.position] == "natural" for p in squad)
     forms = get(c, sid, "formations")
-    assert [f["id"] for f in forms] == ["4-4-2", "4-3-3", "4-2-3-1", "3-5-2", "3-4-3", "5-3-2", "4-1-4-1", "4-5-1",
+    assert [f["id"] for f in forms] == ["4-2-2-2", "4-1-2-3", "4-2-3-1", "3-5-2", "3-4-3", "5-3-2", "4-1-4-1", "4-5-1",
                                      "4-3-2-1", "4-3-1-2", "5-4-1"] and all(len(f["positions"]) == 11 for f in forms)
     assert "attributes" not in str(squad[0].model_dump())  # atributos não são expostos
 
@@ -59,29 +59,29 @@ def test_lineup_set_validate_and_used_in_the_match(env):
     lu = LineupOut.model_validate(get(c, sid, "lineup"))
     assert lu.has_match and lu.source == "auto" and len(lu.starters) == 11 and lu.opponent is not None
     squad = [SquadPlayerOut.model_validate(x) for x in get(c, sid, "squad")]
-    form = next(f for f in get(c, sid, "formations") if f["id"] == "4-4-2")
+    form = next(f for f in get(c, sid, "formations") if f["id"] == "4-2-2-2")
     # posicionamento livre: titulares fora da posição natural são permitidos
     starters = [p.player for p in squad[:11]]
     bench = [p.player for p in squad[11:18]]
-    r = post(c, sid, "lineup", {"formation": "4-4-2", "starters": starters, "bench": bench, "posture": "ofensiva"})
+    r = post(c, sid, "lineup", {"formation": "4-2-2-2", "starters": starters, "bench": bench, "posture": "ofensiva"})
     assert r.status_code == 200, r.json()
     lu = LineupOut.model_validate(r.json())
-    assert lu.source == "user" and lu.formation == "4-4-2" and lu.posture == "ofensiva"
+    assert lu.source == "user" and lu.formation == "4-2-2-2" and lu.posture == "ofensiva"
     assert [s.player for s in lu.starters] == starters and [s.position for s in lu.starters] == form["positions"]
     assert any(s.fit != "natural" for s in lu.starters)  # indicadores de adequação
     # erros
-    bad = post(c, sid, "lineup", {"formation": "4-4-2", "starters": starters[:10] + [starters[0]], "bench": []})
+    bad = post(c, sid, "lineup", {"formation": "4-2-2-2", "starters": starters[:10] + [starters[0]], "bench": []})
     assert bad.status_code == 422 and bad.json()["error"]["code"] == "INVALID_LINEUP"
     bad = post(c, sid, "lineup", {"formation": "2-4-4", "starters": starters, "bench": []})  # não oficial
     assert bad.status_code == 422
-    bad = post(c, sid, "lineup", {"formation": "4-4-2", "starters": starters[:10] + [999999], "bench": []})
+    bad = post(c, sid, "lineup", {"formation": "4-2-2-2", "starters": starters[:10] + [999999], "bench": []})
     assert bad.status_code == 422
     # a escalação do usuário é a usada na partida
     s = SeasonStateOut.model_validate(post(c, sid, "play").json())
     mine = next(f for f in s.fixtures if f.is_user_match)
     rep = MatchReportOut.model_validate(get(c, sid, f"matches/{mine.match_id}"))
     own = next(x for x in rep.lineups if x.club_uid == s.user_club_uid)
-    assert own.formation == "4-4-2" and [p.player for p in own.starters] == starters
+    assert own.formation == "4-2-2-2" and [p.player for p in own.starters] == starters
     assert own.initial_posture == "ofensiva" and len(rep.lineups) == 2
 
 
@@ -92,7 +92,7 @@ def test_lineup_rejects_unavailable_player(env):
     season.state.ledger.injuries[squad[0].player] = 2
     sq = [SquadPlayerOut.model_validate(x) for x in get(c, sid, "squad")]
     assert not sq[0].available and "lesionado" in sq[0].unavailable_reason
-    r = post(c, sid, "lineup", {"formation": "4-3-3", "starters": [p.player for p in squad[:11]], "bench": []})
+    r = post(c, sid, "lineup", {"formation": "4-1-2-3", "starters": [p.player for p in squad[:11]], "bench": []})
     assert r.status_code == 422 and "Indisponíveis" in r.json()["error"]["message"]
 
 
@@ -108,7 +108,7 @@ def test_live_match_flow_reveals_progressively_and_round_reproduces_it(env):
     # escalação fechada depois do início
     lu = LineupOut.model_validate(get(c, sid, "lineup"))
     assert lu.locked
-    r = post(c, sid, "lineup", {"formation": "4-3-3", "starters": [s.player for s in lu.starters], "bench": []})
+    r = post(c, sid, "lineup", {"formation": "4-1-2-3", "starters": [s.player for s in lu.starters], "bench": []})
     assert r.status_code == 409 and r.json()["error"]["code"] == "MATCH_IN_PROGRESS"
     # play bloqueado durante a apresentação
     r = post(c, sid, "play")

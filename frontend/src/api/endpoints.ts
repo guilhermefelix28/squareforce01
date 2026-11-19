@@ -1,5 +1,6 @@
 import type {
   AuctionBidAck,
+  AuctionBidCancel,
   AuctionBidRequest,
   AuctionState,
   AuctionSummary,
@@ -109,6 +110,12 @@ export const getAuction = (id: string) => apiRequest<AuctionState>(`${sid(id)}/a
 
 export const placeBid = (id: string, body: AuctionBidRequest, idempotencyKey = newIdempotencyKey()) =>
   apiRequest<AuctionBidAck>(`${sid(id)}/auction/bids`, { method: "POST", json: body, idempotencyKey, retries: 1 });
+
+/** Retira o lance ativo do usuário na rodada aberta (DR-07). */
+export const cancelBid = (id: string, roundNumber: number | undefined, idempotencyKey = newIdempotencyKey()) =>
+  apiRequest<AuctionBidCancel>(`${sid(id)}/auction/bids/cancel`, {
+    method: "POST", json: roundNumber === undefined ? {} : { round_number: roundNumber }, idempotencyKey, retries: 1,
+  });
 
 export const getAuctionSummary = (id: string) => apiRequest<AuctionSummary>(`${sid(id)}/auction/summary`);
 

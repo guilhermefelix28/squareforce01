@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { App, navItems, parseHash, phaseHome } from "../../app/App";
 import { apiError, fakeApi, json, SESSION } from "../../test/fakeApi";
 import {
-  CALENDAR, LINEUP, LIVE, REPORT, SEASON_FINISHED, SEASON_PLAYED, SEASON_READY, SESSION_COMP, SID, SQUAD, STATS, SUMMARY, baseRoutes,
+  CALENDAR, LINEUP, LIVE, OPP, REPORT, SEASON_FINISHED, SEASON_PLAYED, SEASON_READY, SESSION_COMP, SID, SQUAD, STATS, SUMMARY, USER, baseRoutes,
 } from "../../test/seasonFixtures";
 import { slotCoordinates, swap } from "./Pitch";
 
@@ -33,7 +33,7 @@ describe("navegação contextual", () => {
     expect(labels("finished")).toContain("Encerramento");
     expect(phaseHome({ ...SESSION, phase: "competition" } as never)).toBe("#/temporada/central");
     expect(phaseHome({ ...SESSION, phase: "setup" } as never)).toBe("#/tatica");
-    expect(phaseHome({ ...SESSION, phase: "setup", user_formation: "4-4-2" } as never)).toBe("#/auction");
+    expect(phaseHome({ ...SESSION, phase: "setup", user_formation: "4-2-2-2" } as never)).toBe("#/auction");
   });
 
   it("pular para o conteúdo move o foco sem trocar de tela", async () => {
@@ -222,7 +222,7 @@ describe("escalação", () => {
     expect(screen.getByRole("button", { name: "Salvar escalação" })).toBeEnabled();
   });
 
-  it("arrastar um titular para outra linha troca a formação; desenho não oficial volta", async () => {
+  it("arrastar um titular para outra faixa (DEF/VOL/ME/ATA) troca a formação; desenho não oficial volta", async () => {
     fakeApi({
       ...baseRoutes(),
       [`GET ${S}/season`]: () => json(200, SEASON_READY),
@@ -230,9 +230,11 @@ describe("escalação", () => {
       [`GET ${S}/season/squad`]: () => json(200, SQUAD),
     });
     at("#/escalacao");
-    const zag = await screen.findByRole("button", { name: /Vaga ZAG: Atleta 3,/ });
+    await screen.findByRole("button", { name: /Vaga ZAG: Atleta 3,/ });
     const field = screen.getByRole("group", { name: "Campo: titulares por vaga" });
     field.getBoundingClientRect = () => ({ left: 0, top: 0, right: 680, bottom: 900, width: 680, height: 900, x: 0, y: 0, toJSON() {} });
+    // faixas de função visíveis, com VOL e ME separados
+    expect([...field.querySelectorAll("[data-band]")].map((e) => e.getAttribute("data-band"))).toEqual(["DEF", "VOL", "ME", "ATA"]);
     const data = new Map<string, string>();
     const dataTransfer = { setData: (k: string, v: string) => data.set(k, v), getData: (k: string) => data.get(k) ?? "", effectAllowed: "" };
     // jsdom não tem DragEvent com coordenadas: evento de mouse com dataTransfer
@@ -241,17 +243,19 @@ describe("escalação", () => {
       Object.defineProperty(e, "dataTransfer", { value: dataTransfer });
       fireEvent(field, e);
     };
-    // 4-3-3: zagueiro levado à linha do meio (y = 45%) => 3-4-3
-    fireEvent.dragStart(zag, { dataTransfer });
-    dropAt("dragover", 340, 405);
-    dropAt("drop", 340, 405);
+    // 4-1-2-3: meia levado à faixa de defesa (y = 74%) => 3-4-3 (5 defensores com os alas)
+    const me = screen.getAllByRole("button", { name: /^Vaga ME/ })[0];
+    fireEvent.dragStart(me, { dataTransfer });
+    expect(field).toHaveClass("is-dragging");
+    dropAt("dragover", 340, 666);
+    dropAt("drop", 340, 666);
     expect(await screen.findByText("Formação: 3-4-3")).toBeInTheDocument();
     expect(screen.getByLabelText("Formação")).toHaveValue("3-4-3");
     expect(screen.getAllByRole("button", { name: /^Vaga ZAG/ })).toHaveLength(3);
-    // meio-campista levado ao ataque (y = 14%) => 3-3-4: não oficial, nada muda
-    const mid = screen.getAllByRole("button", { name: /^Vaga ME/ })[0];
-    fireEvent.dragStart(mid, { dataTransfer });
-    dropAt("drop", 340, 126);
+    // volante levado à faixa de meias (y = 33%) => 3-4-3 sem volante e com 2 ME: não oficial, nada muda
+    const vol = screen.getAllByRole("button", { name: /^Vaga VOL/ })[0];
+    fireEvent.dragStart(vol, { dataTransfer });
+    dropAt("drop", 340, 297);
     expect(await screen.findByText("Essa formação não é oficial")).toBeInTheDocument();
     expect(screen.getByLabelText("Formação")).toHaveValue("3-4-3");
   });
@@ -310,6 +314,32 @@ describe("partida", () => {
   });
 });
 
+describe("pênaltis ao vivo", () => {
+  it("narra cada cobrança com o batedor, o goleiro e o placar parcial", async () => {
+    const kick = (seq: number, side: number, name: string, scored: boolean, sc: number[], gk: string) => ({
+      seq, minute: 96, second: 5700, period: 2, type: "shootout_kick", side, club_uid: side === 0 ? USER : OPP, player: 1, player_name: name,
+      other: 2, other_name: gk, data: { scored, shootout: sc },
+    });
+    const live = {
+      ...LIVE, minute: 96, score: [1, 1], shootout: [1, 0],
+      events: [...LIVE.events, { ...LIVE.events[0], seq: 40, minute: 96, type: "full_time", player_name: null },
+        { ...LIVE.events[0], seq: 41, minute: 96, type: "shootout_start", player_name: null, club_uid: null, side: null },
+        kick(42, 0, "Atleta 9", true, [1, 0], "Rival 1"), kick(43, 1, "Rival 7", false, [1, 0], "Atleta 1")],
+    };
+    fakeApi({
+      ...baseRoutes(),
+      [`GET ${S}/season`]: () => json(200, SEASON_READY),
+      [`GET ${S}/season/lineup`]: () => json(200, LINEUP),
+      [`GET ${S}/season/live`]: () => json(200, live),
+    });
+    at("#/partida");
+    expect(await screen.findByText(/1ª cobrança: Atleta 9 bate e marca · pênaltis 1–0/)).toBeInTheDocument();
+    expect(screen.getByText(/1ª cobrança: Rival 7 bate e perde \(goleiro Atleta 1\) · pênaltis 1–0/)).toBeInTheDocument();
+    expect(screen.getByText(/decidida nos pênaltis, cobrança a cobrança/)).toBeInTheDocument();
+    expect(screen.getByLabelText("Placar")).toHaveTextContent("Pênaltis 1–0"); // parcial, ainda sem o vencedor
+  });
+});
+
 describe("encerramento", () => {
   it("mostra campeão, campanha do usuário e premiações", async () => {
     fakeApi({
@@ -323,6 +353,25 @@ describe("encerramento", () => {
     expect(screen.getByText("Artilheiro")).toBeInTheDocument();
     expect(screen.getByText("Melhor média de notas (mín. 50% dos jogos)")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Nova partida/ })).toBeInTheDocument();
+  });
+
+  it("encerra a partida e volta ao início (com confirmação)", async () => {
+    let closed = false;
+    const { calls } = fakeApi({
+      ...baseRoutes({ ...SESSION_COMP, phase: "finished" }),
+      [`GET ${S}/season`]: () => json(200, SEASON_FINISHED),
+      [`GET ${S}/season/summary`]: () => json(200, SUMMARY),
+      [`POST ${S}/close`]: () => {
+        closed = true;
+        return json(200, { ...SESSION_COMP, phase: "finished", status: "closed" });
+      },
+    });
+    at("#/encerramento");
+    await userEvent.click(await screen.findByRole("button", { name: /Encerrar e voltar ao início/ }));
+    await userEvent.click(within(screen.getByRole("alertdialog")).getByRole("button", { name: "Encerrar" }));
+    await waitFor(() => expect(window.location.hash).toBe("#/home"));
+    expect(closed).toBe(true);
+    expect((calls.find((c) => c.method === "POST")!.init.headers as Record<string, string>)["Idempotency-Key"]).toMatch(/^sf-/);
   });
 
   it("campeão indefinido quando o desempate não resolve", async () => {

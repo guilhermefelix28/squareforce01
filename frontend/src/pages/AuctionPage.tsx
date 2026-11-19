@@ -5,11 +5,10 @@ import { useSession } from "../app/SessionContext";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { ActionBar, PhaseBanner } from "../components/GameUi";
 import { Notice } from "../components/Notice";
-import { AuctionBoard, FormationVacancies } from "../features/auction/AuctionBoard";
+import { AuctionBoard } from "../features/auction/AuctionBoard";
 import { AuctionSummaryView } from "../features/auction/AuctionSummaryView";
 import { useAuction } from "../features/auction/useAuction";
 import type { AuctionSummary, Club, Formation } from "../types/api";
-import { MiniPitch } from "./TacticPage";
 
 export function AuctionPage({ go, navigate }: { go: (page: string) => void; navigate: (h: string) => void }) {
   const { session, setSession } = useSession();
@@ -93,14 +92,6 @@ export function AuctionPage({ go, navigate }: { go: (page: string) => void; navi
               A formação orienta quantos jogadores de cada posição buscar.{" "}
               <button type="button" className="btn btn--small btn--ghost" onClick={() => navigate("#/tatica")}>Escolher tática</button>
             </Notice>
-          )}
-          {formation && (
-            <section className="card" style={{ maxWidth: 420, margin: "0 auto", width: "100%" }}>
-              <h3>Sua tática: {formation.id}</h3>
-              <MiniPitch formation={formation} />
-              <FormationVacancies formation={formation} owned={[]} />
-              <button type="button" className="btn btn--ghost btn--small" onClick={() => navigate("#/tatica")}>Trocar tática</button>
-            </section>
           )}
           <ActionBar>
             <button type="button" className="btn btn--cta" onClick={() => setConfirm(true)} disabled={busy}>Começar leilão ▶</button>

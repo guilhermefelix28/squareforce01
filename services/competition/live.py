@@ -27,6 +27,26 @@ from services.match_engine.types import Event, MatchResult, PostureChange
 from .worker import FixtureTask, match_input
 
 
+# Disputa de pênaltis: o motor registra todas as cobranças no instante do apito final. Na apresentação, cada
+# cobrança é revelada em sequência, separada por este intervalo de tempo de jogo (30 s => ~2,5 s reais por
+# cobrança; 15 s => ~1,25 s; 60 s => ~5 s; instantâneo => tudo de uma vez). Só muda QUANDO o cliente vê.
+SHOOTOUT_REVEAL_GAP = 450.0
+SHOOTOUT_EVENTS = frozenset({"shootout_start", "shootout_kick", "shootout_end"})
+
+
+def reveal_seconds(events: Sequence[Event]) -> list[float]:
+    """Instante (tempo de jogo da apresentação) em que cada evento pode ser revelado."""
+    out: list[float] = []
+    k = 0
+    for e in events:
+        if e.type in SHOOTOUT_EVENTS:
+            out.append(e.second + SHOOTOUT_REVEAL_GAP * (k + 0.5))
+            k += 1
+        else:
+            out.append(e.second)
+    return out
+
+
 class LiveError(Exception):
     def __init__(self, code: str, message: str):
         super().__init__(message)
@@ -87,8 +107,7 @@ class LiveMatch:
     def finished(self) -> bool:
         if not self.sim.finished:
             return False
-        last = self.sim.events[-1].second if self.sim.events else 0.0
-        return self.game_second() >= last
+        return self.game_second() >= self._end_second()
 
     def set_speed(self, speed: str) -> None:
         if speed not in SPEEDS:
@@ -101,7 +120,7 @@ class LiveMatch:
     def _end_second(self) -> float:
         if not self.sim.finished:
             return math.inf
-        return self.sim.events[-1].second if self.sim.events else 0.0
+        return reveal_seconds(self.sim.events)[-1] if self.sim.events else 0.0
 
     def change_posture(self, posture: str) -> float:
         with self.lock:
@@ -121,7 +140,7 @@ class LiveMatch:
     def view(self) -> dict:
         with self.lock:
             target = self._advance()
-            revealed: list[Event] = [e for e in self.sim.events if e.second <= target]
+            revealed: list[Event] = [e for e, at in zip(self.sim.events, reveal_seconds(self.sim.events)) if at <= target]
             finished = self.sim.finished and len(revealed) == len(self.sim.events)
             score = [0, 0]
             postures = [self.task.home.posture, self.task.away.posture]
@@ -130,7 +149,11 @@ class LiveMatch:
                     score[e.side] += 1
                 elif e.type == "posture_change":
                     postures[e.side] = e.data.get("posture", postures[e.side])
+            # placar dos pênaltis cresce cobrança a cobrança (só o já revelado)
             shootout = None
+            for e in revealed:
+                if e.type in ("shootout_kick", "shootout_end"):
+                    shootout = tuple(e.data.get("shootout", (0, 0)))
             if finished and self.sim.shootout:
                 shootout = self.sim.shootout
             team = self.sim.teams[self.user_side]
@@ -151,9 +174,13 @@ class LiveMatch:
                         goals[e.side] += 1
                 others.append({"match_id": t.match_id, "home_club_uid": t.home_club, "away_club_uid": t.away_club,
                                "score": tuple(goals), "finished": other.finished and len(shown) == len(other.events)})
-            now = min(target, revealed[-1].second if finished and revealed else target)
+            # o relógio para no apito final (a disputa de pênaltis não conta tempo de jogo)
+            whistle = next((e.second for e in revealed if e.type == "full_time"), None)
+            now = target if whistle is None else min(target, whistle)
+            if finished and revealed:
+                now = min(now, revealed[-1].second)
             return {
-                "game_second": 0.0 if not revealed else (revealed[-1].second if finished else now),
+                "game_second": 0.0 if not revealed else now,
                 "finished": finished,
                 "score": tuple(score),
                 "shootout": shootout,

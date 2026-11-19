@@ -142,7 +142,7 @@ def test_hidden_information_never_leaves_the_server(env):
     forbidden = ("overall", "attributes", "market_value", "personality", "bids", "reputation")
     assert not any(word in raw for word in forbidden)
     player_keys = set(data["round"]["players"][0])
-    assert player_keys == {"unique_id", "name", "age", "club_short_name", "position", "minimum_bid", "has_photo"}
+    assert player_keys == {"unique_id", "name", "age", "club_short_name", "club_uid", "position", "minimum_bid", "has_photo"}
 
 
 # ------------------------------------------------------------------ lances
@@ -171,6 +171,36 @@ def test_bid_flow_errors_and_idempotency(env):
 
     clock.advance(10)
     late = bid(c, sid, p.unique_id, p.minimum_bid + 3_000_000, s.round.number)
+    assert late.status_code == 409 and late.json()["error"]["code"] == "STALE_ROUND"
+
+
+def cancel(c, sid, round_number=None, idem=None):
+    body = {} if round_number is None else {"round_number": round_number}
+    return c.post(f"/api/sessions/{sid}/auction/bids/cancel", json=body, headers={"Idempotency-Key": idem or key()})
+
+
+def test_user_can_cancel_own_bid_until_round_closes(env):
+    """DR-07: o usuário pode retirar o próprio lance durante a rodada; sem lance, não compra ninguém."""
+    c, clock, sid, _ = env
+    s = AuctionStateOut.model_validate(start(c, sid).json())
+    p = s.round.players[0]
+    r = cancel(c, sid, s.round.number)
+    assert r.status_code == 409 and r.json()["error"]["code"] == "NO_ACTIVE_BID"
+    assert bid(c, sid, p.unique_id, p.minimum_bid, s.round.number).status_code == 200
+    idem = key()
+    ok = cancel(c, sid, s.round.number, idem)
+    assert ok.status_code == 200, ok.json()
+    assert ok.json() == {"round": s.round.number, "player_id": p.unique_id, "amount": p.minimum_bid, "replayed": False}
+    again = cancel(c, sid, s.round.number, idem)
+    assert again.headers["Idempotent-Replayed"] == "true"
+    assert state(c, sid).active_bid is None
+    # pode dar outro lance depois de cancelar
+    assert bid(c, sid, p.unique_id, p.minimum_bid, s.round.number).status_code == 200
+    assert cancel(c, sid, s.round.number).status_code == 200
+    clock.advance(10)
+    after = state(c, sid)
+    assert after.squad == [] and all(sale.club_uid != after.user_club_uid for r in after.recent_results for sale in r.sales)
+    late = cancel(c, sid, s.round.number)
     assert late.status_code == 409 and late.json()["error"]["code"] == "STALE_ROUND"
 
 

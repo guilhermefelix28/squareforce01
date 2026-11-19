@@ -52,6 +52,7 @@ Testes unitários do motor usam também `tests/support/fake_auction_model.py`, u
 | POST | `/api/sessions/{id}/auction/start` | Inicia (fase `setup` → `auction`). 409 se o leilão estiver desligado (`SQUADFORCE_AUCTION_MODEL=none`). |
 | GET | `/api/sessions/{id}/auction` | Estado do usuário: rodada, 5 atletas (sem dados ocultos), tempos restantes, saldo, lance máximo, oferta ativa própria, resultados recentes, elencos/saldos públicos. |
 | POST | `/api/sessions/{id}/auction/bids` | `{player_id, amount, round_number?}`; `Idempotency-Key` = identificador da operação. |
+| POST | `/api/sessions/{id}/auction/bids/cancel` | `{round_number?}`: retira o lance ativo do usuário na rodada aberta (DR-07). |
 | GET | `/api/sessions/{id}/auction/summary` | Elencos finais (18) e saldos, após a complementação (fase `squad_completion`). |
 
 Eventos WebSocket (`/ws/sessions/{id}`): `auction.started`, `auction.round_started`, `auction.round_closed`,

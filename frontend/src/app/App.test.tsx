@@ -155,16 +155,22 @@ describe("App", () => {
 });
 
 describe("tática antes do leilão (DR-02)", () => {
-  it("escolhe a formação, salva com idempotência e segue para o leilão", async () => {
+  it("escolhe a formação e, ao confirmar, já começa o leilão (sem tela perguntando se quer trocar)", async () => {
     const user = userEvent.setup();
     localStorage.setItem("squadforce.sessionId", SESSION.id);
+    let started = false;
     const { calls } = fakeApi({
       "GET /api/health": () => json(200, { ...HEALTH, active_session: true }),
-      [`GET /api/sessions/${SESSION.id}`]: () => json(200, SESSION),
+      [`GET /api/sessions/${SESSION.id}`]: () =>
+        json(200, started ? { ...SESSION, version: 3, phase: "auction", user_formation: "3-5-2" } : SESSION),
       "GET /api/formations": () => json(200, FORMATIONS),
       "GET /api/catalog/clubs": () => json(200, { items: CLUBS, total: 3, limit: 200, offset: 0 }),
       [`POST /api/sessions/${SESSION.id}/formation`]: (_u, init) =>
         json(200, { ...SESSION, version: 2, user_formation: JSON.parse(String(init.body)).formation }),
+      [`POST /api/sessions/${SESSION.id}/auction/start`]: () => {
+        started = true;
+        return json(200, {});
+      },
     });
     window.location.hash = "#/tatica";
     render(<App />);
@@ -172,12 +178,15 @@ describe("tática antes do leilão (DR-02)", () => {
     expect(tiles).toHaveLength(11);
     await user.click(screen.getByRole("radio", { name: "3-5-2" }));
     expect(screen.getByRole("radio", { name: "3-5-2" })).toHaveAttribute("aria-checked", "true");
-    await user.click(screen.getByRole("button", { name: /Confirmar tática/ }));
+    expect(screen.queryByText(/Formação: 3-5-2/)).toBeNull(); // a barra de ação não repete a formação
+    await user.click(screen.getByRole("button", { name: /Confirmar tática e começar o leilão/ }));
     await waitFor(() => expect(window.location.hash).toBe("#/auction"));
-    const post = calls.find((c) => c.method === "POST")!;
-    expect(JSON.parse(String(post.init.body))).toEqual({ formation: "3-5-2" });
-    expect((post.init.headers as Record<string, string>)["Idempotency-Key"]).toMatch(/^sf-/);
-    expect(await screen.findByText("Sua tática: 3-5-2")).toBeInTheDocument();
+    const posts = calls.filter((c) => c.method === "POST");
+    expect(posts.map((c) => c.path)).toEqual([`/api/sessions/${SESSION.id}/formation`, `/api/sessions/${SESSION.id}/auction/start`]);
+    expect(JSON.parse(String(posts[0].init.body))).toEqual({ formation: "3-5-2" });
+    for (const p of posts) expect((p.init.headers as Record<string, string>)["Idempotency-Key"]).toMatch(/^sf-/);
+    expect(screen.queryByRole("button", { name: /Trocar tática/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Começar leilão/ })).toBeNull();
     localStorage.removeItem("squadforce.sessionId");
   });
 });

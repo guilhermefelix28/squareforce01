@@ -103,6 +103,8 @@ Detalhes, erros e eventos em [leilão](../architecture/leilao.md). Resumo:
 |---|---|---|---|
 | POST | `/api/sessions/{id}/auction/start` | `AuctionStateOut` (201) | 409 `AUCTION_MODEL_NOT_CONFIGURED` / `INVALID_PHASE`, 500 `AUCTION_REJECTED` |
 | GET | `/api/sessions/{id}/auction` | `AuctionStateOut` | 404 `AUCTION_NOT_FOUND` |
+| GET | (rodada do leilão) | `AuctionPlayerOut.club_uid` | ID do clube de origem do atleta, para o escudo na carta (DR-10) |
+| POST | `/api/sessions/{id}/auction/bids/cancel` | `AuctionBidCancelOut` (`{round, player_id, amount}`) | Body `{round_number?}`. 409 `NO_ACTIVE_BID` / `STALE_ROUND` / `ROUND_CLOSED` / `AUCTION_NOT_RUNNING` (DR-07) |
 | POST | `/api/sessions/{id}/auction/bids` | `AuctionBidAck` | 422 `BELOW_MINIMUM_BID` / `INSUFFICIENT_FUNDS` / `BID_UNCHANGED` / `PLAYER_NOT_IN_ROUND` / `SQUAD_FULL`, 409 `STALE_ROUND` / `ROUND_CLOSED` / `AUCTION_NOT_RUNNING` / `OPERATION_ID_REUSED` |
 | GET | `/api/sessions/{id}/auction/summary` | `AuctionSummaryOut` | 409 `AUCTION_NOT_FINISHED` |
 
@@ -175,7 +177,7 @@ Detalhes em [interface](../architecture/interface.md). Todo POST exige `Idempote
 | GET | `/api/sessions/{id}/season/lineup` | `LineupOut` (escalação atual, postura, adversário público, `locked`) | 404 |
 | POST | `/api/sessions/{id}/season/lineup` | `LineupOut` | 422 `INVALID_LINEUP`, 409 `MATCH_IN_PROGRESS` / `NO_USER_MATCH` |
 | POST | `/api/sessions/{id}/season/live/start` | `LiveStateOut` (201) | 409 `INVALID_PHASE` / `NO_USER_MATCH`, 422 velocidade |
-| GET | `/api/sessions/{id}/season/live` | `LiveStateOut` (somente eventos já ocorridos). Inclui `opponent_players` (escalação pública, sem condição) e `other_matches` (placares simultâneos da rodada, mesmo relógio; DR-06) | 404 `LIVE_NOT_FOUND` |
+| GET | `/api/sessions/{id}/season/live` | `LiveStateOut` (somente eventos já ocorridos). Inclui `opponent_players` (escalação pública, sem condição) e `other_matches` (placares simultâneos da rodada, mesmo relógio; DR-06). Na disputa de pênaltis, cada cobrança é revelada em sequência e `shootout` traz o placar parcial (DR-09) | 404 `LIVE_NOT_FOUND` |
 | POST | `/api/sessions/{id}/season/live/posture` | `LiveStateOut` | 409 `SAME_POSTURE` / `MATCH_FINISHED` |
 | POST | `/api/sessions/{id}/season/live/speed` | `LiveStateOut` | 422 velocidade inválida |
 | GET | `/api/sessions/{id}/season/stats` | `SeasonStatsOut` (jogadores e clubes) | 404 |

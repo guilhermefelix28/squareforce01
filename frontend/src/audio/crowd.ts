@@ -1,7 +1,7 @@
 /**
- * Sons do estádio sintetizados no navegador (Web Audio): sem arquivos de áudio externos.
- * - Gol: explosão da torcida (ruído filtrado com envelope) + "coro" curto; mais contido para gol do adversário.
- * - Apito: início/intervalo/fim.
+ * Sons do estádio.
+ * - Gol: grito de torcida (public/sounds/goal-crowd.mp4, a partir de 3,5 s); mais baixo para gol do adversário.
+ * - Apito: sintetizado (Web Audio) no início/intervalo/fim.
  * Liga/desliga lembrado no navegador (padrão: ligado).
  */
 import { useEffect, useState } from "react";
@@ -50,60 +50,63 @@ function audio(): AudioContext | null {
   }
 }
 
-function noiseBuffer(ac: AudioContext, seconds: number): AudioBuffer {
-  const buf = ac.createBuffer(2, Math.floor(ac.sampleRate * seconds), ac.sampleRate);
-  for (let ch = 0; ch < 2; ch++) {
-    const d = buf.getChannelData(ch);
-    let b = 0;
-    for (let i = 0; i < d.length; i++) {
-      // ruído "rosado" simples: soa como multidão, não como chiado
-      b = 0.97 * b + 0.03 * (Math.random() * 2 - 1);
-      d[i] = b * 6;
-    }
-  }
-  return buf;
+/** Grito de gol fornecido pelo responsável (vídeo MP4; só o áudio é usado). Toca o trecho a partir de 3,5 s. */
+export const GOAL_SOUND_URL = "/sounds/goal-crowd.mp4";
+export const GOAL_START_S = 3.5;
+/** Duração do trecho tocado e do fade final (segundos). */
+export const GOAL_LENGTH_S = 3;
+const GOAL_FADE_S = 0.7;
+let goalClip: HTMLAudioElement | null = null;
+
+function newClip(Ctor: typeof Audio): HTMLAudioElement {
+  const clip = new Ctor(GOAL_SOUND_URL);
+  clip.preload = "auto";
+  return clip;
 }
 
-/** Torcida explodindo no gol. `own` = gol do seu time (mais alto e longo). */
+/** Carrega o som do gol antes do primeiro gol (evita atraso no primeiro grito). */
+export function preloadGoal() {
+  const Ctor = (globalThis as { Audio?: typeof Audio }).Audio;
+  if (!Ctor || !soundEnabled()) return;
+  try {
+    goalClip ??= newClip(Ctor);
+    goalClip.load?.();
+  } catch {
+    /* sem áudio */
+  }
+}
+
+/** Toca [início, início + duração] com o volume pedido e fade no fim. */
+function playSegment(clip: HTMLAudioElement, volume: number) {
+  const go = () => {
+    clip.currentTime = GOAL_START_S;
+    clip.volume = volume;
+    const p = clip.play();
+    if (p && typeof p.catch === "function") p.catch(() => undefined); // autoplay bloqueado: silêncio
+    const steps = 7;
+    const fadeStart = (GOAL_LENGTH_S - GOAL_FADE_S) * 1000;
+    for (let i = 1; i <= steps; i++) {
+      setTimeout(() => {
+        clip.volume = Math.max(0, volume * (1 - i / steps));
+        if (i === steps) clip.pause();
+      }, fadeStart + (GOAL_FADE_S * 1000 * i) / steps);
+    }
+  };
+  if (clip.readyState >= 1) go();
+  else clip.addEventListener("loadedmetadata", go, { once: true }); // só dá para posicionar após os metadados
+}
+
+/** Torcida explodindo no gol. `own` = gol do seu time (volume cheio); gol do adversário bem mais baixo. */
 export function playGoal(own: boolean) {
-  const ac = audio();
-  if (!ac) return;
-  const t = ac.currentTime;
-  const dur = own ? 4.2 : 2.2;
-  const peak = own ? 0.9 : 0.35;
-  const src = ac.createBufferSource();
-  src.buffer = noiseBuffer(ac, dur);
-  const band = ac.createBiquadFilter();
-  band.type = "bandpass";
-  band.frequency.setValueAtTime(700, t);
-  band.frequency.linearRampToValueAtTime(1100, t + 0.6);
-  band.Q.value = 0.6;
-  const gain = ac.createGain();
-  gain.gain.setValueAtTime(0.0001, t);
-  gain.gain.exponentialRampToValueAtTime(peak, t + 0.25);
-  gain.gain.setValueAtTime(peak, t + dur * 0.45);
-  gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  src.connect(band).connect(gain).connect(ac.destination);
-  src.start(t);
-  src.stop(t + dur);
-  if (own) {
-    // coro curto "GOOOL": vozes em quinta, vibrato leve
-    [196, 294, 392].forEach((f, i) => {
-      const o = ac.createOscillator();
-      o.type = "sawtooth";
-      o.frequency.setValueAtTime(f, t + 0.3);
-      o.frequency.linearRampToValueAtTime(f * 0.94, t + 2.4);
-      const lp = ac.createBiquadFilter();
-      lp.type = "lowpass";
-      lp.frequency.value = 900;
-      const g = ac.createGain();
-      g.gain.setValueAtTime(0.0001, t + 0.3);
-      g.gain.exponentialRampToValueAtTime(0.05 / (i + 1), t + 0.6);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + 2.5);
-      o.connect(lp).connect(g).connect(ac.destination);
-      o.start(t + 0.3);
-      o.stop(t + 2.6);
-    });
+  if (!soundEnabled()) return;
+  const Ctor = (globalThis as { Audio?: typeof Audio }).Audio;
+  if (!Ctor) return;
+  try {
+    goalClip ??= newClip(Ctor);
+    const clip = goalClip.paused ? goalClip : (goalClip.cloneNode(true) as HTMLAudioElement);
+    playSegment(clip, own ? 1 : 0.35);
+  } catch {
+    /* navegador sem áudio: o jogo segue */
   }
 }
 

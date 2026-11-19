@@ -375,6 +375,24 @@ class AuctionEngine:
         return BidAck(r.number, player_id, amount, at, self._seq,
                       current.player_id if current and current.player_id != player_id else None)
 
+    def cancel_bid(self, club_uid: int, round_number: int | None = None) -> Bid:
+        """Retira o lance ativo do clube na rodada aberta (DR-07, decisão do responsável). Devolve o lance retirado."""
+        with self._lock:
+            now = self.clock()
+            self._advance(now)
+            if self.phase != "running" or self.round is None:
+                raise AuctionError("AUCTION_NOT_RUNNING", "O leilão não está em andamento.")
+            r = self.round
+            if round_number is not None and round_number != r.number:
+                raise AuctionError("STALE_ROUND", f"A rodada {round_number} não está mais aberta (atual: {r.number}).",
+                                   details={"current_round": r.number})
+            if now >= r.ends_at:
+                raise AuctionError("ROUND_CLOSED", "A rodada já foi encerrada.")
+            current = r.bids.pop(club_uid, None)
+            if current is None:
+                raise AuctionError("NO_ACTIVE_BID", "Não há lance seu nesta rodada.")
+            return current
+
     # ================================================================ bots
     def _schedule_bots(self, r: AuctionRound) -> None:
         for uid, club in sorted(self.clubs.items()):

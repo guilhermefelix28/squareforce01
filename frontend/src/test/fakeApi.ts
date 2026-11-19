@@ -101,8 +101,8 @@ export const CUP_COMPETITION = {
 
 /** As 11 formações oficiais (mesmas vagas do servidor). */
 export const FORMATIONS = [
-  ["4-4-2", "GK DR DC DC DL MC MC MC MC STC STC"],
-  ["4-3-3", "GK DR DC DC DL DM MC MC STC STC STC"],
+  ["4-2-2-2", "GK DR DC DC DL DM DM MC MC STC STC"],
+  ["4-1-2-3", "GK DR DC DC DL DM MC MC STC STC STC"],
   ["4-2-3-1", "GK DR DC DC DL DM DM MC MC MC STC"],
   ["3-5-2", "GK DC DC DC DR DL DM MC MC STC STC"],
   ["3-4-3", "GK DC DC DC DR DL DM MC STC STC STC"],

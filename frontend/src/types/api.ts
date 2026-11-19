@@ -33,6 +33,7 @@ export type AuctionState = S["AuctionStateOut"];
 export type AuctionPlayer = S["AuctionPlayerOut"];
 export type AuctionRound = S["AuctionRoundOut"];
 export type AuctionBidAck = S["AuctionBidAck"];
+export type AuctionBidCancel = S["AuctionBidCancelOut"];
 export type AuctionBidRequest = S["AuctionBidRequest"];
 export type AuctionSummary = S["AuctionSummaryOut"];
 export type AuctionContract = S["AuctionContractOut"];

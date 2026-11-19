@@ -16,12 +16,13 @@ export const POSITION_ORDER: Position[] = ["GK", "DR", "DC", "DL", "DM", "MC", "
 
 export const displayPosition = (p: Position | string): string => POSITION_DISPLAY[p as Position] ?? p;
 
-export type Sector = "gol" | "def" | "mei" | "ata";
+export type Sector = "gol" | "def" | "vol" | "mei" | "ata";
 /** Setor do campo (cor do selo de posição). */
 export function sector(p: Position | string): Sector {
   if (p === "GK") return "gol";
   if (p === "DR" || p === "DL" || p === "DC") return "def";
-  if (p === "DM" || p === "MC") return "mei";
+  if (p === "DM") return "vol"; // volante com cor própria (DR-08)
+  if (p === "MC") return "mei";
   return "ata";
 }
 

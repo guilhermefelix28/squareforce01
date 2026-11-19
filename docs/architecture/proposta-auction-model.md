@@ -105,8 +105,8 @@ leilão, os bots, a escalação e o motor.
 
 | Formação | Vagas |
 |---|---|
-| 4-4-2 | GOL, LD, ZAG, ZAG, LE, ME, ME, ME, ME, ATA, ATA |
-| 4-3-3 | GOL, LD, ZAG, ZAG, LE, VOL, ME, ME, ATA, ATA, ATA |
+| 4-2-2-2 (era 4-4-2; DR-08) | GOL, LD, ZAG, ZAG, LE, VOL, VOL, ME, ME, ATA, ATA |
+| 4-1-2-3 (era 4-3-3; DR-08) | GOL, LD, ZAG, ZAG, LE, VOL, ME, ME, ATA, ATA, ATA |
 | 4-2-3-1 | GOL, LD, ZAG, ZAG, LE, VOL, VOL, ME, ME, ME, ATA |
 | 3-5-2 | GOL, ZAG, ZAG, ZAG, LD, LE, VOL, ME, ME, ATA, ATA |
 | 3-4-3 | GOL, ZAG, ZAG, ZAG, LD, LE, VOL, ME, ATA, ATA, ATA |

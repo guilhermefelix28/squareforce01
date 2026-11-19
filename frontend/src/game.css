@@ -13,6 +13,7 @@
   --pitch-line: rgba(255, 255, 255, 0.38);
   --sector-gol: #ff9f1c;
   --sector-def: #3aa0ff;
+  --sector-vol: #2ee6c8;
   --sector-mei: #99fa08;
   --sector-ata: #ff4d5e;
   --display: "Oswald", "Bahnschrift", "Arial Narrow", system-ui, sans-serif;
@@ -29,6 +30,7 @@
   --grass-2: #379039;
   --sector-gol: #c46a00;
   --sector-def: #1769c2;
+  --sector-vol: #0b8a7a;
   --sector-mei: #2f7a00;
   --sector-ata: #c62838;
   --led: #111511;
@@ -104,6 +106,7 @@ h3 { font-size: 1.1rem; }
 .pos-badge--sm { min-width: 2.1rem; height: 1.15rem; font-size: 0.7rem; }
 .pos-badge--gol, .pcard--gol { --sector: var(--sector-gol); }
 .pos-badge--def, .pcard--def { --sector: var(--sector-def); }
+.pos-badge--vol, .pcard--vol { --sector: var(--sector-vol); }
 .pos-badge--mei, .pcard--mei { --sector: var(--sector-mei); }
 .pos-badge--ata, .pcard--ata { --sector: var(--sector-ata); }
 :root[data-theme="light"] .pos-badge { color: #fff; }
@@ -314,7 +317,7 @@ h3 { font-size: 1.1rem; }
   .ring__label { font-size: 1.5rem; }
   .card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .btn--cta { font-size: 0.95rem; padding: 0.65rem 1.1rem; }
-  .dot__name { display: none; }
+  .dot__name { font-size: 0.5rem; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
@@ -349,10 +352,6 @@ h3 { font-size: 1.1rem; }
 }
 .summary-grid .squad table.compact td, .summary-grid .squad table.compact th { padding: 0.3rem 0.3rem; }
 .summary-grid .squad td.hide-sm, .summary-grid .squad td:nth-child(2) { white-space: normal; }
-.dot--user .dot__chip { background: #99fa08; color: #0a0a0a; }
-.dot--opp .dot__chip { background: #f2f2f2; color: #0a0a0a; }
-.live-legend .user::before { background: #99fa08; }
-.live-legend .opp::before { background: #f2f2f2; border: 1px solid #888; }
 
 /* ---------- celular: barra de ação compacta e cartas menores ---------- */
 @media (max-width: 760px) {
@@ -366,3 +365,48 @@ h3 { font-size: 1.1rem; }
   .token .photo { width: 22px; height: 22px; font-size: 0.55rem; }
   .token .pos-badge--sm { height: 1rem; min-width: 1.8rem; font-size: 0.6rem; }
 }
+
+/* ---------- ajustes 2026-11-19 (lote 2): carta do leilão, atalhos, cancelar lance, coluna de clubes ---------- */
+.photo--silhouette { color: color-mix(in srgb, var(--text) 55%, transparent); background: var(--surface-2); }
+.pcard--full .photo { border-width: 3px; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35); }
+.pcard__age { font-size: 0.75rem; color: var(--muted); font-weight: 600; }
+.pcard__origin {
+  display: flex; align-items: center; justify-content: center; gap: 0.4rem; width: 100%; min-width: 0;
+  padding: 0.3rem 0.45rem; border-radius: 10px; background: color-mix(in srgb, var(--text) 7%, transparent);
+  border: 1px solid var(--border);
+}
+.pcard__origin .crest { flex: 0 0 auto; }
+.pcard__origin .pcard__club { font-weight: 700; font-size: 0.85rem; color: var(--text); }
+.step--down { color: var(--danger); }
+.active-bid { display: flex; align-items: center; justify-content: center; gap: 0.6rem; flex-wrap: wrap; }
+.btn--danger-ghost { background: transparent; color: var(--danger); border: 1px solid color-mix(in srgb, var(--danger) 55%, transparent); }
+.btn--danger-ghost:hover:not(:disabled) { background: var(--danger-soft); }
+.auction { grid-template-columns: minmax(0, 1fr) 300px; grid-template-areas: "main side" "main clubs"; }
+.auction__main { grid-area: main; }
+.auction__side { grid-area: side; }
+.auction__clubs { grid-area: clubs; min-width: 0; }
+.auction__clubs table.compact { table-layout: fixed; width: 100%; }
+.auction__clubs table.compact th:first-child, .auction__clubs table.compact td:first-child { width: 52%; }
+.auction__clubs table.compact td, .auction__clubs table.compact th { padding: 0.3rem 0.25rem; }
+.auction__clubs .club-name > span:not(.tag) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (min-width: 1360px) {
+  .auction { grid-template-columns: 270px minmax(0, 1fr) 300px; grid-template-areas: "clubs main side"; }
+}
+@media (max-width: 1000px) {
+  .auction { grid-template-columns: minmax(0, 1fr); grid-template-areas: "main" "side" "clubs"; }
+}
+/* faixas de função do campinho (DR-08): discretas em repouso, destacadas durante o arraste */
+.field2__row { height: 17%; transition: background 0.15s; }
+.field2__row-label { left: 6px; right: auto; top: 50%; transform: translateY(-50%); opacity: 0.45; font-size: 0.62rem; }
+.field2.is-dragging .field2__row { background: rgba(255, 255, 255, 0.05); outline: 1px dashed rgba(255, 255, 255, 0.28); outline-offset: -3px; }
+.field2.is-dragging .field2__row-label { opacity: 1; color: #fff; font-size: 0.75rem; }
+.field2.is-dragging .field2__row.is-target { background: rgba(153, 250, 8, 0.16); outline: 2px dashed var(--accent); }
+/* campinho ao vivo: uniforme = cor do clube (extraída do escudo), posição dentro do ícone, nome embaixo */
+.dot .dot__chip { width: 26px; height: 26px; font-size: 0.54rem; letter-spacing: 0.02em; background: var(--kit); color: var(--kit-ink); border: 2px solid rgba(0, 0, 0, 0.55); font-family: var(--display); }
+.dot--user .dot__chip { box-shadow: 0 0 0 2px var(--accent); }
+.live-legend .kit::before { background: var(--kit); border: 1px solid rgba(0, 0, 0, 0.5); }
+@media (max-width: 520px) { .dot .dot__chip { width: 20px; height: 20px; font-size: 0.45rem; } }
+/* leilão com três colunas: a página usa a largura toda da tela grande */
+.content:has(.auction) { max-width: 1480px; }
+.pcard__origin .pcard__club { white-space: normal; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.15; text-align: left; font-size: 0.8rem; }
+.lot2 .pcard__foot .tag { white-space: normal; display: inline-block; max-width: 100%; }

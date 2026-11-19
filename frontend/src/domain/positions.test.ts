@@ -12,7 +12,7 @@ describe("posições (GDD seção 3; ordem DR-05)", () => {
     const xs = [{ n: "a", p: "STC" }, { n: "b", p: "DL" }, { n: "c", p: "GK" }, { n: "d", p: "DC" }, { n: "e", p: "DC" }, { n: "f", p: "DR" }];
     expect(byPosition(xs, (x) => x.p).map((x) => x.n)).toEqual(["c", "f", "d", "e", "b", "a"]);
   });
-  it("classifica setores", () => {
-    expect(["GK", "DR", "DC", "DM", "MC", "STC"].map(sector)).toEqual(["gol", "def", "def", "mei", "mei", "ata"]);
+  it("classifica setores (VOL com cor própria, DR-08)", () => {
+    expect(["GK", "DR", "DC", "DM", "MC", "STC"].map(sector)).toEqual(["gol", "def", "def", "vol", "mei", "ata"]);
   });
 });

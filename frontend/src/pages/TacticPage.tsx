@@ -1,7 +1,7 @@
-/** Tática antes do leilão (DR-02): a formação escolhida orienta o leilão e vira a escalação inicial. */
+/** Tática antes do leilão (DR-02): a formação escolhida orienta o leilão e vira a escalação inicial. Confirmar já abre o leilão. */
 import { useEffect, useState } from "react";
 import { ApiError } from "../api/client";
-import { chooseFormation, getOfficialFormations } from "../api/endpoints";
+import { chooseFormation, getOfficialFormations, getSession, startAuction } from "../api/endpoints";
 import { useSession } from "../app/SessionContext";
 import { ActionBar, PhaseBanner } from "../components/GameUi";
 import { Notice } from "../components/Notice";
@@ -76,7 +76,10 @@ export function TacticPage({ navigate }: { navigate: (h: string) => void }) {
   const confirm = () =>
     void cmd.run(async (k) => {
       if (!chosen) return;
-      setSession(await chooseFormation(session.id, chosen, k));
+      await chooseFormation(session.id, chosen, k);
+      // sem tela intermediária: a tática confirmada já começa o leilão (o relógio global inicia agora)
+      await startAuction(session.id, `${k}-leilao`);
+      setSession(await getSession(session.id));
       navigate("#/auction");
     });
 
@@ -84,6 +87,8 @@ export function TacticPage({ navigate }: { navigate: (h: string) => void }) {
     <div className="stack">
       <PhaseBanner kicker="Antes do leilão" title="Escolha sua tática">
         A formação define quantos jogadores de cada posição você vai buscar no leilão e será a escalação inicial do time.
+        Ao confirmar, o leilão começa: rodadas de 10 segundos com 5 jogadores da mesma posição e R$ 120 milhões para
+        montar 18 jogadores. O relógio é global e não pausa.
       </PhaseBanner>
       {loadError && <Notice kind="error">{loadError}</Notice>}
       {cmd.error && <Notice kind="error" title="Tática não salva">{cmd.error.message}</Notice>}
@@ -108,9 +113,9 @@ export function TacticPage({ navigate }: { navigate: (h: string) => void }) {
           </section>
         )}
       </div>
-      <ActionBar hint={selected ? `Formação: ${selected.id}` : undefined}>
+      <ActionBar>
         <button type="button" className="btn btn--cta" disabled={!chosen || cmd.busy} onClick={confirm}>
-          {cmd.busy ? "Salvando…" : "Confirmar tática e ir ao leilão ▶"}
+          {cmd.busy ? "Abrindo o leilão…" : "Confirmar tática e começar o leilão ▶"}
         </button>
       </ActionBar>
     </div>

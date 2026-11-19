@@ -140,7 +140,7 @@ function Shell() {
       </a>
       <header className="topbar">
         <a href="#/home" className="brand" aria-label="SquadForce — início">
-          <img src={theme === "dark" ? "/brand/logo-dark.png" : "/brand/logo-light.png"} alt="SquadForce" />
+          <img src="/brand/logo.png" alt="SquadForce" />
         </a>
         {step && <PhaseStepper current={step} />}
         <div className="topbar__end">
@@ -173,7 +173,7 @@ function Shell() {
           <>
             {route.page === "home" && (
               <HomePage health={health} connection={connection} error={error} session={session} onRetry={refresh}
-                onStart={() => navigate("#/session")} continueTo={() => navigate(phaseHome(session))} />
+                onStart={() => navigate("#/session")} continueTo={() => navigate(phaseHome(session))} navigate={navigate} />
             )}
             {route.page === "admin" && <AdminPage importsBlocked={importsBlocked} onDataChanged={refresh} health={health} />}
             {route.page === "session" && <SessionPage onSessionChanged={refresh} navigate={navigate} />}

@@ -306,6 +306,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/sessions/{session_id}/auction/bids/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel Bid
+         * @description Retira o lance ativo do usuário na rodada aberta (DR-07). Sem lance, o usuário não compra ninguém na rodada.
+         */
+        post: operations["cancel_bid_api_sessions__session_id__auction_bids_cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/sessions/{session_id}/auction/summary": {
         parameters: {
             query?: never;
@@ -769,6 +789,31 @@ export interface components {
              */
             replayed: boolean;
         };
+        /** AuctionBidCancelIn */
+        AuctionBidCancelIn: {
+            /**
+             * Round Number
+             * @description Rodada visível ao usuário; recusado se já encerrada.
+             */
+            round_number?: number | null;
+        };
+        /**
+         * AuctionBidCancelOut
+         * @description Lance retirado pelo usuário (DR-07).
+         */
+        AuctionBidCancelOut: {
+            /** Round */
+            round: number;
+            /** Player Id */
+            player_id: number;
+            /** Amount */
+            amount: number;
+            /**
+             * Replayed
+             * @default false
+             */
+            replayed: boolean;
+        };
         /** AuctionBidOut */
         AuctionBidOut: {
             /** Round */
@@ -844,6 +889,11 @@ export interface components {
              * @description Clube de origem do atleta (base importada).
              */
             club_short_name: string;
+            /**
+             * Club Uid
+             * @description ID do clube de origem (escudo em /api/assets/clubs/{club_uid}).
+             */
+            club_uid?: number | null;
             /** @description Posição principal. */
             position: components["schemas"]["Position"];
             /** Minimum Bid */
@@ -2403,7 +2453,7 @@ export interface components {
         UserFormationIn: {
             /**
              * Formation
-             * @description Nome de uma das 11 formações oficiais (ex.: '4-4-2').
+             * @description Nome de uma das 11 formações oficiais (ex.: '4-2-2-2').
              */
             formation: string;
         };
@@ -3642,6 +3692,98 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AuctionBidAck"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Request Entity Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unsupported Media Type */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    cancel_bid_api_sessions__session_id__auction_bids_cancel_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Obrigatório: identificador único do comando (8–128 caracteres). */
+                "Idempotency-Key"?: string | null;
+            };
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AuctionBidCancelIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuctionBidCancelOut"];
                 };
             };
             /** @description Bad Request */

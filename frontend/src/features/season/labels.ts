@@ -31,6 +31,7 @@ const EVENT_LABEL: Record<string, string> = {
   substitution: "Substituição",
   penalty_awarded: "Pênalti!",
   save: "Defesa",
+  shootout_start: "Disputa de pênaltis",
   shootout_kick: "Cobrança de pênalti",
   shootout_end: "Fim da disputa de pênaltis",
   abandoned: "Partida encerrada",
@@ -48,7 +49,9 @@ export const EVENT_ICON: Record<string, string> = {
   posture_change: "⚙",
   save: "🧤",
   penalty_awarded: "◎",
+  shootout_start: "◎",
   shootout_kick: "◎",
+  shootout_end: "🏁",
 };
 
 export const STAT_LABELS: { key: string; label: string; pct?: boolean; dec?: boolean }[] = [
@@ -86,8 +89,18 @@ export function describeEvent(e: { type: string; player_name?: string | null; ot
       return e.other_name ? `Falta de ${e.other_name} em ${who}` : `${who} sofre a falta`;
     case "posture_change":
       return `Nova postura: ${postureLabel(String(e.data?.posture ?? ""))}`;
-    case "shootout_kick":
-      return `${who}: ${e.data?.scored ? "converteu" : "perdeu"}`;
+    case "shootout_kick": {
+      const sc = Array.isArray(e.data?.shootout) ? (e.data!.shootout as number[]) : null;
+      const n = typeof e.data?.kick === "number" ? `${e.data.kick}ª cobrança: ` : "";
+      const result = e.data?.scored ? "bate e marca" : `bate e perde${e.other_name ? ` (goleiro ${e.other_name})` : ""}`;
+      return `${n}${who} ${result}${sc ? ` · pênaltis ${sc[0]}–${sc[1]}` : ""}`;
+    }
+    case "shootout_start":
+      return "Empate no tempo normal: a vaga será decidida nos pênaltis, cobrança a cobrança.";
+    case "shootout_end": {
+      const sc = Array.isArray(e.data?.shootout) ? (e.data!.shootout as number[]) : null;
+      return sc ? `Resultado final dos pênaltis: ${sc[0]}–${sc[1]}` : "";
+    }
     default:
       return who;
   }

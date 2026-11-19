@@ -83,7 +83,7 @@ export function LineupPage({ navigate }: { navigate: (h: string) => void }) {
   return (
     <div className="stack">
       <PhaseBanner kicker={state?.round_label ?? "Escalação"} title="Escalação e tática">
-        Arraste os jogadores pelo campinho. Leve um titular para outra linha e a formação muda sozinha.
+        Arraste os jogadores pelo campinho. Leve um titular para outra faixa (DEF, VOL, ME, ATA) e a formação muda sozinha.
       </PhaseBanner>
       {lineup.locked && <Notice kind="info" title="Escalação fechada">A partida já começou: durante o jogo a formação é fixa e só a postura pode mudar.</Notice>}
       {lineup.note && <Notice kind="warning" title="Sua escalação anterior não pôde ser usada">{lineup.note}</Notice>}

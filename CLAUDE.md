@@ -36,9 +36,11 @@ as 11 formações (PM-01), o desempate Brasileirão (PC-01), a pontuação 3/1/0
 Mudar fórmula, perfil de bot ou formação aprovados exige nova aprovação do responsável. Os parâmetros do motor
 (`services/match_engine/params.py`) são os calibrados contra as referências aceitas; os da IA tática
 (`services/bot_ai/tactics_params.py`) e da concorrência no leilão (PB-06) continuam provisórios.
-**Experiência de jogo (2026-11-19):** as diretrizes do responsável prevalecem sobre o GDD (DR-01..DR-06 em
-`pendencias.md`: lance redutível, tática antes do leilão, goleiro cansa ×0,35, área oculta de dados com senha,
-ordem de posições GOL-LD-ZAG-LE-VOL-ME-ATA, partida ao vivo com as duas equipes e os outros jogos).
+**Experiência de jogo (2026-11-19):** as diretrizes do responsável prevalecem sobre o GDD (DR-01..DR-10 em
+`pendencias.md`: lance redutível e cancelável, tática antes do leilão (confirmar já inicia o leilão), goleiro cansa
+×0,35, área oculta de dados com senha, ordem de posições GOL-LD-ZAG-LE-VOL-ME-ATA, partida ao vivo com as duas
+equipes e os outros jogos, formações 4-2-2-2 e 4-1-2-3 com faixas VOL/ME no campinho, pênaltis cobrança a cobrança,
+cores dos uniformes extraídas do escudo).
 Critérios de aceitação são fixos (`docs/homologacao/criterios.md`): nunca altere limites depois de ver resultados.
 Não implemente novas entregas sem autorização
 explícita do usuário para a entrega correspondente.

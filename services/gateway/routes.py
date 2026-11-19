@@ -18,6 +18,8 @@ from services.competition.options import competition_options
 from squadforce_shared import __version__
 from squadforce_shared.contracts import (
     AuctionBidAck,
+    AuctionBidCancelIn,
+    AuctionBidCancelOut,
     AuctionBidRequest,
     AuctionStateOut,
     AuctionSummaryOut,
@@ -396,6 +398,26 @@ async def place_bid(c: C, request: Request, session_id: str, body: AuctionBidReq
         ).model_dump(mode="json")
 
     status, out, replayed = c.idempotency.execute(f"auction:bid:{session_id}", key, fingerprint(raw), run)
+    return _respond(status, out, replayed)
+
+
+@router.post("/sessions/{session_id}/auction/bids/cancel", response_model=AuctionBidCancelOut, responses=ERR,
+             tags=["auction"])
+async def cancel_bid(c: C, request: Request, session_id: str, body: AuctionBidCancelIn, idempotency_key: IdemKey = None):
+    """Retira o lance ativo do usuário na rodada aberta (DR-07). Sem lance, o usuário não compra ninguém na rodada."""
+    key = validate_key(idempotency_key)
+    raw = await request.body()
+    engine = _engine(c, session_id)
+
+    def run() -> tuple[int, dict[str, Any]]:
+        try:
+            gone = engine.cancel_bid(engine.user_club_uid, body.round_number)
+        except AuctionError as exc:
+            raise _auction_error(exc) from exc
+        return 200, AuctionBidCancelOut(round=engine.round.number, player_id=gone.player_id,
+                                        amount=gone.amount).model_dump(mode="json")
+
+    status, out, replayed = c.idempotency.execute(f"auction:cancel:{session_id}", key, fingerprint(raw), run)
     return _respond(status, out, replayed)
 
 

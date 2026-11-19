@@ -1,5 +1,6 @@
 /** Abertura do jogo: apresentação e "Nova partida" / "Continuar". */
 import { Notice } from "../components/Notice";
+import { QuitToHome } from "../components/QuitToHome";
 import type { Connection } from "../hooks/useHealth";
 import type { Health, Session } from "../types/api";
 
@@ -20,6 +21,7 @@ export function HomePage({
   onRetry,
   onStart,
   continueTo,
+  navigate,
 }: {
   health: Health | null;
   connection: Connection;
@@ -28,13 +30,14 @@ export function HomePage({
   onRetry: () => void;
   onStart: () => void;
   continueTo: () => void;
+  navigate: (h: string) => void;
 }) {
   const db = health?.database;
   const ready = !!db && (db.clubs ?? 0) >= 2 && (db.players ?? 0) > 0;
   const active = session?.status === "active";
   return (
     <div className="intro">
-      <img className="intro__logo" src="/brand/logo-dark.png" alt="SquadForce — Football Strategy Game" />
+      <img className="intro__logo" src="/brand/logo.png" alt="SquadForce — Football Strategy Game" />
       <p className="intro__tagline">
         Monte seu time no <em>leilão</em>, negocie no <em>mercado</em> e dispute a <em>Liga</em> ou a <em>Copa</em> contra
         clubes comandados por bots.
@@ -53,6 +56,7 @@ export function HomePage({
             <span className="muted">· {PHASE_LABEL[session.phase] ?? session.phase}</span>
           </span>
           <button type="button" className="btn btn--cta" onClick={continueTo}>▶ Continuar</button>
+          {session.phase === "finished" && <QuitToHome navigate={navigate} label="Encerrar e começar de novo" />}
         </div>
       ) : (
         <button type="button" className="btn btn--cta" onClick={onStart} disabled={connection === "offline" || (!!health && !ready)}>

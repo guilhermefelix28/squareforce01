@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { ApiError, newIdempotencyKey } from "../../api/client";
-import { placeBid } from "../../api/endpoints";
+import { cancelBid, placeBid } from "../../api/endpoints";
 import { ClubCrest } from "../../components/ClubCrest";
 import { Notice } from "../../components/Notice";
 import { PlayerCard, PositionBadge } from "../../components/PlayerCard";
@@ -15,6 +15,7 @@ const BID_ERRORS: Record<string, string> = {
   STALE_ROUND: "A rodada terminou antes do lance chegar ao servidor.",
   ROUND_CLOSED: "A rodada terminou antes do lance chegar ao servidor.",
   SQUAD_FULL: "Seu elenco já tem 18 jogadores.",
+  NO_ACTIVE_BID: "Você não tem lance ativo nesta rodada.",
 };
 
 /** Cronômetro circular da rodada. */
@@ -92,7 +93,8 @@ export function AuctionBoard({
   const active = state.active_bid && state.active_bid.round === round?.number ? state.active_bid : null;
   const activePlayer = active ? round?.players.find((p) => p.unique_id === active.player_id) : null;
   const steps = [...state.bid_increments].sort((a, b) => a - b);
-  const small = steps[0] ?? 100_000;
+  const small = steps[0] ?? 100_000; // botões − e + (passo de R$ 100 mil)
+  const quick = steps.filter((s) => s > small); // atalhos: −1 mi, −500 mil, +500 mil, +1 mi
 
   function choose(id: number) {
     const p = round?.players.find((x) => x.unique_id === id);
@@ -127,6 +129,23 @@ export function AuctionBoard({
       setFeedback({ kind: "error", text: BID_ERRORS[code] ?? (err instanceof ApiError ? err.message : "Falha ao enviar o lance.") });
     } finally {
       keyRef.current = newIdempotencyKey(); // uma chave por confirmação do usuário
+      setBusy(false);
+    }
+  }
+
+  async function withdraw() {
+    if (!active || !round) return;
+    setBusy(true);
+    setFeedback(null);
+    try {
+      await cancelBid(sessionId, round.number, keyRef.current);
+      setFeedback({ kind: "success", text: `Lance em ${activePlayer?.name ?? "atleta"} cancelado. Você pode dar outro lance até o fim da rodada.` });
+      onChanged();
+    } catch (err) {
+      const code = err instanceof ApiError ? err.code : "";
+      setFeedback({ kind: "error", text: BID_ERRORS[code] ?? (err instanceof ApiError ? err.message : "Falha ao cancelar o lance.") });
+    } finally {
+      keyRef.current = newIdempotencyKey();
       setBusy(false);
     }
   }
@@ -171,7 +190,7 @@ export function AuctionBoard({
                     name={p.name}
                     position={p.position}
                     age={p.age}
-                    club={{ name: p.club_short_name }}
+                    club={{ name: p.club_short_name, uid: p.club_uid ?? undefined }}
                     hasPhoto={p.has_photo}
                     footer={
                       <>
@@ -203,17 +222,16 @@ export function AuctionBoard({
                 />
                 <button type="button" className="btn btn--ghost" onClick={() => add(small)} aria-label="Aumentar lance">+</button>
               </div>
-              <div className="steps">
-                <button type="button" className="btn btn--ghost btn--small" onClick={() => setAmountText(String(player.minimum_bid))}>Mínimo</button>
-                {steps.map((inc) => (
-                  <span key={inc} className="steps">
-                    <button type="button" className="btn btn--ghost btn--small" onClick={() => add(-inc)} aria-label={`Reduzir ${formatMoneyShort(inc)}`}>
-                      −{formatMoneyShort(inc).replace("R$ ", "")}
-                    </button>
-                    <button type="button" className="btn btn--ghost btn--small" onClick={() => add(inc)}>
-                      +{formatMoneyShort(inc).replace("R$ ", "")}
-                    </button>
-                  </span>
+              <div className="steps" role="group" aria-label="Atalhos de valor">
+                {[...quick].reverse().map((inc) => (
+                  <button key={`-${inc}`} type="button" className="btn btn--ghost btn--small step--down" onClick={() => add(-inc)} aria-label={`Reduzir ${formatMoneyShort(inc)}`}>
+                    −{formatMoneyShort(inc).replace("R$ ", "")}
+                  </button>
+                ))}
+                {quick.map((inc) => (
+                  <button key={`+${inc}`} type="button" className="btn btn--ghost btn--small step--up" onClick={() => add(inc)}>
+                    +{formatMoneyShort(inc).replace("R$ ", "")}
+                  </button>
                 ))}
               </div>
               <p className="muted small" style={{ textAlign: "center" }}>
@@ -229,11 +247,43 @@ export function AuctionBoard({
               {canBid ? "Toque em um jogador para fazer seu lance." : state.open_slots === 0 ? "Seu elenco está completo." : "Aguardando a próxima rodada…"}
             </p>
           )}
-          {active && <p className="small" style={{ textAlign: "center" }}>Oferta ativa: <strong>{formatMoneyShort(active.amount)}</strong> em {activePlayer?.name ?? ""}</p>}
+          {active && (
+            <div className="active-bid">
+              <span className="small">Oferta ativa: <strong>{formatMoneyShort(active.amount)}</strong> em {activePlayer?.name ?? ""}</span>
+              <button type="button" className="btn btn--danger-ghost btn--small" onClick={() => void withdraw()} disabled={busy || roundRemainingMs <= 0}>
+                ✕ Cancelar meu lance
+              </button>
+            </div>
+          )}
           {feedback && <Notice kind={feedback.kind}>{feedback.text}</Notice>}
-          <p className="muted small" style={{ textAlign: "center" }}>Ofertas são sigilosas: você vê apenas o seu próprio lance. Você pode aumentar ou reduzir o seu lance até o fim da rodada.</p>
+          <p className="muted small" style={{ textAlign: "center" }}>Ofertas são sigilosas: você vê apenas o seu próprio lance. Você pode aumentar, reduzir ou cancelar o seu lance até o fim da rodada.</p>
         </form>
       </section>
+
+      <aside className="auction__clubs stack" aria-label="Clubes no leilão">
+        <section className="card">
+          <h3>Clubes no leilão</h3>
+          <table className="compact">
+            <thead>
+              <tr><th>Clube</th><th className="num">Elenco</th><th className="num">Saldo</th></tr>
+            </thead>
+            <tbody>
+              {[...state.clubs].sort((a, b) => Number(b.is_user) - Number(a.is_user)).map((c) => (
+                <tr key={c.club_uid} className={c.is_user ? "is-user" : ""}>
+                  <td>
+                    <span className="club-name">
+                      <ClubCrest clubUid={c.club_uid} name={clubName.get(c.club_uid) ?? "?"} size={18} />
+                      <span>{clubName.get(c.club_uid) ?? c.club_uid}</span>
+                    </span>
+                  </td>
+                  <td className="num">{c.squad_count}/18</td>
+                  <td className="num">{formatMoneyShort(c.budget)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      </aside>
 
       <aside className="auction__side stack" aria-label="Seu elenco e resultados">
         <section className="card">
@@ -280,28 +330,6 @@ export function AuctionBoard({
               ))}
             </ol>
           )}
-        </section>
-        <section className="card">
-          <h3>Clubes</h3>
-          <table className="compact">
-            <thead>
-              <tr><th>Clube</th><th className="num">Elenco</th><th className="num">Saldo</th></tr>
-            </thead>
-            <tbody>
-              {[...state.clubs].sort((a, b) => Number(b.is_user) - Number(a.is_user)).map((c) => (
-                <tr key={c.club_uid} className={c.is_user ? "is-user" : ""}>
-                  <td>
-                    <span className="club-name">
-                      <ClubCrest clubUid={c.club_uid} name={clubName.get(c.club_uid) ?? "?"} size={18} />
-                      <span>{clubName.get(c.club_uid) ?? c.club_uid}</span>
-                    </span>
-                  </td>
-                  <td className="num">{c.squad_count}/18</td>
-                  <td className="num">{formatMoneyShort(c.budget)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
         </section>
       </aside>
     </div>

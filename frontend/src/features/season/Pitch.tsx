@@ -1,8 +1,9 @@
 /**
  * Campo interativo (GDD §9): 11 titulares, até 7 reservas.
  * - Arrastar e soltar (mouse: drag nativo; toque: Pointer Events) entre vagas, banco e elenco.
- * - Arrastar um titular para OUTRA LINHA do campo muda o desenho; se o novo desenho for uma das 11 formações
- *   oficiais, a formação é trocada automaticamente (aviso "Formação: 3-5-2"); senão a carta volta.
+ * - O campo tem faixas por função (GOL, DEF, VOL, ME, ATA). Arrastar um titular para OUTRA FAIXA muda o desenho;
+ *   se o novo desenho for uma das 11 formações oficiais, a formação é trocada automaticamente (aviso
+ *   "Formação: 4-3-1-2"); senão a carta volta. Durante o arraste as faixas ficam visíveis com o nome.
  * - Toque/clique: selecione um atleta e depois o destino para trocar os dois (celular e teclado).
  * - As vagas são distribuídas por linha com espaçamento igual: as cartas nunca se sobrepõem.
  */
@@ -10,7 +11,7 @@ import { useEffect, useRef, useState, type DragEvent, type PointerEvent as React
 import { PlayerPhoto, PositionBadge } from "../../components/PlayerCard";
 import { byPosition, displayPosition } from "../../domain/positions";
 import type { FitLevel, Position, SquadPlayer } from "../../types/api";
-import { moveToRow, slotLayout, slotRows, widestRow, type FormationDef } from "../lineup/layout";
+import { BAND_LABELS, BAND_Y, moveToRow, slotLayout, slotRows, widestRow, type FormationDef } from "../lineup/layout";
 import { FIT_LABEL } from "./labels";
 
 /** `pool` com player -1 = área "fora da lista" (retirar um atleta sem colocar outro). */
@@ -99,6 +100,7 @@ export function Pitch({ arrangement, squad, locked, onChange, formations = [] }:
   const [selected, setSelected] = useState<Spot | null>(null);
   const [flash, setFlash] = useState<{ text: string; bad?: boolean } | null>(null);
   const [hoverRow, setHoverRow] = useState<number | null>(null);
+  const [dragOn, setDragOn] = useState(false);
   const [touch, setTouch] = useState<{ spot: Spot; x: number; y: number; label: string; active: boolean } | null>(null);
   const fieldRef = useRef<HTMLDivElement>(null);
   const flashTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -171,15 +173,15 @@ export function Pitch({ arrangement, squad, locked, onChange, formations = [] }:
     const x = ((clientX - box.left) / box.width) * 100;
     let best = -1;
     let dist = Infinity;
-    rows.forEach((slots, r) => {
+    rows.forEach((_, r) => {
       if (r === 0) return;
-      const d = Math.abs(coords[slots[0]].y - y);
+      const d = Math.abs(BAND_Y[r] - y);
       if (d < dist) {
         dist = d;
         best = r;
       }
     });
-    if (best < 0 || dist > 9) return null;
+    if (best < 0 || dist > 10.5) return null;
     return { kind: "row", row: best, at: rows[best].filter((s) => coords[s].x < x).length };
   };
 
@@ -189,8 +191,12 @@ export function Pitch({ arrangement, squad, locked, onChange, formations = [] }:
     onDragStart: (e: DragEvent) => {
       e.dataTransfer.setData("text/plain", JSON.stringify(s));
       e.dataTransfer.effectAllowed = "move";
+      setDragOn(s.zone === "slot");
     },
-    onDragEnd: () => setHoverRow(null),
+    onDragEnd: () => {
+      setHoverRow(null);
+      setDragOn(false);
+    },
   });
   const readDrag = (e: DragEvent): Spot | null => {
     try {
@@ -227,6 +233,7 @@ export function Pitch({ arrangement, squad, locked, onChange, formations = [] }:
       const t = rowAt(e.clientX, e.clientY);
       if (from && t) apply(from, t);
       setHoverRow(null);
+      setDragOn(false);
       setSelected(null);
     },
   };
@@ -275,11 +282,13 @@ export function Pitch({ arrangement, squad, locked, onChange, formations = [] }:
 
   return (
     <div className="lineup2">
-      <div className="field2" ref={fieldRef} role="group" aria-label="Campo: titulares por vaga" {...fieldDrop}>
+      <div className={`field2${dragOn || (touch?.active && touch.spot.zone === "slot") ? " is-dragging" : ""}`} ref={fieldRef} role="group" aria-label="Campo: titulares por vaga" {...fieldDrop}>
         <FieldLines />
-        {rows.map((slots, r) =>
+        {def && rows.map((_, r) =>
           r === 0 ? null : (
-            <div key={r} className={`field2__row${hoverRow === r ? " is-target" : ""}`} style={{ top: `${coords[slots[0]].y}%` }} aria-hidden />
+            <div key={r} className={`field2__row${hoverRow === r ? " is-target" : ""}`} style={{ top: `${BAND_Y[r]}%` }} aria-hidden data-band={BAND_LABELS[r]}>
+              <span className="field2__row-label">{BAND_LABELS[r]}</span>
+            </div>
           ),
         )}
         {flash && <span className={`formation-flash${flash.bad ? " formation-flash--bad" : ""}`} role="status">{flash.text}</span>}
@@ -363,7 +372,7 @@ export function Pitch({ arrangement, squad, locked, onChange, formations = [] }:
         {selected && !locked && (
           <p className="muted small" role="status">Selecionado: escolha o destino para trocar (ou toque de novo para cancelar).</p>
         )}
-        {!locked && def && <p className="muted small">Dica: arraste um titular para outra linha do campo para mudar a formação.</p>}
+        {!locked && def && <p className="muted small">Dica: arraste um titular para outra faixa (DEF, VOL, ME, ATA) para mudar a formação.</p>}
       </div>
       {touch?.active && (
         <span className="drag-ghost token" style={{ left: touch.x, top: touch.y, ["--w" as string]: "84px", position: "fixed" }} aria-hidden>

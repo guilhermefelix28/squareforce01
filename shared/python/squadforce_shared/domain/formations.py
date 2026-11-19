@@ -1,4 +1,4 @@
-"""Formações oficiais (PM-01), escolhidas pelo responsável em 2026-11-19.
+"""Formações oficiais (PM-01), escolhidas pelo responsável em 2026-11-19 (nomes ajustados em DR-08).
 
 Usam somente os 7 códigos do GDD §3: meias abertos e meias-atacantes são MC; alas são DR/DL. Por isso alguns
 pares têm as mesmas vagas e diferem só no nome: 3-5-2 = 5-3-2 e 4-3-2-1 = 4-2-3-1. A ORDEM das vagas é
@@ -25,8 +25,9 @@ class Formation:
 
 
 OFFICIAL_FORMATIONS: tuple[Formation, ...] = (
-    Formation("4-4-2", (GK, DR, DC, DC, DL, MC, MC, MC, MC, STC, STC)),
-    Formation("4-3-3", (GK, DR, DC, DC, DL, DM, MC, MC, STC, STC, STC)),
+    # DR-08 (2026-11-19): o antigo 4-4-2 passou a 4-2-2-2 (2 VOL + 2 ME) e o 4-3-3 foi renomeado 4-1-2-3
+    Formation("4-2-2-2", (GK, DR, DC, DC, DL, DM, DM, MC, MC, STC, STC)),
+    Formation("4-1-2-3", (GK, DR, DC, DC, DL, DM, MC, MC, STC, STC, STC)),
     Formation("4-2-3-1", (GK, DR, DC, DC, DL, DM, DM, MC, MC, MC, STC)),
     Formation("3-5-2", (GK, DC, DC, DC, DR, DL, DM, MC, MC, STC, STC)),
     Formation("3-4-3", (GK, DC, DC, DC, DR, DL, DM, MC, STC, STC, STC)),

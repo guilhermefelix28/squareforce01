@@ -115,11 +115,11 @@ def test_replaced_session_is_isolated(env):
 
 
 @pytest.mark.parametrize("body", [
-    {"formation": "4-3-3", "starters": [1] * 11, "bench": [], "posture": "xyz"},
-    {"formation": "4-3-3", "starters": list(range(12)), "bench": []},
-    {"formation": "4-3-3", "starters": list(range(11)), "bench": list(range(100, 108))},
+    {"formation": "4-1-2-3", "starters": [1] * 11, "bench": [], "posture": "xyz"},
+    {"formation": "4-1-2-3", "starters": list(range(12)), "bench": []},
+    {"formation": "4-1-2-3", "starters": list(range(11)), "bench": list(range(100, 108))},
     {"formation": 433, "starters": "abc"},
-    {"formation": "4-3-3", "starters": list(range(11)), "extra": 1},
+    {"formation": "4-1-2-3", "starters": list(range(11)), "extra": 1},
 ])
 def test_lineup_input_validation(env, body):
     c, clock, _, sid = env

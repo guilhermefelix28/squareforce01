@@ -1795,6 +1795,137 @@
         }
       }
     },
+    "/api/sessions/{session_id}/auction/bids/cancel": {
+      "post": {
+        "tags": [
+          "auction"
+        ],
+        "summary": "Cancel Bid",
+        "description": "Retira o lance ativo do usuário na rodada aberta (DR-07). Sem lance, o usuário não compra ninguém na rodada.",
+        "operationId": "cancel_bid_api_sessions__session_id__auction_bids_cancel_post",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Obrigatório: identificador único do comando (8–128 caracteres).",
+              "title": "Idempotency-Key"
+            },
+            "description": "Obrigatório: identificador único do comando (8–128 caracteres)."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuctionBidCancelIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuctionBidCancelOut"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
     "/api/sessions/{session_id}/auction/summary": {
       "get": {
         "tags": [
@@ -4488,6 +4619,55 @@
         ],
         "title": "AuctionBidAck"
       },
+      "AuctionBidCancelIn": {
+        "properties": {
+          "round_number": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Round Number",
+            "description": "Rodada visível ao usuário; recusado se já encerrada."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "AuctionBidCancelIn"
+      },
+      "AuctionBidCancelOut": {
+        "properties": {
+          "round": {
+            "type": "integer",
+            "title": "Round"
+          },
+          "player_id": {
+            "type": "integer",
+            "title": "Player Id"
+          },
+          "amount": {
+            "type": "integer",
+            "title": "Amount"
+          },
+          "replayed": {
+            "type": "boolean",
+            "title": "Replayed",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "round",
+          "player_id",
+          "amount"
+        ],
+        "title": "AuctionBidCancelOut",
+        "description": "Lance retirado pelo usuário (DR-07)."
+      },
       "AuctionBidOut": {
         "properties": {
           "round": {
@@ -4653,6 +4833,18 @@
             "type": "string",
             "title": "Club Short Name",
             "description": "Clube de origem do atleta (base importada)."
+          },
+          "club_uid": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Club Uid",
+            "description": "ID do clube de origem (escudo em /api/assets/clubs/{club_uid})."
           },
           "position": {
             "$ref": "#/components/schemas/Position",
@@ -8503,7 +8695,7 @@
           "formation": {
             "type": "string",
             "title": "Formation",
-            "description": "Nome de uma das 11 formações oficiais (ex.: '4-4-2')."
+            "description": "Nome de uma das 11 formações oficiais (ex.: '4-2-2-2')."
           }
         },
         "additionalProperties": false,
