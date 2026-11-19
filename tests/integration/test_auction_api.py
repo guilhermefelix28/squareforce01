@@ -164,9 +164,10 @@ def test_bid_flow_errors_and_idempotency(env):
     other = bid(c, sid, p.unique_id, p.minimum_bid + 2_000_000, s.round.number, idem)
     assert other.status_code == 409 and other.json()["error"]["code"] == "IDEMPOTENCY_KEY_REUSED"
 
-    lower = bid(c, sid, p.unique_id, p.minimum_bid + 500_000)
-    assert lower.status_code == 422 and lower.json()["error"]["code"] == "BID_NOT_INCREASED"
-    assert state(c, sid).active_bid.amount == p.minimum_bid + 1_000_000
+    same = bid(c, sid, p.unique_id, p.minimum_bid + 1_000_000)
+    assert same.status_code == 422 and same.json()["error"]["code"] == "BID_UNCHANGED"
+    lower = bid(c, sid, p.unique_id, p.minimum_bid + 500_000)  # redução permitida (decisão do responsável)
+    assert lower.status_code == 200 and state(c, sid).active_bid.amount == p.minimum_bid + 500_000
 
     clock.advance(10)
     late = bid(c, sid, p.unique_id, p.minimum_bid + 3_000_000, s.round.number)

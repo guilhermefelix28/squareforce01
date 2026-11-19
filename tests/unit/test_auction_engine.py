@@ -148,15 +148,22 @@ def test_bid_at_last_instant_is_accepted_and_after_deadline_is_not(quiet):
     assert e.sold.get(pid) == quiet.clubs[0]
 
 
-def test_raise_allowed_reduce_and_repeat_forbidden(quiet):
-    e = quiet.engine
+def test_raise_and_reduce_allowed_repeat_forbidden(quiet):
+    """Decisão do responsável (2026-11-19, sobrepõe GDD §5): o clube pode reduzir o próprio lance no mesmo atleta."""
+    e, clock = quiet.engine, quiet.clock
     u = quiet.clubs[0]
     pid, mn = first_player(e)
-    e.place_bid(u, pid, mn + 1_000_000, "a")
-    for amount in (mn + 1_000_000, mn + 500_000):
-        with pytest.raises(AuctionError) as err:
-            e.place_bid(u, pid, amount, f"r{amount}")
-        assert err.value.code == "BID_NOT_INCREASED"
+    first = e.place_bid(u, pid, mn + 1_000_000, "a")
+    with pytest.raises(AuctionError) as err:
+        e.place_bid(u, pid, mn + 1_000_000, "same")
+    assert err.value.code == "BID_UNCHANGED" and e.round.bids[u].amount == mn + 1_000_000
+    clock.advance(1)
+    lower = e.place_bid(u, pid, mn + 500_000, "lower")
+    assert lower.amount == mn + 500_000 and e.round.bids[u].amount == mn + 500_000
+    assert lower.seq > first.seq and lower.accepted_at > first.accepted_at  # instante do valor final
+    with pytest.raises(AuctionError) as err:
+        e.place_bid(u, pid, mn - 1, "below")
+    assert err.value.code == "BELOW_MINIMUM_BID" and e.round.bids[u].amount == mn + 500_000
     assert e.place_bid(u, pid, mn + 1_100_000, "b").amount == mn + 1_100_000
     assert e.round.bids[u].amount == mn + 1_100_000
 

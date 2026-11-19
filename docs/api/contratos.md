@@ -101,7 +101,7 @@ Detalhes, erros e eventos em [leilão](../architecture/leilao.md). Resumo:
 |---|---|---|---|
 | POST | `/api/sessions/{id}/auction/start` | `AuctionStateOut` (201) | 409 `AUCTION_MODEL_NOT_CONFIGURED` / `INVALID_PHASE`, 500 `AUCTION_REJECTED` |
 | GET | `/api/sessions/{id}/auction` | `AuctionStateOut` | 404 `AUCTION_NOT_FOUND` |
-| POST | `/api/sessions/{id}/auction/bids` | `AuctionBidAck` | 422 `BELOW_MINIMUM_BID` / `INSUFFICIENT_FUNDS` / `BID_NOT_INCREASED` / `PLAYER_NOT_IN_ROUND` / `SQUAD_FULL`, 409 `STALE_ROUND` / `ROUND_CLOSED` / `AUCTION_NOT_RUNNING` / `OPERATION_ID_REUSED` |
+| POST | `/api/sessions/{id}/auction/bids` | `AuctionBidAck` | 422 `BELOW_MINIMUM_BID` / `INSUFFICIENT_FUNDS` / `BID_UNCHANGED` / `PLAYER_NOT_IN_ROUND` / `SQUAD_FULL`, 409 `STALE_ROUND` / `ROUND_CLOSED` / `AUCTION_NOT_RUNNING` / `OPERATION_ID_REUSED` |
 | GET | `/api/sessions/{id}/auction/summary` | `AuctionSummaryOut` | 409 `AUCTION_NOT_FINISHED` |
 
 Fases da sessão: `setup` → `auction` (início do leilão) → `squad_completion` (leilão + complementação concluídos).

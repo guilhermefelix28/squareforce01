@@ -4,7 +4,7 @@ Garantias (todas sob uma única trava, testadas com concorrência):
 - Rodadas de 10 s, contíguas, com 5 atletas da mesma posição principal; o resultado de uma rodada é
   publicado enquanto a seguinte já corre (o relógio global nunca para).
 - Ofertas fechadas: um lance ativo por clube; aumentar ou trocar de alvo é atômico (se a troca falhar,
-  o lance anterior permanece); proibido reduzir o lance no mesmo atleta.
+  o lance anterior permanece); aumentar ou reduzir o lance no mesmo atleta é permitido (decisão do responsável).
 - Lance <= saldo − R$ 500 mil × vagas que restarão após a contratação.
 - Vencedor: maior lance; empate → menor timestamp do servidor em que o valor final foi atingido →
   menor número de sequência de aceitação.
@@ -366,8 +366,9 @@ class AuctionEngine:
                                "Lance acima do disponível (é preciso preservar R$ 500 mil por vaga restante).",
                                status=422, details={"max_bid": max(0, limit)})
         current = r.bids.get(club_uid)
-        if current and current.player_id == player_id and amount <= current.amount:
-            raise AuctionError("BID_NOT_INCREASED", "Não é permitido reduzir ou repetir o lance no mesmo atleta.",
+        if current and current.player_id == player_id and amount == current.amount:
+            # Redução permitida: decisão do responsável (2026-11-19), sobrepõe GDD §5. Repetir o valor não tem efeito.
+            raise AuctionError("BID_UNCHANGED", "O lance já está neste valor.",
                                status=422, details={"current_amount": current.amount})
         self._seq += 1
         r.bids[club_uid] = Bid(club_uid, player_id, amount, at, self._seq, op_id)  # troca atômica do alvo

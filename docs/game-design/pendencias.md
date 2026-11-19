@@ -111,3 +111,17 @@ Legenda: **P** = regra pendente · **D** = decisão técnica provisória (confir
 | ID | Tipo | Pendência | Estado |
 |---|---|---|---|
 | PB-06 | D | **Concorrência e escolha mista no leilão** (GDD §6, "considerar concorrência com base apenas em informações públicas"): rivais esperados por atleta pela proporção dos lances mínimos; alvo sorteado ∝ pontuação², determinístico por clube e rodada. `COMPETITION_WEIGHT` = 0,5 e `SAMPLING_POWER` = 2 são parâmetros provisórios da IA, escolhidos em lotes exploratórios. | Provisória |
+
+## Diretrizes do responsável — experiência de jogo (2026-11-19)
+
+O responsável determinou que suas novas diretrizes **prevalecem sobre o GDD v5.2**. Spec:
+`docs/superpowers/specs/2026-11-19-experiencia-de-jogo-design.md`.
+
+| ID | Tipo | Decisão | Estado |
+|---|---|---|---|
+| DR-01 | **C** 2026-11-19 | **Lance redutível** (sobrepõe GDD §5 "proibição de reduzir o lance vigente"): qualquer clube pode reduzir o próprio lance no mesmo atleta durante a rodada, respeitando lance mínimo e saldo. Repetir o mesmo valor é rejeitado (`BID_UNCHANGED`). O desempate usa o instante do valor final. Bots mantêm o comportamento. | Resolvida |
+| DR-02 | **C** 2026-11-19 | **Tática do usuário antes do leilão**: o usuário escolhe uma das 11 formações oficiais na fase `setup`; ela é a formação inicial da escalação automática e orienta o painel de vagas do leilão. | Resolvida |
+| DR-03 | **C** 2026-11-19 | **Goleiros cansam pouco**: desgaste do goleiro × 0,35 (`gk_fatigue_multiplier`). | Resolvida |
+| DR-04 | **C** 2026-11-19 | **Área oculta de dados**: importações só com senha (padrão 9153, `SQUADFORCE_ADMIN_PASSWORD`), verificada no servidor; tela em `#/admin`, fora da navegação. | Resolvida |
+| DR-05 | **C** 2026-11-19 | **Ordem de exibição das posições**: GOL · LD · ZAG · LE · VOL · ME · ATA (somente interface; a ordem interna do sorteio do leilão não muda). | Resolvida |
+| DR-06 | **C** 2026-11-19 | **Partida ao vivo**: mostra os dois times em campo (sem condição física do adversário), os placares simultâneos dos outros jogos da rodada e autor/vítima do pênalti. | Resolvida |

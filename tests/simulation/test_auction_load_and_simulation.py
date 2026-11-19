@@ -45,7 +45,7 @@ def test_concurrent_bids_keep_financial_logic_and_winners_correct():
             try:
                 ack = e.place_bid(club, pid, amount, f"w{worker}-{n}", round_number=r.number)
             except AuctionError as exc:
-                if exc.code not in {"BID_NOT_INCREASED", "INSUFFICIENT_FUNDS", "SQUAD_FULL", "STALE_ROUND",
+                if exc.code not in {"BID_UNCHANGED", "INSUFFICIENT_FUNDS", "SQUAD_FULL", "STALE_ROUND",
                                     "ROUND_CLOSED", "AUCTION_NOT_RUNNING", "BELOW_MINIMUM_BID", "PLAYER_NOT_IN_ROUND"}:
                     errors.append(exc.code)
                 continue

@@ -8,7 +8,7 @@ Implementação de GDD v5.2 §4–§7. Código: `services/auction/` e `services/
 |---|---|
 | R$ 120 mi por clube; 18 contratados (11 + 7) | `rules.py` |
 | Rodadas de 10 s com 5 atletas da mesma posição principal | `engine._open_round` |
-| Ofertas fechadas; um lance ativo por clube; aumento ou troca de alvo atômicos; proibido reduzir no mesmo atleta; troca inválida mantém o lance anterior | `engine._accept` |
+| Ofertas fechadas; um lance ativo por clube; aumento, redução (decisão do responsável, 2026-11-19) ou troca de alvo atômicos; repetir o valor é rejeitado; troca inválida mantém o lance anterior | `engine._accept` |
 | Lance ≤ saldo − R$ 500 mil × vagas que restarão após a compra | `rules.max_affordable_bid` |
 | Maior lance vence; empate → timestamp do servidor em que o valor final foi atingido → sequência de aceitação | `engine._close_round` |
 | Relógio global autoritativo (10/15/20 min conforme formato) e encerramento antecipado com todos os elencos completos | `rules.auction_duration_seconds`, `engine._advance` |
@@ -57,7 +57,7 @@ Testes unitários do motor usam também `tests/support/fake_auction_model.py`, u
 Eventos WebSocket (`/ws/sessions/{id}`): `auction.started`, `auction.round_started`, `auction.round_closed`,
 `auction.finished` — apenas números de rodada; o cliente consulta o estado pelo GET.
 
-Erros de lance: `BELOW_MINIMUM_BID`, `INSUFFICIENT_FUNDS` (com `max_bid`), `BID_NOT_INCREASED`, `PLAYER_NOT_IN_ROUND`,
+Erros de lance: `BELOW_MINIMUM_BID`, `INSUFFICIENT_FUNDS` (com `max_bid`), `BID_UNCHANGED`, `PLAYER_NOT_IN_ROUND`,
 `SQUAD_FULL`, `STALE_ROUND`, `ROUND_CLOSED`, `AUCTION_NOT_RUNNING`, `OPERATION_ID_REUSED`.
 
 ## Relógio

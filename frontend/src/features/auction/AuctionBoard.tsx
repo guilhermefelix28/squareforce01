@@ -16,7 +16,7 @@ function PlayerPhoto({ p }: { p: AuctionPlayer }) {
 const BID_ERRORS: Record<string, string> = {
   BELOW_MINIMUM_BID: "Lance abaixo do mínimo deste atleta.",
   INSUFFICIENT_FUNDS: "Lance acima do disponível: é preciso preservar R$ 500 mil por vaga restante.",
-  BID_NOT_INCREASED: "No mesmo atleta só é possível aumentar o lance.",
+  BID_UNCHANGED: "Seu lance já está neste valor.",
   STALE_ROUND: "A rodada terminou antes do lance chegar ao servidor.",
   ROUND_CLOSED: "A rodada terminou antes do lance chegar ao servidor.",
   SQUAD_FULL: "Seu elenco já tem 18 jogadores.",
