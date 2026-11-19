@@ -105,3 +105,19 @@ APROVADA somente se:
 
 Funcionalidade bloqueada por insumo externo (fórmulas do leilão, critérios de desempate) impede a
 aprovação.
+
+## 6. Leilão com o `AuctionModel` oficial (fixado em 2026-11-19, ANTES de qualquer medição)
+
+Fonte: `docs/architecture/proposta-auction-model.md` §9, aprovada pelo responsável. Lote: leilões completos
+simulados (Liga 20, Liga 10, Copa 8 e Copa 32; 50 sementes cada), todos os clubes como bots, usuário passivo.
+
+| # | Critério | Limite |
+|---|---|---|
+| L1 | Clubes com exatamente 18 atletas, saldo ≥ 0 e sem duplicação | 100% |
+| L2 | `AuctionModelError` (saída do modelo violando o GDD) | 0 |
+| L3 | Mediana do gasto por clube no leilão (fração do orçamento de R$ 120 mi) | 50% a 95% |
+| L4 | Atletas oferecidos que aparecem sem venda no máximo 2 vezes | ≥ 60% |
+| L5 | Gasto médio: Agressivo > Conservador; preço pago/valor de mercado: Oportunista < média dos demais | sim |
+| L6 | Diferença de qualidade dos titulares entre o melhor e o pior bot (mediana entre sementes), relativa à qualidade mediana | ≤ 25% |
+
+Com as 11 formações oficiais (PM-01), as faixas estatísticas do motor (§2) são verificadas de novo, sem mudar os limites.
