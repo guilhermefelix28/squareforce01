@@ -100,7 +100,7 @@ function NextMatch({ sid, state, names, navigate, onChange }: {
         {state.champion_club_uid != null ? (
           <p>Campeão: <Club uid={state.champion_club_uid} names={names} user={user} /></p>
         ) : (
-          <Notice kind="warning" title="Campeão indefinido">Empate no topo sem critério oficial de desempate (pendência PC-01).</Notice>
+          <Notice kind="warning" title="Campeão indefinido">Empate no topo não resolvido pelos critérios de desempate.</Notice>
         )}
         <div className="hero__actions">
           <button type="button" className="btn btn--primary" onClick={() => navigate("#/encerramento")}>Ver encerramento e premiações</button>
@@ -280,7 +280,7 @@ function TableView({ sid, state, names, navigate }: { sid: string; state: Season
       <section className="card">
         <h3>Classificação</h3>
         <StandingsTable rows={state.standings} names={names} user={state.user_club_uid} />
-        <p className="muted small">Pontuação {state.points_system?.win}/{state.points_system?.draw}/{state.points_system?.loss} (provisória, PC-09). Atualizada somente após a rodada completa.</p>
+        <p className="muted small">Pontuação {state.points_system?.win}/{state.points_system?.draw}/{state.points_system?.loss} (vitória/empate/derrota). Desempate: vitórias, saldo de gols, gols pró, confronto direto (entre dois clubes), menos cartões vermelhos, menos cartões amarelos e sorteio. Atualizada somente após a rodada completa.</p>
       </section>
     );
   }

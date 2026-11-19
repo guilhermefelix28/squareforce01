@@ -26,8 +26,8 @@ Legenda: **P** = regra pendente · **D** = decisão técnica provisória (confir
 
 | ID | Tipo | Tema | Situação |
 |---|---|---|---|
-| PC-01 | P | **Critérios de desempate da classificação** da Liga — o responsável enviará (2026-11-18). Entrega 7: NENHUM critério aplicado; clubes com mesmos pontos compartilham a posição (`tied_with`) e empate no topo deixa o campeão indefinido (`tied_champions`). Critérios configuráveis já suportados (`services/competition/standings.py`). | Aguardando |
-| PC-09 | D | **Pontuação da Liga** 3/1/0 (vitória/empate/derrota): o GDD não define a escala. Provisória e configurável (`PointsSystem`). | Confirmar |
+| PC-01 | **C** 2026-11-19 | **Critérios de desempate da Liga = padrão Brasileirão**: vitórias → saldo de gols → gols pró → confronto direto → menos cartões vermelhos → menos cartões amarelos → sorteio. Aplicados em cascata (cada critério só separa quem segue empatado). Interpretação: confronto direto = pontos nos jogos entre os dois, **somente quando exatamente dois clubes** seguem empatados; segundo amarelo conta como amarelo e vermelho; sorteio determinístico pela semente da competição. `BRASILEIRAO_TIEBREAKERS` em `services/competition/standings.py`. | Resolvida |
+| PC-09 | **C** 2026-11-19 | **Pontuação da Liga** 3/1/0 (vitória/empate/derrota) confirmada pelo responsável. | Resolvida |
 | PC-10 | D | **Escalação e postura do usuário** antes da interface de partida: escolhidas automaticamente pelo mesmo algoritmo dos bots (postura inicial equilibrada, sem controlador automático). O núcleo aceita decisões de postura do usuário (`set_user_decisions`), ainda não expostas na API. | Provisória |
 | PC-11 | D | **Formações usadas na execução**: lista de amostra do motor (4-3-3, 4-4-2, 5-3-2) até a lista oficial (PM-01). | Provisória |
 | PC-02 | **C** | **Clubes elegíveis** = os 40 clubes importados que têm divisão (A ou B). A Copa sorteia entre todos eles; a Liga prioriza a Série A. Não há divergência de quantidade nas fontes: GDD §2 = 40 clubes (20 + 20) = planilha = listas 2026. | Resolvida |
@@ -73,13 +73,13 @@ Legenda: **P** = regra pendente · **D** = decisão técnica provisória (confir
 | ID | Tipo | Tema |
 |---|---|---|
 | PM-01 | P | Lista oficial de **formações**. |
-| PM-02 | P | **Referências estatísticas oficiais e calibração** do motor. Todos os números de `services/match_engine/params.py` são provisórios; lotes exploratórios em `docs/architecture/motor-calibracao-exploratoria.md` (dentro de faixas PRELIMINARES não aprovadas; grandes chances observadas ≈ 0,5 por time, possivelmente baixas). |
+| PM-02 | **C** 2026-11-19 | **Referências estatísticas**: o responsável aceitou como oficiais os agregados públicos usados na homologação (`docs/homologacao/criterios.md`). Parâmetros do motor `provisorio-0.6` passam a ser os calibrados contra essas referências. Métricas sem referência continuam só monitoradas (PH-03). |
 | PM-03 | P | Métrica de "**impacto das ações decisivas**" (desempate do Craque da Partida). |
 | PG-01 | P | **Requisitos de desempenho** (GDD §26) não quantificados. (Observado: ~45 ms por partida instantânea.) |
 | PB-03 | P | **Parâmetros da IA tática** (`services/bot_ai/tactics_params.py`): ganho mínimo, histerese, estabilidade, intervalos, aversão à perda por personalidade, custos de desgaste, pesos de escalação/formação. Os multiplicadores das posturas foram MEDIDOS no motor (e suavizados). |
 | PB-04 | D | **Valores dos resultados por situação** (Liga 3/1/0; precisa vencer 3/0,4/0; evitar derrota 3/2,4/−1; Copa 1/0,5/0) e regra `league_situation` (poucas rodadas, distância do líder ou da zona de perigo). A Entrega 7 fornecerá a classificação. |
 | PB-05 | P | **Formação de referência escolhida antes do leilão** pelos bots: o GDD prevê, mas não define como é escolhida (entrada de `choose_lineup`). |
-| MD-01 | P | **Duração da suspensão por vermelho** (provisório: 1 jogo na mesma competição) e **suspensão por acúmulo de amarelos** (desligada até definição). |
+| MD-01 | **C** 2026-11-19 | **Suspensão**: vermelho = 1 jogo na mesma competição; **sem** suspensão por acúmulo de amarelos. Confirmado pelo responsável. |
 | MD-02 | D | Lesão de **0 jogos** retira o atleta da partida atual, sem afastamento nas seguintes. |
 | MD-03 | D | Craque da Partida: após nota exibida, precisão interna e impacto decisivo, o último desempate é o menor ID. |
 | MD-04 | D | Pesos das composições de atributos por ação (iguais dentro de cada composição) e efeitos das posturas: provisórios. |
@@ -91,7 +91,7 @@ Legenda: **P** = regra pendente · **D** = decisão técnica provisória (confir
 | ID | Tipo | Pendência | Estado |
 |---|---|---|---|
 | PI-01 | P | **Tipografia**: o manual de identidade visual não define fontes. Usada a fonte do sistema. | Aguardando |
-| PI-02 | D | **Limiares dos indicadores de adequação** (familiaridade ≥ 90 Natural, ≥ 70 Boa, ≥ 40 Regular, abaixo Improvisado): apresentação provisória; o motor usa o valor contínuo (`positional_factor`). | Confirmar |
+| PI-02 | **C** 2026-11-19 | **Limiares dos indicadores de adequação** (≥ 90 Natural, ≥ 70 Boa, ≥ 40 Regular, abaixo Improvisado) confirmados. | Resolvida |
 | PI-03 | D | **Partida ao vivo sem pausa**: o GDD não prevê pausa; o relógio da apresentação é do servidor e segue mesmo desconectado (coerente com §23). Velocidade pode ser trocada durante o jogo. | Confirmar |
 | PI-04 | D | **Condição física exibida só do próprio time** (a do adversário não é informação pública). | Confirmar |
 | PI-05 | I | **Ícone do app**: o manual pede revisão em tamanho pequeno antes da publicação (arquivo raster). | Aberta |
@@ -101,7 +101,7 @@ Legenda: **P** = regra pendente · **D** = decisão técnica provisória (confir
 
 | ID | Tipo | Pendência | Estado |
 |---|---|---|---|
-| PH-01 | D | **"Posturas moderadas" = no máximo ±35% de gols marcados/sofridos em relação à Equilibrada**: interpretação usada como critério de aceitação (medido: −22% a +20%). | Confirmar |
-| PH-02 | D | **Critérios de desempenho** (`docs/homologacao/criterios.md` §4): decisão técnica; o GDD não fixa números. | Confirmar |
+| PH-01 | **C** 2026-11-19 | **"Posturas moderadas" = no máximo ±35%** de gols marcados/sofridos em relação à Equilibrada, confirmado (medido: −22% a +20%). | Resolvida |
+| PH-02 | **C** 2026-11-19 | **Critérios de desempenho** (`docs/homologacao/criterios.md` §4) confirmados. | Resolvida |
 | PH-03 | O | **Métricas sem referência confiável** (não validadas): posse por time muito concentrada (41–58%, desvio 2,3 pontos), grandes chances 1,1 por partida, escanteios 8,5, defesas 6,5, lesões 0,53, notas média 6,18 (DP 0,70). Recomenda-se fornecer referências oficiais (PM-02) para avaliá-las. | Aberta |
-| PH-04 | O | **Referências usadas** são agregados públicos (Opta/The Analyst, ESPN, imprensa); não substituem a base oficial pendente (PM-02). | Aberta |
+| PH-04 | **C** 2026-11-19 | **Referências usadas** (agregados públicos) aceitas como oficiais (ver PM-02). | Resolvida |

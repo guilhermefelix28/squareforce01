@@ -452,7 +452,7 @@ class PointsSystemOut(_Model):
     win: int
     draw: int
     loss: int
-    status: str = Field(description="Escala não definida no GDD: provisória (PC-09).")
+    status: str = Field(description="Situação da escala: 3/1/0 confirmada pelo responsável (PC-09).")
 
 
 class StandingRowOut(_Model):
@@ -467,7 +467,7 @@ class StandingRowOut(_Model):
     goal_difference: int
     points: int
     form: list[Literal["V", "E", "D"]] = Field(description="Últimos 5 resultados.")
-    tied_with: list[int] = Field(description="Clubes empatados sem critério de desempate oficial (PC-01 pendente).")
+    tied_with: list[int] = Field(description="Clubes iguais em todos os critérios de desempate (vazio com o sorteio final).")
 
 
 class SeasonFixtureOut(_Model):
@@ -496,7 +496,7 @@ class SeasonStateOut(_Model):
     standings: list[StandingRowOut] = Field(description="Classificação oficial (Liga); vazia na Copa.")
     bracket: CupBracket | None = None
     points_system: PointsSystemOut | None = None
-    tiebreakers: list[str] = Field(description="Critérios de desempate em uso (vazio: PC-01 pendente).")
+    tiebreakers: list[str] = Field(description="Critérios de desempate em uso, na ordem (padrão Brasileirão, PC-01): wins, goal_difference, goals_for, head_to_head_two_clubs, fewer_red_cards, fewer_yellow_cards, draw.")
     user_club_uid: int
     user_eliminated: bool
     champion_club_uid: int | None = None

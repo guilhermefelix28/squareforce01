@@ -34,7 +34,7 @@ execução de Liga e Copa; interface definitiva e integração). O leilão está
 **bloqueado até o `AuctionModel` aprovado** (fórmulas pendentes — `docs/architecture/leilao.md`); nunca invente
 essas fórmulas. Os números do motor são provisórios (`services/match_engine/params.py`) — nunca os declare calibrados.
 Parâmetros da IA tática também são provisórios (`services/bot_ai/tactics_params.py`).
-Desempate da Liga pendente (PC-01): nunca aplique critérios não enviados. Pontuação 3/1/0 é provisória (PC-09).
+Desempate da Liga = padrão Brasileirão (PC-01) e pontuação 3/1/0 (PC-09), confirmados em 2026-11-19.
 Entrega 9 (homologação) concluída como BLOQUEADA: ver `docs/homologacao/`. Critérios de aceitação são fixos
 (`docs/homologacao/criterios.md`): nunca altere limites depois de ver resultados. Não implemente novas entregas sem autorização
 explícita do usuário para a entrega correspondente.

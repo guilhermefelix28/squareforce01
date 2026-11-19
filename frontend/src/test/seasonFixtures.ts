@@ -20,7 +20,7 @@ export const SEASON_READY = {
   session_id: SID, kind: "league", phase: "ready", round_number: 1, total_rounds: 3, round_label: "Rodada 1",
   fixtures: [fixture("L-R01-M01", USER, OPP), fixture("L-R01-M02", 102496, 999)], byes: [], failed_matches: [],
   standings: [row(1, USER), row(1, OPP), row(1, 102496), row(1, 999)], bracket: null,
-  points_system: { win: 3, draw: 1, loss: 0, status: "provisória" }, tiebreakers: [], user_club_uid: USER,
+  points_system: { win: 3, draw: 1, loss: 0, status: "confirmada" }, tiebreakers: ["wins", "goal_difference", "goals_for", "head_to_head_two_clubs", "fewer_red_cards", "fewer_yellow_cards", "draw"], user_club_uid: USER,
   user_eliminated: false, champion_club_uid: null, tied_champions: [],
 };
 

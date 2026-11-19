@@ -1809,7 +1809,7 @@ export interface components {
             loss: number;
             /**
              * Status
-             * @description Escala não definida no GDD: provisória (PC-09).
+             * @description Situação da escala: 3/1/0 confirmada pelo responsável (PC-09).
              */
             status: string;
         };
@@ -1962,7 +1962,7 @@ export interface components {
             points_system?: components["schemas"]["PointsSystemOut"] | null;
             /**
              * Tiebreakers
-             * @description Critérios de desempate em uso (vazio: PC-01 pendente).
+             * @description Critérios de desempate em uso, na ordem (padrão Brasileirão, PC-01): wins, goal_difference, goals_for, head_to_head_two_clubs, fewer_red_cards, fewer_yellow_cards, draw.
              */
             tiebreakers: string[];
             /** User Club Uid */
@@ -2160,7 +2160,7 @@ export interface components {
             form: ("V" | "E" | "D")[];
             /**
              * Tied With
-             * @description Clubes empatados sem critério de desempate oficial (PC-01 pendente).
+             * @description Clubes iguais em todos os critérios de desempate (vazio com o sorteio final).
              */
             tied_with: number[];
         };

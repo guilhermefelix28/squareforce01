@@ -327,3 +327,24 @@ def test_cup_final_decided_on_penalties():
     assert s.champion()[0] == winner == s.state.bracket.champion_club_uid
     assert s.state.bracket.rounds[-1].matches[0].decided_by == "penalties"
     assert sum(p.goals for p in s.state.players.values()) == sum(r.score)
+
+
+# ------------------------------------------------------------------ PC-01: desempate Brasileirão
+def test_league_uses_brasileirao_tiebreakers_cards_and_always_has_a_champion():
+    from services.competition.standings import BRASILEIRAO_TIEBREAKERS
+
+    s = make_season("league", 6, seed=5)
+    assert s.tiebreakers == BRASILEIRAO_TIEBREAKERS
+    run_all(s)
+    table = s.standings()
+    assert all(r.tied_with == () for r in table)
+    assert [r.position for r in table] == list(range(1, 7))
+    champ, tied = s.champion()
+    assert champ == table[0].club_uid and tied == ()
+    cards = {"yellow": 0, "red": 0}
+    for pm in s.state.history:
+        for c in pm.result.cards:
+            cards[c.color] += 1
+    recs = s.state.records.values()
+    assert sum(r.yellow_cards for r in recs) == cards["yellow"]
+    assert sum(r.red_cards for r in recs) == cards["red"]

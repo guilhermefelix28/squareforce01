@@ -138,9 +138,9 @@ Detalhes em [competições](../architecture/competicoes.md). Todo POST exige `Id
 `SeasonStateOut`:
 - `phase`: `ready`, `awaiting_advance` ou `finished`;
 - rodada atual: `round_number`/`total_rounds`, `round_label`, `fixtures[]` (placar, pênaltis e vencedor depois de jogada), `byes`, `failed_matches`;
-- `standings[]` (Liga): `tied_with` = empatados sem critério oficial (PC-01);
+- `standings[]` (Liga): `tied_with` = iguais em todos os critérios de desempate (sempre vazio com o sorteio final);
 - `bracket` (Copa);
-- `points_system` (provisório, PC-09) e `tiebreakers` (vazio);
+- `points_system` (3/1/0, confirmado, PC-09) e `tiebreakers` (padrão Brasileirão, PC-01): `wins`, `goal_difference`, `goals_for`, `head_to_head_two_clubs` (somente quando exatamente dois clubes seguem empatados), `fewer_red_cards`, `fewer_yellow_cards`, `draw` (sorteio determinístico pela semente da competição);
 - `user_eliminated`, `champion_club_uid` e `tied_champions`.
 
 `MatchReportOut`:

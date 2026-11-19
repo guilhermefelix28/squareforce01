@@ -6875,7 +6875,7 @@
           "status": {
             "type": "string",
             "title": "Status",
-            "description": "Escala não definida no GDD: provisória (PC-09)."
+            "description": "Situação da escala: 3/1/0 confirmada pelo responsável (PC-09)."
           }
         },
         "additionalProperties": false,
@@ -7249,7 +7249,7 @@
             },
             "type": "array",
             "title": "Tiebreakers",
-            "description": "Critérios de desempate em uso (vazio: PC-01 pendente)."
+            "description": "Critérios de desempate em uso, na ordem (padrão Brasileirão, PC-01): wins, goal_difference, goals_for, head_to_head_two_clubs, fewer_red_cards, fewer_yellow_cards, draw."
           },
           "user_club_uid": {
             "type": "integer",
@@ -7743,7 +7743,7 @@
             },
             "type": "array",
             "title": "Tied With",
-            "description": "Clubes empatados sem critério de desempate oficial (PC-01 pendente)."
+            "description": "Clubes iguais em todos os critérios de desempate (vazio com o sorteio final)."
           }
         },
         "additionalProperties": false,

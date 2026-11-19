@@ -7,6 +7,7 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import Callable
 
 from services.competition.planner import build_cup_bracket, build_league_schedule
+from services.competition.standings import BRASILEIRAO_TIEBREAKERS
 from services.competition.season import Season
 from services.competition.worker import FixtureOutcome, FixtureTask, play_fixture
 from services.match_engine.calibration import SAMPLE_FORMATIONS
@@ -30,7 +31,7 @@ def clubs(n: int, levels: dict[int, int] | None = None) -> list[int]:
 
 def make_season(kind: str, n: int, *, rounds: LeagueRounds = LeagueRounds.SINGLE, seed: int = 7,
                 levels: dict[int, int] | None = None, runner: Callable[[FixtureTask], FixtureOutcome] = play_fixture,
-                tiebreakers=()) -> Season:
+                tiebreakers=BRASILEIRAO_TIEBREAKERS) -> Season:
     ids = clubs(n)
     rng = random.Random(seed)
     structure = build_league_schedule(ids, rounds, rng) if kind == "league" else build_cup_bracket(ids, rng)

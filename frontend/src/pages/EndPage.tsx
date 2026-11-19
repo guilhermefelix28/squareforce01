@@ -43,7 +43,7 @@ export function EndPage({ navigate }: { navigate: (h: string) => void }) {
           <Club uid={summary.champion_club_uid} names={names} user={user} size={64} />
         ) : (
           <Notice kind="warning" title="Campeão indefinido">
-            Empate no topo entre {summary.tied_champions.map((c) => names.get(c) ?? c).join(", ")}: os critérios oficiais de desempate ainda não foram definidos (PC-01).
+            Empate no topo entre {summary.tied_champions.map((c) => names.get(c) ?? c).join(", ")}, não resolvido pelos critérios de desempate.
           </Notice>
         )}
       </section>

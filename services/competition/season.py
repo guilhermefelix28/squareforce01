@@ -34,7 +34,15 @@ from services.match_engine.types import MatchPlayer, MatchResult, PostureChange,
 from squadforce_shared.contracts import CupBracket, LeagueSchedule
 from squadforce_shared.domain.positions import Position
 
-from .standings import ClubRecord, MatchScore, PointsSystem, StandingRow, apply_result, standings
+from .standings import (
+    BRASILEIRAO_TIEBREAKERS,
+    ClubRecord,
+    MatchScore,
+    PointsSystem,
+    StandingRow,
+    apply_result,
+    standings,
+)
 from .worker import FixtureOutcome, FixtureTask, play_fixture
 
 RECENT_RATINGS = 3
@@ -131,6 +139,18 @@ class _State:
         )
 
 
+def _score(home: int, away: int, res: MatchResult) -> MatchScore:
+    """Placar oficial + cartões de cada lado (critérios de desempate PC-01). Lado 0 = mandante/clube A.
+
+    Um segundo amarelo conta como amarelo E vermelho (os dois cartões são registrados pelo motor).
+    """
+    n = {(side, color): 0 for side in (0, 1) for color in ("yellow", "red")}
+    for c in res.cards:
+        n[(c.side, c.color)] += 1
+    return MatchScore(home, away, *res.official_score, home_yellow=n[(0, "yellow")], home_red=n[(0, "red")],
+                      away_yellow=n[(1, "yellow")], away_red=n[(1, "red")])
+
+
 def match_seed(base_seed: int, competition_id: str, match_id: str) -> int:
     """Semente própria de cada partida, independente da ordem de processamento."""
     digest = hashlib.sha256(f"{base_seed}:{competition_id}:{match_id}".encode()).hexdigest()
@@ -150,7 +170,7 @@ class Season:
         formations: Sequence[Sequence[Position]],
         seed: int,
         points: PointsSystem = PointsSystem(),
-        tiebreakers: Sequence[str] = (),
+        tiebreakers: Sequence[str] = BRASILEIRAO_TIEBREAKERS,
         runner: Callable[[FixtureTask], FixtureOutcome] = play_fixture,
         round_timeout: float = 600.0,
     ):
@@ -246,8 +266,9 @@ class Season:
         return league_situation(mine, leader, None, remaining)
 
     def standings(self) -> list[StandingRow]:
-        results = [MatchScore(pm.home, pm.away, *pm.result.official_score) for pm in self.state.history]
-        return standings(self.state.records, self.names, self.tiebreakers, results, self.points)
+        results = [_score(pm.home, pm.away, pm.result) for pm in self.state.history]
+        return standings(self.state.records, self.names, self.tiebreakers, results, self.points,
+                         draw_seed=self.seed)
 
     def _prepare(self) -> None:
         fixtures, byes, label = self._round_fixtures()
@@ -424,12 +445,12 @@ class Season:
             new.club_matches[home] += 1
             new.club_matches[away] += 1
             if self.kind == "league":
-                apply_result(new.records, MatchScore(home, away, *res.official_score), self.points)
+                apply_result(new.records, _score(home, away, res), self.points)
             else:
                 winner = home if res.winner_side == 0 else away
                 decided_by = "penalties" if res.shootout else "regular_time"
                 new.bracket = register_cup_winner(new.bracket, m, winner, decided_by)
-                apply_result(new.records, MatchScore(home, away, *res.official_score), self.points)
+                apply_result(new.records, _score(home, away, res), self.points)
             squads = ({p.unique_id for p in self.squads[home]}, {p.unique_id for p in self.squads[away]})
             new.ledger.record_match(res, (task.home, task.away), squads)
             self._accumulate(new, res, task)

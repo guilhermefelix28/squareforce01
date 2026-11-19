@@ -277,7 +277,7 @@ describe("encerramento", () => {
     expect(screen.getByRole("button", { name: "Configurar nova competição" })).toBeInTheDocument();
   });
 
-  it("campeão indefinido sem critério de desempate", async () => {
+  it("campeão indefinido quando o desempate não resolve", async () => {
     fakeApi({
       ...baseRoutes({ ...SESSION_COMP, phase: "finished" }),
       [`GET ${S}/season`]: () => json(200, { ...SEASON_FINISHED, champion_club_uid: null, tied_champions: [322, 329] }),
@@ -285,7 +285,7 @@ describe("encerramento", () => {
     });
     at("#/encerramento");
     expect(await screen.findByText("Campeão indefinido")).toBeInTheDocument();
-    expect(screen.getByText(/PC-01/)).toBeInTheDocument();
+    expect(screen.getByText(/não resolvido pelos critérios de desempate/)).toBeInTheDocument();
   });
 });
 

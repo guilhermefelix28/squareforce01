@@ -77,7 +77,7 @@ export function StandingsTable({ rows, names, user, compact }: { rows: StandingR
       </div>
       {tied && (
         <p className="muted small">
-          * Empate em pontos sem critério de desempate oficial (pendência PC-01): os clubes dividem a posição.
+          * Clubes iguais em todos os critérios de desempate dividem a posição.
         </p>
       )}
     </div>
