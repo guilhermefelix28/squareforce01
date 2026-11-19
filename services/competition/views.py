@@ -5,19 +5,19 @@ from __future__ import annotations
 import math
 
 from services.match_engine.engine import LINE
-from services.match_engine.calibration import SAMPLE_FORMATIONS
 from services.match_engine.types import MatchPlayer, TeamSheet
 from squadforce_shared.contracts import (
     CalendarOut, CalendarRoundOut, ClubSeasonStatsOut, FormationOut, LineupOut, LineupPlayerOut, LineupSlotOut,
     LivePlayerOut, LiveStateOut, MatchEventOut, OpponentPreviewOut, PlayerSeasonStatsOut, SeasonFixtureOut,
     SeasonStatsOut, SquadPlayerOut, TeamLineupOut,
 )
+from squadforce_shared.domain.formations import OFFICIAL_FORMATIONS, official_name
 
 from .live import LiveMatch
 from .season import MAIN_EVENTS, Season, SeasonError, UserLineup
 
-# Lista oficial de formações PENDENTE (PM-01): usa-se a lista de amostra do motor, marcada como provisória.
-PROVISIONAL_FORMATIONS = SAMPLE_FORMATIONS
+# Formações oficiais (PM-01, confirmadas em 2026-11-19), como tuplas de vagas usadas pela temporada e pelo motor.
+SEASON_FORMATIONS = tuple(f.slots for f in OFFICIAL_FORMATIONS)
 
 FIT_THRESHOLDS = ((90, "natural"), (70, "boa"), (40, "regular"))  # familiaridade 1–100 (apresentação, PI-02)
 
@@ -28,6 +28,9 @@ def fit_level(player: MatchPlayer, slot) -> str:
 
 
 def formation_name(formation) -> str:
+    name = official_name(formation)
+    if name is not None:
+        return name
     counts = {"def": 0, "mid": 0, "att": 0}
     for pos in formation:
         if LINE[pos] in counts:
@@ -38,11 +41,11 @@ def formation_name(formation) -> str:
 
 
 def _formations() -> list[FormationOut]:
-    return [FormationOut(id=formation_name(f), positions=[p.value for p in f]) for f in PROVISIONAL_FORMATIONS]
+    return [FormationOut(id=formation_name(f), positions=[p.value for p in f]) for f in SEASON_FORMATIONS]
 
 
 def formation_by_name(name: str):
-    return next((f for f in PROVISIONAL_FORMATIONS if formation_name(f) == name), None)
+    return next((f for f in SEASON_FORMATIONS if formation_name(f) == name), None)
 
 
 STAT_KEYS = ("shots", "shots_on_target", "xg", "big_chances", "big_chances_missed", "possession_pct", "corners",

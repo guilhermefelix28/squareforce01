@@ -312,7 +312,7 @@ def choose_lineup(
     com 100% (GDD §13). Emergenciais só com menos de 11 aptos (delegado a `build_team_sheet`).
     """
     if not formations:
-        raise ValueError("Nenhuma formação candidata informada (lista oficial pendente — PM-01).")
+        raise ValueError("Nenhuma formação candidata informada.")
     ratings = recent_ratings or {}
     available = [p for p in squad if ledger is None or ledger.is_available(p.unique_id, competition)]
     opp = context.opponent

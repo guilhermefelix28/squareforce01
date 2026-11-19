@@ -25,7 +25,7 @@ from .validation import validate_result
 FORMATION_433 = (P.GK, P.DR, P.DC, P.DC, P.DL, P.DM, P.MC, P.MC, P.STC, P.STC, P.STC)
 FORMATION_442 = (P.GK, P.DR, P.DC, P.DC, P.DL, P.DM, P.MC, P.MC, P.MC, P.STC, P.STC)
 FORMATION_532 = (P.GK, P.DR, P.DC, P.DC, P.DC, P.DL, P.DM, P.MC, P.MC, P.STC, P.STC)
-SAMPLE_FORMATIONS = (FORMATION_433, FORMATION_442, FORMATION_532)  # exemplos de TESTE (PM-01 pendente)
+SAMPLE_FORMATIONS = (FORMATION_433, FORMATION_442, FORMATION_532)  # amostra para testes do motor (oficiais: squadforce_shared.domain.formations)
 
 # Referências PRELIMINARES (não aprovadas) — por partida, salvo indicação.
 PRELIMINARY_REFERENCES = {

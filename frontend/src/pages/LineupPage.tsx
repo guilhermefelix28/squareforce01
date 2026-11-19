@@ -102,7 +102,7 @@ export function LineupPage({ navigate }: { navigate: (h: string) => void }) {
             </label>
           ))}
         </fieldset>
-        <p className="muted small">Formações provisórias (lista oficial pendente, PM-01). Arraste os atletas ou toque em dois para trocá-los. Atletas podem jogar fora da posição natural; a cor indica a adequação.</p>
+        <p className="muted small">Arraste os atletas ou toque em dois para trocá-los. Atletas podem jogar fora da posição natural; a cor indica a adequação.</p>
         <ul className="fit-legend" aria-label="Legenda de adequação">
           <li className="fit--natural">Natural</li><li className="fit--boa">Boa</li><li className="fit--regular">Regular</li><li className="fit--improvisada">Improvisado</li>
         </ul>

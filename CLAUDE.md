@@ -20,23 +20,24 @@ Consulte a Skill correspondente **antes** de alterar um módulo. `game-design-ru
 | `project-architecture` | serviços, rotas, contratos, idempotência, erros |
 | `database-import` | SQLite, migrações, importação Excel, catálogo |
 | `session-management` | sessão em memória, versão, WebSocket, bloqueio de importação |
-| `auction-system` | leilão e complementação de elencos (entrega futura) |
-| `trading-system` | mercado de negociações (entrega futura) |
-| `bot-intelligence` | decisões dos bots (entrega futura) |
-| `match-engine` | motor de partidas (entrega futura) |
+| `auction-system` | leilão e complementação de elencos |
+| `trading-system` | mercado de negociações |
+| `bot-intelligence` | decisões dos bots |
+| `match-engine` | motor de partidas |
 | `competition-system` | formatos, Liga, Copa, calendário, consolidação |
 | `frontend-ui` | React/TS, temas, responsividade, cliente de API |
 | `testing-validation` | testes obrigatórios e critérios de aceitação |
 
 ## Escopo atual
-**Entregas 1 a 8** (infraestrutura, dados, sessão; competições; leilão; mercado; motor esportivo; IA tática;
-execução de Liga e Copa; interface definitiva e integração). O leilão está implementado mas
-**bloqueado até o `AuctionModel` aprovado** (fórmulas pendentes — `docs/architecture/leilao.md`); nunca invente
-essas fórmulas. Os números do motor são provisórios (`services/match_engine/params.py`) — nunca os declare calibrados.
-Parâmetros da IA tática também são provisórios (`services/bot_ai/tactics_params.py`).
-Desempate da Liga = padrão Brasileirão (PC-01) e pontuação 3/1/0 (PC-09), confirmados em 2026-11-19.
-Entrega 9 (homologação) concluída como BLOQUEADA: ver `docs/homologacao/`. Critérios de aceitação são fixos
-(`docs/homologacao/criterios.md`): nunca altere limites depois de ver resultados. Não implemente novas entregas sem autorização
+**Entregas 1 a 9 concluídas** (infraestrutura, dados, sessão; competições; leilão; mercado; motor esportivo; IA tática;
+execução de Liga e Copa; interface; homologação). Conclusão em 2026-11-19: o `AuctionModel` oficial foi aprovado
+(`docs/architecture/proposta-auction-model.md`, `services/auction/official_model.py`, carregado por padrão), assim como
+as 11 formações (PM-01), o desempate Brasileirão (PC-01), a pontuação 3/1/0 (PC-09) e as referências do motor (PM-02).
+Mudar fórmula, perfil de bot ou formação aprovados exige nova aprovação do responsável. Os parâmetros do motor
+(`services/match_engine/params.py`) são os calibrados contra as referências aceitas; os da IA tática
+(`services/bot_ai/tactics_params.py`) e da concorrência no leilão (PB-06) continuam provisórios.
+Critérios de aceitação são fixos (`docs/homologacao/criterios.md`): nunca altere limites depois de ver resultados.
+Não implemente novas entregas sem autorização
 explícita do usuário para a entrega correspondente.
 
 ## Comandos

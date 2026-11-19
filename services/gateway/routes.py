@@ -306,8 +306,8 @@ async def start_auction(c: C, request: Request, session_id: str, idempotency_key
         if c.auction_model is None:
             raise AppError(
                 409, ErrorCode.AUCTION_MODEL_NOT_CONFIGURED,
-                "O leilão depende das fórmulas de overall, valor de mercado, lance mínimo, reservas, pesos de "
-                "posição, formações e perfis dos bots, ainda não aprovadas (pendências PE-01…PE-05, PM-01).",
+                "O leilão está desligado neste servidor (SQUADFORCE_AUCTION_MODEL=none): nenhum modelo de "
+                "overall, valores, reservas, formações e perfis dos bots foi carregado.",
             )
         if state.phase != "setup" or state.status != "active":
             raise AppError(409, ErrorCode.INVALID_PHASE, f"O leilão só pode começar na fase de configuração (atual: {state.phase}).")
@@ -668,7 +668,7 @@ def _live_error(exc: LiveError) -> AppError:
 
 @router.get("/sessions/{session_id}/season/formations", response_model=list[FormationOut], responses=ERR, tags=["season"])
 def season_formations(c: C, session_id: str) -> list[FormationOut]:
-    """Formações disponíveis (lista oficial pendente — PM-01: provisória)."""
+    """Formações oficiais (PM-01)."""
     _season(c, session_id)
     return c.seasons.formations()
 

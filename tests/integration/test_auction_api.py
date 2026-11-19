@@ -69,13 +69,42 @@ def bid(c, sid, player_id, amount, round_number=None, idem=None):
     return c.post(f"/api/sessions/{sid}/auction/bids", json=body, headers={"Idempotency-Key": idem or key()})
 
 
-# ------------------------------------------------------------------ fórmulas pendentes
-def test_auction_is_blocked_without_approved_model(loaded_client):
-    sid = create_session(loaded_client).json()["id"]
-    r = start(loaded_client, sid)
-    assert r.status_code == 409 and r.json()["error"]["code"] == "AUCTION_MODEL_NOT_CONFIGURED"
-    assert loaded_client.get(f"/api/sessions/{sid}").json()["phase"] == "setup"  # nada mudou
-    assert loaded_client.get("/api/health").json()["services"]["auction"] == "planned"
+# ------------------------------------------------------------------ modelo desligado / modelo oficial
+def test_auction_is_blocked_when_model_is_disabled(tmp_path):
+    app, _, settings = make_client(tmp_path, None)
+    with TestClient(app) as c:
+        set_divisions(settings, TEST_DIVISIONS)
+        rows = big_squad()
+        assert post_import(c, "clubs", build_xlsx(rows)).status_code == 200
+        assert post_import(c, "players", build_xlsx(rows)).status_code == 200
+        sid = create_session(c).json()["id"]
+        r = start(c, sid)
+        assert r.status_code == 409 and r.json()["error"]["code"] == "AUCTION_MODEL_NOT_CONFIGURED"
+        assert c.get(f"/api/sessions/{sid}").json()["phase"] == "setup"  # nada mudou
+        assert c.get("/api/health").json()["services"]["auction"] == "planned"
+
+
+def test_official_model_is_loaded_by_default_and_runs_the_auction(tmp_path, monkeypatch):
+    monkeypatch.delenv("SQUADFORCE_AUCTION_MODEL", raising=False)
+    clock = ManualClock()
+    graphics = tmp_path / "Graphics"
+    (graphics / "Faces").mkdir(parents=True)
+    settings = Settings(db_path=tmp_path / "official.db", graphics_dir=graphics, auction_ticker=False)
+    with TestClient(create_app(settings, clock=clock)) as c:  # sem auction_model: carrega o padrão
+        set_divisions(settings, TEST_DIVISIONS)
+        rows = big_squad()
+        assert post_import(c, "clubs", build_xlsx(rows)).status_code == 200
+        assert post_import(c, "players", build_xlsx(rows)).status_code == 200
+        assert c.get("/api/health").json()["services"]["auction"] == "ready"
+        sid = create_session(c, format="cup", num_clubs=4, league_rounds=None).json()["id"]
+        assert start(c, sid).status_code == 201
+        for _ in range(2000):
+            clock.advance(1.0)
+            if state(c, sid).phase == "completed":
+                break
+        summary = AuctionSummaryOut.model_validate(c.get(f"/api/sessions/{sid}/auction/summary").json())
+        assert len(summary.squads) == 4
+        assert all(len(sq.contracts) == 18 and sq.budget >= 0 for sq in summary.squads)
 
 
 # ------------------------------------------------------------------ ciclo de vida

@@ -49,7 +49,8 @@ def test_squad_and_formations(env):
     assert len(squad) == 18 and all(p.available for p in squad)
     assert all(p.fit[p.position] == "natural" for p in squad)
     forms = get(c, sid, "formations")
-    assert {f["id"] for f in forms} == {"4-3-3", "4-4-2", "5-3-2"} and all(len(f["positions"]) == 11 for f in forms)
+    assert [f["id"] for f in forms] == ["4-4-2", "4-3-3", "4-2-3-1", "3-5-2", "3-4-3", "5-3-2", "4-1-4-1", "4-5-1",
+                                     "4-3-2-1", "4-3-1-2", "5-4-1"] and all(len(f["positions"]) == 11 for f in forms)
     assert "attributes" not in str(squad[0].model_dump())  # atributos não são expostos
 
 
@@ -71,7 +72,7 @@ def test_lineup_set_validate_and_used_in_the_match(env):
     # erros
     bad = post(c, sid, "lineup", {"formation": "4-4-2", "starters": starters[:10] + [starters[0]], "bench": []})
     assert bad.status_code == 422 and bad.json()["error"]["code"] == "INVALID_LINEUP"
-    bad = post(c, sid, "lineup", {"formation": "3-5-2", "starters": starters, "bench": []})
+    bad = post(c, sid, "lineup", {"formation": "2-4-4", "starters": starters, "bench": []})  # não oficial
     assert bad.status_code == 422
     bad = post(c, sid, "lineup", {"formation": "4-4-2", "starters": starters[:10] + [999999], "bench": []})
     assert bad.status_code == 422

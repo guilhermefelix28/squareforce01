@@ -71,7 +71,7 @@ export function AuctionPage({ go }: { go: (page: "session") => void }) {
       <h2>Leilão</h2>
       {error && (
         <Notice kind={error.code === "AUCTION_MODEL_NOT_CONFIGURED" ? "warning" : "error"}
-          title={error.code === "AUCTION_MODEL_NOT_CONFIGURED" ? "Leilão aguardando fórmulas aprovadas" : "Não foi possível iniciar"}>
+          title={error.code === "AUCTION_MODEL_NOT_CONFIGURED" ? "Leilão desligado neste servidor" : "Não foi possível iniciar"}>
           {error.message}
         </Notice>
       )}

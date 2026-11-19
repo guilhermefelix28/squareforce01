@@ -29,7 +29,7 @@ Legenda: **P** = regra pendente · **D** = decisão técnica provisória (confir
 | PC-01 | **C** 2026-11-19 | **Critérios de desempate da Liga = padrão Brasileirão**: vitórias → saldo de gols → gols pró → confronto direto → menos cartões vermelhos → menos cartões amarelos → sorteio. Aplicados em cascata (cada critério só separa quem segue empatado). Interpretação: confronto direto = pontos nos jogos entre os dois, **somente quando exatamente dois clubes** seguem empatados; segundo amarelo conta como amarelo e vermelho; sorteio determinístico pela semente da competição. `BRASILEIRAO_TIEBREAKERS` em `services/competition/standings.py`. | Resolvida |
 | PC-09 | **C** 2026-11-19 | **Pontuação da Liga** 3/1/0 (vitória/empate/derrota) confirmada pelo responsável. | Resolvida |
 | PC-10 | D | **Escalação e postura do usuário** antes da interface de partida: escolhidas automaticamente pelo mesmo algoritmo dos bots (postura inicial equilibrada, sem controlador automático). O núcleo aceita decisões de postura do usuário (`set_user_decisions`), ainda não expostas na API. | Provisória |
-| PC-11 | D | **Formações usadas na execução**: lista de amostra do motor (4-3-3, 4-4-2, 5-3-2) até a lista oficial (PM-01). | Provisória |
+| PC-11 | **C** 2026-11-19 | **Formações na execução** = as 11 oficiais (PM-01). | Resolvida |
 | PC-02 | **C** | **Clubes elegíveis** = os 40 clubes importados que têm divisão (A ou B). A Copa sorteia entre todos eles; a Liga prioriza a Série A. Não há divergência de quantidade nas fontes: GDD §2 = 40 clubes (20 + 20) = planilha = listas 2026. | Resolvida |
 | PC-03 | P | Efeito (se houver) do **mando de campo** no motor. | Aberta |
 | PC-04 | **C** 2026-11-18 | **Escolha dentro da mesma série na Liga.** O GDD manda priorizar a Série A, mas não diz *quais* clubes da Série A entram quando há mais clubes do que vagas (ex.: Liga de 10). Implementado: **sorteio** entre os clubes da série (seleção automática dos clubes-bot), com semente automática da sessão. | Resolvida |
@@ -40,17 +40,17 @@ Legenda: **P** = regra pendente · **D** = decisão técnica provisória (confir
 
 ## Economia e leilão
 
-> **Bloqueio da Entrega 3:** por decisão do responsável (2026-11-18) as fórmulas abaixo NÃO foram inventadas.
-> O leilão está implementado, mas só roda com um `AuctionModel` aprovado — ver [leilão](../architecture/leilao.md).
+> **Desbloqueado em 2026-11-19:** o responsável aprovou o `AuctionModel` oficial (com ajustes) —
+> ver [proposta aprovada](../architecture/proposta-auction-model.md). Modelo carregado por padrão.
 
 | ID | Tipo | Tema |
 |---|---|---|
-| PE-01 | P | Fórmula do **overall calibrado** (mediana-alvo 70, >90 raro) e ponderações por posição. |
-| PE-02 | P | Fórmulas de **valor de mercado** (overall calibrado + idade) e de **lance mínimo** (até R$ 30 mi). |
-| PE-03 | P | Regra detalhada da **penalidade posicional** ("até 35% conforme a regra já definida"). |
-| PE-04 | P | Tamanho e composição exatos das **reservas básica e complementar**. |
-| PE-05 | P | Pesos do **sorteio ponderado** de posições do leilão. |
-| PB-01 | P | **Parâmetros das personalidades** dos bots (Agressivo, Conservador, Equilibrado, Oportunista): tolerância a preço, agressividade do lance, ganho mínimo, sensibilidade a preço, gasto por vaga, urgência, tempos de decisão (ver `BotProfile`). |
+| PE-01 | **C** 2026-11-19 | **Overall calibrado**: composições de atributos do motor por posição, escala por posição (mediana 70, 8 pontos por desvio robusto), recalculado a cada base (ver `docs/architecture/proposta-auction-model.md` §1). |
+| PE-02 | **C** 2026-11-19 | **Valor de mercado** = R$ 3 mi × e^(k(overall−70)) × fator de idade, k = 0,1228 acima e 0,25 abaixo da mediana (ajuste do responsável), teto R$ 50 mi; **lance mínimo** = 50% do valor (ver `docs/architecture/proposta-auction-model.md` §3). |
+| PE-03 | **C** 2026-11-19 | **Penalidade posicional** linear de 0% a 35% (mesma curva do motor) (ver `docs/architecture/proposta-auction-model.md` §2). |
+| PE-04 | **C** 2026-11-19 | **Reservas**: básica = vagas + 25%, menores overalls, cota por posição e ≥ 1 goleiro por clube; complementar = melhores não vendidos, 1,5 × clubes × participação da posição, destaques ≤ clubes/4 (ver `docs/architecture/proposta-auction-model.md` §4). |
+| PE-05 | **C** 2026-11-19 | **Sorteio da posição**: (0,25 + participação na necessidade) × disponibilidade × recência; atletas da rodada com peso 6 acima da mediana contra 1 abaixo, pelo menos um de cada grupo (ajuste do responsável) (ver `docs/architecture/proposta-auction-model.md` §5). |
+| PB-01 | **C** 2026-11-19 | **Personalidades no leilão**: perfis revisados pelo responsável (bots mais dispostos a pagar) (ver `docs/architecture/proposta-auction-model.md` §7). |
 | PE-06 | D | **Resultado público da rodada** mostra comprador e preço pago; lances perdedores continuam sigilosos. |
 | PE-07 | D | Lances em múltiplos de R$ 100 mil para os bots (menor botão rápido); o usuário pode digitar qualquer valor inteiro. |
 | PE-08 | D | **Complementação do clube do usuário** é automática (GDD §1/§7), com a mesma avaliação usada pelos bots; melhoria só é escolhida se aumentar a qualidade do elenco. |
@@ -61,7 +61,7 @@ Legenda: **P** = regra pendente · **D** = decisão técnica provisória (confir
 
 | ID | Tipo | Tema |
 |---|---|---|
-| PB-02 | P | **Parâmetros de negociação das personalidades** (`TradeProfile`): perda esportiva tolerada, R$ exigidos por ponto de qualidade, tolerância de valor, ganho mínimo para propor, fração do saldo oferecível, intervalos de proposta e de resposta. |
+| PB-02 | **C** 2026-11-19 | **Personalidades no mercado** aprovadas (ver `docs/architecture/proposta-auction-model.md` §8). |
 | TR-01 | D | "Uma proposta ativa por clube" = **uma pendente como proponente**; um clube pode **receber** várias (o GDD fala em "propostas recebidas" no plural). |
 | TR-02 | D | Propostas entre bots não aparecem para o usuário; somente as trocas **concluídas** são públicas (histórico). |
 | TR-03 | D | Pendentes que ficam impossíveis após outra troca (jogador já trocado ou limite de 3) são **invalidadas** na hora. |
@@ -72,7 +72,7 @@ Legenda: **P** = regra pendente · **D** = decisão técnica provisória (confir
 
 | ID | Tipo | Tema |
 |---|---|---|
-| PM-01 | P | Lista oficial de **formações**. |
+| PM-01 | **C** 2026-11-19 | **11 formações oficiais** escolhidas pelo responsável: 4-4-2, 4-3-3, 4-2-3-1, 3-5-2, 3-4-3, 5-3-2, 4-1-4-1, 4-5-1, 4-3-2-1, 4-3-1-2, 5-4-1 (`squadforce_shared/domain/formations.py`). |
 | PM-02 | **C** 2026-11-19 | **Referências estatísticas**: o responsável aceitou como oficiais os agregados públicos usados na homologação (`docs/homologacao/criterios.md`). Parâmetros do motor `provisorio-0.6` passam a ser os calibrados contra essas referências. Métricas sem referência continuam só monitoradas (PH-03). |
 | PM-03 | P | Métrica de "**impacto das ações decisivas**" (desempate do Craque da Partida). |
 | PG-01 | P | **Requisitos de desempenho** (GDD §26) não quantificados. (Observado: ~45 ms por partida instantânea.) |
@@ -105,3 +105,9 @@ Legenda: **P** = regra pendente · **D** = decisão técnica provisória (confir
 | PH-02 | **C** 2026-11-19 | **Critérios de desempenho** (`docs/homologacao/criterios.md` §4) confirmados. | Resolvida |
 | PH-03 | O | **Métricas sem referência confiável** (não validadas): posse por time muito concentrada (41–58%, desvio 2,3 pontos), grandes chances 1,1 por partida, escanteios 8,5, defesas 6,5, lesões 0,53, notas média 6,18 (DP 0,70). Recomenda-se fornecer referências oficiais (PM-02) para avaliá-las. | Aberta |
 | PH-04 | **C** 2026-11-19 | **Referências usadas** (agregados públicos) aceitas como oficiais (ver PM-02). | Resolvida |
+
+## Conclusão (2026-11-19)
+
+| ID | Tipo | Pendência | Estado |
+|---|---|---|---|
+| PB-06 | D | **Concorrência e escolha mista no leilão** (GDD §6, "considerar concorrência com base apenas em informações públicas"): rivais esperados por atleta pela proporção dos lances mínimos; alvo sorteado ∝ pontuação², determinístico por clube e rodada. `COMPETITION_WEIGHT` = 0,5 e `SAMPLING_POWER` = 2 são parâmetros provisórios da IA, escolhidos em lotes exploratórios. | Provisória |

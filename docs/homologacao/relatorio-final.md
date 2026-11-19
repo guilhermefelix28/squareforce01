@@ -1,32 +1,57 @@
 # Relatório final de homologação: SquadForce (Game Design v5.2)
 
-Entrega 9, auditoria, calibração e homologação. Data: 2026-11-19. Branch `entrega-9`.
+Entrega 9: auditoria, calibração e homologação (2026-11-19). **Re-homologação no mesmo dia**, depois que o
+responsável aprovou os insumos que bloqueavam a versão (branch `conclusao`).
 
-## Decisão final: **BLOQUEADA**
+## Decisão final: **APROVADA** (re-homologação de 2026-11-19)
 
-Todo o software implementável foi verificado e aprovado nos critérios definidos **antes** das medições
-(`criterios.md`, commit `d2cda8e`):
-- todos os testes funcionais passam;
-- não há falha crítica ou importante aberta;
-- as faixas estatísticas com referência foram atendidas;
-- IA, determinismo, competições, desempenho e interface foram validados.
+Na primeira homologação, a decisão foi BLOQUEADA por insumos externos. Todos foram fornecidos ou aprovados:
 
-A versão **não pode ser declarada APROVADA**, porque depende de insumos que só o responsável pode fornecer:
+| Bloqueio | Resolução |
+|---|---|
+| Fórmulas do leilão (`AuctionModel`) | Proposta aprovada com ajustes: atletas abaixo da mediana mais baratos e mais chance de atletas acima da mediana nas rodadas. Perfis dos bots revisados (`docs/architecture/proposta-auction-model.md`). Modelo oficial carregado por padrão. |
+| Desempate da Liga (PC-01) | Padrão Brasileirão: vitórias, saldo, gols pró, confronto direto entre dois clubes, menos vermelhos, menos amarelos e sorteio. |
+| Referências estatísticas (PM-02) | Agregados públicos aceitos como referência oficial. |
+| Provisórias (PC-09, PM-01, MD-01, PI-02, PH-01, PH-02) | Confirmadas: 3/1/0; **11 formações oficiais**; suspensão de 1 jogo por vermelho, sem acúmulo de amarelos; limiares de adequação e de desempenho. |
 
-1. **Fórmulas do leilão (`AuctionModel`).** Sem elas, o leilão real não inicia, e o jogo só roda de ponta a
-   ponta com o modelo FALSO de testes. As decisões financeiras dos bots não podem ser validadas com as regras
-   reais.
-2. **Critérios de desempate da Liga (PC-01).** Hoje, um empate em pontos no topo deixa o campeão indefinido.
-3. **Aprovação das referências estatísticas (PM-02).** A calibração usou agregados públicos. Várias métricas
-   não têm referência confiável e não foram validadas (PH-03).
-4. **Decisões provisórias a confirmar:**
-   - pontuação 3/1/0 (PC-09);
-   - formações oficiais (PM-01);
-   - duração da suspensão;
-   - limiares de interface e de desempenho (PI-02, PH-01, PH-02).
+### Verificações da re-homologação (critérios fixados ANTES das medições)
 
-Com esses insumos, a homologação pode ser refeita com os scripts e critérios deste diretório, sem retrabalho
-de arquitetura.
+- **Leilão** (`criterios.md` §6, 200 leilões completos na base real, `leilao.md`):
+  - L1–L6 atendidos;
+  - 100% dos clubes com 18 atletas, sem saldo negativo e sem duplicação;
+  - gasto mediano dos bots de 60,4%;
+  - diferença de titulares entre o melhor e o pior bot de 7,8%;
+  - personalidades distintas: o Agressivo paga 1,78× o valor e o Oportunista, 0,80×.
+- **Motor com as 11 formações** (`calibracao.md`, 20.250 partidas): todas as faixas atendidas, com os limites inalterados.
+  - gols 2,368, empates 25,4%, xG 2,343, finalizações 24,5, faltas 26,5, amarelos 5,05 e vermelhos 0,215;
+  - 0 partidas inválidas.
+- **Desempenho** com o modelo oficial (`desempenho.md`): todos os critérios atendidos. Lance p95 1,2 ms; rodada
+  da Liga 20 p95 215 ms; Liga 20 completa em 21,6 s; memória 287 MB; paralelismo 2,17×.
+- **Testes:**
+  - pytest **787 passed**;
+  - Vitest **73 passed**;
+  - e2e **6 passed**: a jornada completa agora usa o modelo oficial com a planilha real;
+  - build sem erros.
+
+### Correções durante a re-homologação
+
+| Gravidade | Defeito | Correção |
+|---|---|---|
+| IMPORTANTE | Os bots do leilão ignoravam a concorrência (vagas e saldos públicos dos rivais), contra o GDD §6. Todos miravam o mesmo atleta: na Liga 20, só 1,8 venda por rodada de 5. | Concorrência estimada com informação pública e escolha mista do alvo (`auction_bot.py`, PB-06): 3,8 vendas por rodada, e todos os bots completam o elenco. Teste de regressão: `test_bot_considers_public_competition_and_avoids_the_crowded_target`. |
+
+### Itens que continuam em aberto (não bloqueiam)
+
+- **Provisórios:** parâmetros da IA tática (PB-03), valores por situação (PB-04), formação de referência dos bots
+  (PB-05) e concorrência no leilão (PB-06).
+- **Em aberto:**
+  - mando de campo sem efeito no motor (PC-03);
+  - métrica de impacto decisivo (PM-03);
+  - tipografia (PI-01);
+  - métricas sem referência (PH-03).
+
+---
+
+*Relatório original da Entrega 9 (decisão BLOQUEADA), mantido como histórico:*
 
 ## 1. Resumo da implementação
 

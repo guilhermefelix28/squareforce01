@@ -120,21 +120,38 @@ leilão, os bots, a escalação e o motor.
 Com só 7 códigos, alguns pares têm as **mesmas vagas** e diferem apenas no nome e no desenho:
 3-5-2 = 5-3-2 e 4-3-2-1 = 4-2-3-1. Todos ficam disponíveis com o nome escolhido.
 
-## 7. Personalidades dos bots no leilão (PB-01)
+## 7. Personalidades dos bots no leilão (PB-01): revisadas e aprovadas em 2026-11-19
 
 | Parâmetro (`BotProfile`) | Agressivo | Conservador | Equilibrado | Oportunista |
 |---|---|---|---|---|
-| Teto sobre o valor de mercado | 1,5× | 0,9× | 1,2× | 1,0× |
-| Lance inicial (fração entre mínimo e teto) | 0,6 | 0,2 | 0,4 | 0,1 |
+| Teto sobre o valor de mercado | 2,0× | 1,2× | 1,6× | 1,3× |
+| Lance inicial (fração entre mínimo e teto) | 0,85 | 0,5 | 0,7 | 0,3 |
 | Ganho mínimo para disputar | 0,0 | 0,5 | 0,2 | 0,1 |
 | Sensibilidade a preço | 0,1 | 0,6 | 0,3 | 0,9 |
-| Gasto por vaga (× média disponível) | 1,8 | 1,0 | 1,3 | 1,2 |
+| Gasto por vaga (× média disponível) | 2,0 | 1,1 | 1,5 | 1,3 |
 | Urgência no fim do relógio | +50% | +20% | +35% | +40% |
 | Primeiro lance (s após abrir a rodada) | 0,5–3 | 1–5 | 0,5–4 | 2–6 |
 | Reavaliação (s antes do fim da rodada) | 2,0 | 1,5 | 2,0 | 3,0 |
 
-Os valores partem dos usados na simulação da Entrega 3, que já foram exercitados em carga, e mantêm o
-significado definido no código. Escala do ganho: trocar um titular de 70 por um de 80 vale cerca de 0,73.
+Escala do ganho: trocar um titular de 70 por um de 80 vale cerca de 0,73.
+
+### Por que os perfis foram revisados (lotes exploratórios, sementes 500+, fora do lote oficial)
+
+1. **Primeiro teste (perfis originais, 1 semente por formato):** na Liga 20 só 1,8 dos 5 atletas de cada rodada
+   eram vendidos. Os bots miravam todos o mesmo alvo, e os Equilibrados terminavam com 1,3 contratação.
+   - O GDD §6 manda **considerar a concorrência com base em informação pública**, e o bot recebia as vagas e
+     os saldos dos rivais, mas não os usava.
+   - Implementado em `services/bot_ai/auction_bot.py`: o bot estima quantos rivais com vaga e saldo devem
+     disputar cada atleta e usa a chance de vencer na pontuação.
+   - O alvo passou a ser escolhido de forma **mista**: sorteio proporcional a pontuação², determinístico por
+     clube e rodada. Bots que pensam igual deixam de colidir.
+   - Os parâmetros da IA (`COMPETITION_WEIGHT` = 0,5 e `SAMPLING_POWER` = 2) são provisórios, como os da IA
+     tática. Foram escolhidos em lotes exploratórios.
+   - Resultado: 3,8 vendas por rodada, e todos os bots completam o elenco no leilão.
+2. **Com os perfis originais**, o gasto mediano ficou em ~41% (L3 exige 50–95%). Lance mínimo de 70% levou a
+   46,5%, e uma curva menos inclinada abaixo da mediana, a 40,7%. A causa era o comportamento de lance.
+   **O responsável escolheu bots mais dispostos a pagar.**
+3. **Perfis revisados (12 leilões exploratórios):** L1–L6 atendidos; gasto mediano de 66%, entre 62% e 71% por formato.
 
 ## 8. Personalidades dos bots no mercado (PB-02)
 

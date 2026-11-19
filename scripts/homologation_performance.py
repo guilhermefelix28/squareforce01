@@ -88,7 +88,6 @@ class Server:
         self.port = free_port()
         self.tmp = tempfile.mkdtemp(prefix=f"sf-perf-{name}-")
         e = {**os.environ, "SQUADFORCE_DB_PATH": str(Path(self.tmp) / "perf.db"),
-             "SQUADFORCE_AUCTION_MODEL": "support.fake_auction_model:FakeAuctionModel",
              "PYTHONPATH": str(ROOT / "tests"), **env}
         t0 = time.perf_counter()
         self.proc = subprocess.Popen([PY, "-m", "services.gateway", "--port", str(self.port)], cwd=ROOT, env=e,

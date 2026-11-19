@@ -7,7 +7,8 @@ description: Implementar e revisar o leilão de jogadores do SquadForce — ofer
 
 ## Finalidade
 Orientar o serviço `services/auction`. **Implementado na Entrega 3** (motor, regras, complementação, API e tela),
-**bloqueado até o `AuctionModel` aprovado** — as fórmulas não podem ser inventadas (ver `docs/architecture/leilao.md`).
+com o **`AuctionModel` oficial aprovado em 2026-11-19** (`services/auction/official_model.py`, carregado por padrão;
+fórmulas em `docs/architecture/proposta-auction-model.md`). Mudar fórmulas ou perfis exige nova aprovação do responsável.
 
 ## Quando utilizar
 - Entrega do leilão autorizada pelo usuário.
@@ -30,7 +31,8 @@ antecipado, complementação automática e resumo final de elencos e saldos.
 
 ## Contratos e dependências
 - Regras aprovadas: `services/auction/rules.py` (única fonte das constantes do GDD).
-- Fórmulas pendentes: `services/auction/model.py::AuctionModel` (carregado por `SQUADFORCE_AUCTION_MODEL`).
+- Interface `services/auction/model.py::AuctionModel`; oficial em `official_model.py` (`for_pool` recalibra pela base);
+  `SQUADFORCE_AUCTION_MODEL` substitui o modelo e `none` desliga o leilão.
 - Motor: `engine.py` (`AuctionEngine.start/tick/place_bid`), complementação `completion.py`, visões `service.py`.
 - API: `POST /auction/start`, `GET /auction`, `POST /auction/bids` (Idempotency-Key = op_id), `GET /auction/summary`.
 - Eventos WS: `auction.started`, `auction.round_started`, `auction.round_closed`, `auction.finished`.
@@ -45,7 +47,7 @@ antecipado, complementação automática e resumo final de elencos e saldos.
 5. Ao receber as fórmulas reais: implementar o modelo, rodar `tests/simulation` com ele e calibrar (mediana 70, >90 raro).
 
 ## Restrições e comportamentos proibidos
-- Inventar fórmulas econômicas, pesos ou perfis pendentes; usar o modelo falso fora dos testes.
+- Alterar fórmulas econômicas, pesos, formações ou perfis aprovados sem aprovação; usar o modelo falso fora dos testes.
 - Revelar ofertas de outros clubes ou dados ocultos a qualquer cliente.
 - Pausar o relógio por desconexão.
 
@@ -54,11 +56,13 @@ Saldo nunca negativo; sem duplicatas; desempate por timestamp e sequência; rese
 limite de complementação; determinismo com relógio simulado; concorrência de lances.
 
 ## Estado na homologação (Entrega 9)
-Homologação: lógica, concorrência e finanças testadas com o MODELO FALSO; a validação das decisões financeiras reais dos bots continua BLOQUEADA até o `AuctionModel` aprovado (fórmulas não inventadas).
+Homologação: lógica, concorrência e finanças testadas com o modelo falso (unitários) e com o modelo OFICIAL (API e
+lote de 200 leilões na base real, critérios L1–L6 em `docs/homologacao/criterios.md` §6; resultado em `docs/homologacao/leilao.md`).
 
 ## Referências
 - [Game Design §4, §5, §7](../../../docs/game-design/game-design-v5.2.md)
 - [Pendências PE-*](../../../docs/game-design/pendencias.md)
 - [README do serviço](../../../services/auction/README.md)
-- [Leilão: regras implementadas e fórmulas pendentes](../../../docs/architecture/leilao.md)
+- [Leilão: regras implementadas](../../../docs/architecture/leilao.md)
+- [AuctionModel oficial aprovado](../../../docs/architecture/proposta-auction-model.md)
 - [Matriz de testes](../../../docs/architecture/matriz-de-testes.md)

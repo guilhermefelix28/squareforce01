@@ -30,3 +30,23 @@ Notas:
 - O primeiro processo da árvore (~4 MB) é o lançador do `python.exe` do `.venv` no Windows; o gateway real é o filho; os demais são os processos de partidas.
 - O ganho do paralelismo (2,15×) é limitado pelo custo fixo de despachar tarefas e pela consolidação sequencial (correta por projeto); a rodada inteira já fica em ~0,2–0,3 s.
 - As medidas valem para este ambiente; não são garantia para máquinas mais lentas.
+
+## Re-medição com o `AuctionModel` OFICIAL e as 11 formações (2026-11-19)
+
+Mesmo script, agora sem o modelo falso (o servidor carrega o modelo oficial). Critérios inalterados; todos atendidos.
+
+| Medida | Resultado | Critério |
+|---|---|---|
+| Inicialização do gateway | 1,157 s | ≤ 5 s ✅ |
+| GET health / sessão / catálogo / leilão | p95 3,06 / 12,61 / 3,87 / 1,6 ms | ≤ 150 ms ✅ |
+| GET estatísticas / resumo final (Liga 20) | p95 11,82 / 30,11 ms | ≤ 150 ms ✅ |
+| POST lance no leilão | p95 1,2 ms (120 × 200) | ≤ 100 ms ✅ |
+| POST proposta / cancelamento | p95 1,3 / 1,28 ms | ≤ 150 ms ✅ |
+| Rodada de Liga 20 | p95 215,22 ms | ≤ 4 s ✅ |
+| Liga 20 turno e returno (380 partidas) | 21,63 s | ≤ 120 s ✅ |
+| 1ª fase da Copa 32 | 264,1 ms | ≤ 5 s ✅ |
+| Memória após Liga 20 / Copa 32 | 286,6 / 285,3 MB | ≤ 600 MB ✅ |
+| Paralelismo (1 × 8 processos) | 2,17× | ≥ 1,5× ✅ |
+
+A Liga 20 completa passou de 12,0 s para 21,6 s: a IA agora avalia 11 formações em vez de 3, e continua bem
+abaixo do limite.

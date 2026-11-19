@@ -86,6 +86,31 @@ def test_bot_bids_respect_minimum_and_reserve_rule():
                 assert intent.amount % 100_000 == 0
 
 
+def test_bot_considers_public_competition_and_avoids_the_crowded_target():
+    """§6: concorrência estimada SÓ com informação pública (vagas e saldos dos rivais, lances mínimos)."""
+    from dataclasses import replace
+
+    s = make_engine(4)
+    e = s.engine
+    model = FakeAuctionModel()
+    prof = model.bot_profile("balanced")
+    alone = replace(_view(e, s.clubs[1]), rivals_open_slots={}, rivals_budgets={})
+    solo = decide_bid(alone, model, prof)
+    assert solo is not None
+    crowd_slots = {9000 + i: 18 for i in range(30)}
+    crowd = replace(alone, rivals_open_slots=crowd_slots, rivals_budgets={u: 120_000_000 for u in crowd_slots})
+    contested = decide_bid(crowd, model, prof)
+    assert contested is not None
+    mb = alone.minimum_bids
+    # sem rivais: o maior ganho; com 30 rivais: um alvo menos disputado (lance mínimo menor)
+    assert mb[contested.player_id] < mb[solo.player_id]
+    # rivais sem vagas ou sem saldo não contam como concorrência
+    idle = replace(alone, rivals_open_slots={u: 0 for u in crowd_slots}, rivals_budgets={u: 120_000_000 for u in crowd_slots})
+    assert decide_bid(idle, model, prof) == solo
+    broke = replace(alone, rivals_open_slots=crowd_slots, rivals_budgets={u: 0 for u in crowd_slots})
+    assert decide_bid(broke, model, prof) == solo
+
+
 def test_full_squad_bot_does_not_bid():
     s = make_engine(4)
     e = s.engine

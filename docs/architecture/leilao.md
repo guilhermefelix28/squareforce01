@@ -20,33 +20,36 @@ Implementação de GDD v5.2 §4–§7. Código: `services/auction/` e `services/
 | Bots: 4 personalidades ocultas, mesma avaliação, ganho marginal 0,8 × Δtitulares + 0,2 × Δreservas, só informação pública | `bot_ai/evaluation.py`, `bot_ai/auction_bot.py` |
 | Complementação: 18 exatos, limite `min(18 − C, ⌊C/4⌋)`, ≤ 1 destaque (≥ percentil 85), preço = média(valor de mercado, lance mínimo), distribuição em turnos com ordem sorteada, sem compensação | `completion.py` |
 
-## O que falta: o `AuctionModel` (fórmulas pendentes)
+## `AuctionModel` oficial (aprovado em 2026-11-19)
 
-O leilão **não inicia** sem um modelo aprovado (`409 AUCTION_MODEL_NOT_CONFIGURED`). Para ativar, implemente a
-interface `services/auction/model.py::AuctionModel` e aponte a variável de ambiente
-`SQUADFORCE_AUCTION_MODEL="pacote.modulo:Objeto"`. Toda saída é **validada contra o GDD** pelo motor.
+Fórmulas, ajustes do responsável e lotes exploratórios: [proposta aprovada](proposta-auction-model.md).
+Implementação: `services/auction/official_model.py`, carregado **por padrão**. O motor chama `for_pool(base)` a cada
+leilão, então a calibração (overall por posição, percentil 85, mediana) é refeita com a base atual. Toda saída
+continua **validada contra o GDD** pelo motor.
 
-| Método | Pendência | Precisa definir | Validação automática |
-|---|---|---|---|
-| `overall(player)` | PE-01 | Overall calibrado (mediana-alvo 70; > 90 raro). Base do destaque (p85). | — |
-| `player_quality(player, posição)` | PE-01, PE-03 | Rendimento por posição: ponderações de atributos + familiaridade (penalidade máx. 35%). | — |
-| `market_value(player)` | PE-02 | Valor de mercado (overall calibrado + idade). | 0 < valor ≤ R$ 50 mi |
-| `minimum_bid(player)` | PE-02 | Lance mínimo. | 0 < lance ≤ R$ 30 mi |
-| `basic_price(player)` | PE-04 | Preço na reserva básica. | 0 < preço ≤ R$ 500 mil |
-| `formations()` | PM-01 | Lista de formações (11 posições cada, códigos GK/DR/DL/DC/DM/MC/STC). | ≥ 1 formação, 11 vagas |
-| `position_weights(...)` | PE-05 | Pesos do sorteio da posição (necessidade coletiva, disponibilidade, histórico, aleatoriedade). | pesos ≥ 0, soma > 0 |
-| `pick_round_players(...)` | §5 | Escolha dos 5 com variedade de qualidade e limite de repetição de não vendidos. | 5 distintos, disponíveis, da posição |
-| `build_reserves(...)` | PE-04 | Reserva básica (suficiente para todas as vagas) e complementar (intermediários e destaques). | disjuntas, só não vendidos, básica ≥ vagas |
-| `bot_profile(personalidade)` | PB-01 | Parâmetros de Agressivo, Conservador, Equilibrado e Oportunista no leilão (ver `BotProfile`). | tempos dentro da rodada de 10 s |
-| `trade_profile(personalidade)` | PB-02 | Parâmetros de negociação das personalidades (ver `TradeProfile` e [mercado](mercado.md)). | resposta < 10 s; intervalo > 0 |
+- `SQUADFORCE_AUCTION_MODEL="pacote.modulo:Objeto"` substitui o modelo (testes e demonstração).
+- `SQUADFORCE_AUCTION_MODEL=none` desliga o leilão (`409 AUCTION_MODEL_NOT_CONFIGURED`).
 
-Os testes usam `tests/support/fake_auction_model.py`, um modelo **falso e arbitrário**, nunca usado em produção.
+| Método | Regra (proposta) |
+|---|---|
+| `overall` | §1: composições de atributos do motor por posição; escala por posição com mediana 70 |
+| `player_quality` | §2: escala da posição × (1 − 0,35 × (100 − familiaridade)/99) |
+| `market_value` / `minimum_bid` | §3: R$ 3 mi × e^(k(overall−70)) × idade (k = 0,1228 acima e 0,25 abaixo da mediana); lance mínimo 50% |
+| `basic_price` / `build_reserves` | §4: min(R$ 500 mil, lance mínimo); reservas básica e complementar |
+| `position_weights` / `pick_round_players` | §5: necessidade × disponibilidade × recência; peso 6 acima e 1 abaixo da mediana |
+| `formations` | §6: 11 formações oficiais |
+| `bot_profile` / `trade_profile` | §7 e §8 |
+
+Bots (GDD §6, concorrência pública): rivais esperados por atleta e escolha mista do alvo (PB-06, parâmetros
+provisórios da IA em `services/bot_ai/auction_bot.py`).
+
+Testes unitários do motor usam também `tests/support/fake_auction_model.py`, um modelo **falso**, nunca usado em produção.
 
 ## API
 
 | Método | Rota | Descrição |
 |---|---|---|
-| POST | `/api/sessions/{id}/auction/start` | Inicia (fase `setup` → `auction`). 409 se o modelo não estiver configurado. |
+| POST | `/api/sessions/{id}/auction/start` | Inicia (fase `setup` → `auction`). 409 se o leilão estiver desligado (`SQUADFORCE_AUCTION_MODEL=none`). |
 | GET | `/api/sessions/{id}/auction` | Estado do usuário: rodada, 5 atletas (sem dados ocultos), tempos restantes, saldo, lance máximo, oferta ativa própria, resultados recentes, elencos/saldos públicos. |
 | POST | `/api/sessions/{id}/auction/bids` | `{player_id, amount, round_number?}`; `Idempotency-Key` = identificador da operação. |
 | GET | `/api/sessions/{id}/auction/summary` | Elencos finais (18) e saldos, após a complementação (fase `squad_completion`). |

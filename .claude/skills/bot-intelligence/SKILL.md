@@ -7,9 +7,10 @@ description: Decisões dos clubes controlados por IA no SquadForce — personali
 
 ## Finalidade
 Orientar o serviço `services/bot_ai`. **Leilão implementado** (Entrega 3): `evaluation.py` (escalação ótima por
-formação via algoritmo húngaro; ganho 0,8/0,2) e `auction_bot.py` (decisão de lance). Parâmetros das
-personalidades pendentes (PB-01, via `AuctionModel.bot_profile`). **Mercado implementado** (Entrega 4):
-`trade_bot.py` (`evaluate_offer` com proteção contra exploração; `choose_proposal`), parâmetros PB-02 pendentes.
+formação via algoritmo húngaro; ganho 0,8/0,2) e `auction_bot.py` (decisão de lance com concorrência estimada por
+informação pública e escolha mista do alvo, PB-06 provisório). Perfis aprovados (PB-01, `AuctionModel.bot_profile`).
+**Mercado implementado** (Entrega 4): `trade_bot.py` (`evaluate_offer` com proteção contra exploração;
+`choose_proposal`), perfis aprovados (PB-02).
 **Tática implementada** (Entrega 6): `tactics.py` (`choose_lineup`, `TacticalBot`, `CompetitionSituation`,
 `PreMatchContext`), parâmetros provisórios em `tactics_params.py` (PB-03). Ver `docs/architecture/ia-tatica.md`.
 

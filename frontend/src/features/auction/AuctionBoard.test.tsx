@@ -140,14 +140,14 @@ describe("AuctionPage", () => {
       [`GET /api/sessions/${SESSION.id}`]: () => json(200, SESSION),
       "GET /api/catalog/clubs": () => json(200, { items: CLUBS, total: 3, limit: 200, offset: 0 }),
       [`POST /api/sessions/${SESSION.id}/auction/start`]: () =>
-        apiError(409, "AUCTION_MODEL_NOT_CONFIGURED", "O leilão depende das fórmulas ainda não aprovadas."),
+        apiError(409, "AUCTION_MODEL_NOT_CONFIGURED", "O leilão está desligado neste servidor."),
     });
     window.location.hash = "#/auction";
     const { App } = await import("../../app/App");
     render(<App />);
     await user.click(await screen.findByRole("button", { name: "Iniciar leilão" }));
     await user.click(within(screen.getByRole("alertdialog")).getByRole("button", { name: "Iniciar" }));
-    expect(await screen.findByText("Leilão aguardando fórmulas aprovadas")).toBeInTheDocument();
+    expect(await screen.findByText("Leilão desligado neste servidor")).toBeInTheDocument();
     await waitFor(() => expect(screen.getByRole("button", { name: "Iniciar leilão" })).toBeEnabled());
   });
 });

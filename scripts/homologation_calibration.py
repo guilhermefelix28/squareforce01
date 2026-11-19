@@ -31,6 +31,7 @@ sys.path[:0] = [str(ROOT), str(ROOT / "shared" / "python"), str(ROOT / "tests")]
 import services  # noqa: E402,F401
 from services.bot_ai.tactics import CompetitionSituation, PreMatchContext, TacticalBot  # noqa: E402
 from services.match_engine.calibration import SAMPLE_FORMATIONS  # noqa: E402
+from services.competition.views import SEASON_FORMATIONS  # noqa: E402  (11 oficiais, PM-01)
 from services.match_engine.engine import simulate  # noqa: E402
 from services.match_engine.params import DEFAULT_PARAMS, POSTURES  # noqa: E402
 from services.match_engine.types import MatchInput, TeamSheet  # noqa: E402
@@ -122,7 +123,7 @@ def run_broad(seed: int) -> dict:
     knockout = rng.random() < 0.2
     a, b = rng.sample(sorted(REAL), 2)
     ctxs = [PreMatchContext(situation(rng, knockout), rng.choice(PERSONALITIES)) for _ in (0, 1)]
-    sheets = [choose_lineup(c, REAL[c], SAMPLE_FORMATIONS, ctx).sheet for c, ctx in zip((a, b), ctxs)]
+    sheets = [choose_lineup(c, REAL[c], SEASON_FORMATIONS, ctx).sheet for c, ctx in zip((a, b), ctxs)]
     m = MatchInput(f"B-{seed}", "liga" if not knockout else "copa", sheets[0], sheets[1], seed,
                    neutral_venue=knockout, knockout=knockout)
     ctrl = {k: TacticalBot(ctxs[k]) for k in (0, 1)}

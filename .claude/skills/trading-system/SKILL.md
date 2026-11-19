@@ -7,7 +7,7 @@ description: Implementar e revisar o mercado de negociações do SquadForce — 
 
 ## Finalidade
 Orientar o serviço `services/trading`. **Implementado na Entrega 4** (motor, IA de negociação, API e tela).
-Parâmetros das personalidades pendentes (PB-02, via `AuctionModel.trade_profile`).
+Perfis das personalidades aprovados (PB-02, `AuctionModel.trade_profile` do modelo oficial).
 
 ## Quando utilizar
 Entrega do mercado autorizada, ou revisão de contratos/fases que envolvam negociações.

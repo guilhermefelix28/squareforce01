@@ -8,6 +8,7 @@ de `BotProfile` (pendentes, fornecidos pelo AuctionModel).
 
 from __future__ import annotations
 
+import hashlib
 import math
 from dataclasses import dataclass
 from typing import Mapping, Sequence
@@ -18,6 +19,14 @@ from services.auction.rules import MIN_RESERVE_PER_SLOT, SQUAD_SIZE, max_afforda
 from .evaluation import marginal_gain, squad_quality
 
 BID_STEP = 100_000  # lances em múltiplos de R$ 100 mil (menor botão rápido do GDD)
+# Concorrência (§6, só informação pública): rivais com vaga e saldo para o lance mínimo se distribuem entre os
+# atletas da rodada na proporção dos lances mínimos (os melhores atraem mais). Chance estimada de vencer =
+# 1 / (1 + rivais esperados × lance mínimo / próprio lance): lances mais altos enfrentam menos concorrência.
+# Parâmetro de IA (provisório, como os de tactics_params), não regra de jogo.
+COMPETITION_WEIGHT = 0.5
+# Escolha mista: o alvo é sorteado com probabilidade proporcional a score^SAMPLING_POWER, por um sorteio
+# determinístico por (clube, atletas da rodada). Bots que pensam igual deixam de colidir no mesmo atleta.
+SAMPLING_POWER = 2.0
 
 
 @dataclass(frozen=True)
@@ -57,16 +66,32 @@ def price_cap(view: BotAuctionView, profile: BotProfile, market_value: int, gain
     return _round_down(cap)
 
 
+def expected_rivals(view: BotAuctionView) -> dict[int, float]:
+    """Rivais esperados em cada atleta da rodada, estimados SÓ com informação pública."""
+    mbs = {p.unique_id: view.minimum_bids[p.unique_id] for p in view.round_players}
+    total = sum(mbs.values())
+    out: dict[int, float] = {}
+    for pid, mb in mbs.items():
+        able = sum(
+            1 for uid, slots in view.rivals_open_slots.items()
+            if slots > 0 and max_affordable_bid(view.rivals_budgets.get(uid, 0), SQUAD_SIZE - slots) >= mb
+        )
+        out[pid] = able * (mb / total if total else 0.0)
+    return out
+
+
 def decide_bid(view: BotAuctionView, model: AuctionModel, profile: BotProfile) -> BidIntent | None:
     """Escolhe o atleta e o valor; None = não disputar a rodada.
 
-    Score = ganho marginal × (1 − price_sensitivity × preço/limite): o oportunista privilegia
-    barganhas, o agressivo aceita pagar perto do limite. Nunca reduz o próprio lance ativo.
+    Score = ganho marginal × chance estimada de vencer × (1 − price_sensitivity × preço/limite): o oportunista
+    privilegia barganhas, o agressivo aceita pagar perto do limite, e todos evitam os alvos mais disputados
+    quando há alternativa. Nunca reduz o próprio lance ativo.
     """
     if len(view.squad) >= SQUAD_SIZE:
         return None
-    best: tuple[float, BidIntent] | None = None
+    options: list[tuple[float, BidIntent]] = []
     before = squad_quality(view.squad, model)
+    rivals = expected_rivals(view)
     for p in view.round_players:
         min_bid = view.minimum_bids[p.unique_id]
         gain = marginal_gain(view.squad, p, model, before)
@@ -79,10 +104,31 @@ def decide_bid(view: BotAuctionView, model: AuctionModel, profile: BotProfile) -
         amount = max(amount, min_bid)
         if view.own_bid and view.own_bid[0] == p.unique_id:
             amount = max(amount, view.own_bid[1])  # proibido reduzir o lance no mesmo atleta
-        score = gain * (1.0 - profile.price_sensitivity * (amount / cap if cap else 1.0))
-        if best is None or score > best[0]:
-            best = (score, BidIntent(p.unique_id, amount))
-    return best[1] if best else None
+        win = 1.0 / (1.0 + COMPETITION_WEIGHT * rivals[p.unique_id] * min_bid / amount)
+        score = gain * win * (1.0 - profile.price_sensitivity * (amount / cap if cap else 1.0))
+        options.append((score, BidIntent(p.unique_id, amount)))
+    return _mixed_choice(view, options)
+
+
+def _mixed_choice(view: BotAuctionView, options: list[tuple[float, BidIntent]]) -> BidIntent | None:
+    if not options:
+        return None
+    if view.own_bid is not None:  # já tem lance: mantém o alvo (só revisa o valor), sem trocar ao acaso
+        same = next((o for o in options if o[1].player_id == view.own_bid[0]), None)
+        if same is not None:
+            return same[1]
+    weights = [max(0.0, sc) ** SAMPLING_POWER for sc, _ in options]
+    total = sum(weights)
+    if total <= 0:
+        return max(options, key=lambda o: o[0])[1]
+    key = f"{view.club_uid}:" + ",".join(str(p.unique_id) for p in view.round_players)
+    u = int(hashlib.sha256(key.encode()).hexdigest()[:12], 16) / 16**12
+    acc = 0.0
+    for w, (_, intent) in zip(weights, options):
+        acc += w / total
+        if u < acc:
+            return intent
+    return options[-1][1]
 
 
 def summarize_view(view: BotAuctionView) -> Sequence[str]:

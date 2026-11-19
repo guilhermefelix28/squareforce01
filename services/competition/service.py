@@ -27,7 +27,7 @@ from squadforce_shared.contracts import (
 
 from .live import LiveMatch
 from .season import MAIN_EVENTS, PlayedMatch, PlayerStats, Season
-from .views import PROVISIONAL_FORMATIONS, SeasonViewsMixin
+from .views import SEASON_FORMATIONS, SeasonViewsMixin
 
 
 
@@ -64,7 +64,7 @@ class SeasonService(SeasonViewsMixin):
             ages = {pid: p.age for pid, p in market.players.items()}
         season = Season(competition_id=competition_id, structure=structure,
                         squads={c: squads[c] for c in structure.participants}, names=names, user_club=user,
-                        personalities=personalities, formations=PROVISIONAL_FORMATIONS, seed=seed)
+                        personalities=personalities, formations=SEASON_FORMATIONS, seed=seed)
         with self._lock:
             self._seasons[session_id] = season
             self._locks[session_id] = threading.Lock()

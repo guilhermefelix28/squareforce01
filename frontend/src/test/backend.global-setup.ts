@@ -49,8 +49,7 @@ async function startServer(name: string, extraEnv: Record<string, string>): Prom
       ...process.env,
       SQUADFORCE_DB_PATH: join(tmp, "e2e.db"),
       SQUADFORCE_GRAPHICS_DIR: join(ROOT, "Graphics"),
-      // MODELO FALSO, somente para o teste e2e exercitar o leilão (fórmulas reais pendentes)
-      SQUADFORCE_AUCTION_MODEL: "support.fake_auction_model:FakeAuctionModel",
+      // sem SQUADFORCE_AUCTION_MODEL: o servidor carrega o AuctionModel OFICIAL (padrão)
       PYTHONPATH: join(ROOT, "tests"),
       ...extraEnv,
     },

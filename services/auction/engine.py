@@ -120,7 +120,8 @@ class AuctionEngine:
     ):
         if len(set(participants)) != len(participants) or user_club_uid not in participants:
             raise ValueError("Participantes inválidos para o leilão.")
-        self.model = model
+        bind = getattr(model, "for_pool", None)
+        self.model = bind(list(pool)) if callable(bind) else model  # calibrado para a base atual
         self.rng = rng
         self.clock = clock
         self.fmt, self.num_clubs = fmt, num_clubs

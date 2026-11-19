@@ -1,11 +1,12 @@
-"""Ponto de extensão das regras PENDENTES de calibração (PE-01 a PE-05, PM-01).
+"""Interface das fórmulas econômicas e calibrações do leilão (PE-01 a PE-05, PM-01, PB-01, PB-02).
 
-Por decisão do responsável (2026-11-18), nenhuma fórmula econômica é inventada: o leilão só roda
-quando um `AuctionModel` aprovado for fornecido. Enquanto isso, `load_auction_model()` retorna None e
-o início do leilão é recusado com AUCTION_MODEL_NOT_CONFIGURED.
+O modelo OFICIAL (`services/auction/official_model.py`) foi aprovado pelo responsável em 2026-11-19 e é
+carregado por padrão. A variável de ambiente SQUADFORCE_AUCTION_MODEL="pacote.modulo:objeto" substitui o
+modelo (os testes usam um modelo FALSO em tests/support/fake_auction_model.py); o valor "none" desliga o
+leilão (início recusado com AUCTION_MODEL_NOT_CONFIGURED).
 
-Um modelo é carregado pela variável de ambiente SQUADFORCE_AUCTION_MODEL="pacote.modulo:objeto".
-Os testes usam um modelo FALSO em tests/support/fake_auction_model.py (nunca em produção).
+Um modelo pode oferecer `for_pool(pool)`: o motor do leilão o chama com a base atual e usa o modelo
+devolvido, calibrado para aquela base (GDD §4/§7: recalcular quando a base for substituída).
 
 Todas as saídas do modelo são VALIDADAS pelo motor contra as regras aprovadas (limites do GDD).
 """
@@ -18,16 +19,9 @@ import random
 from dataclasses import dataclass
 from typing import Mapping, Protocol, Sequence
 
+from squadforce_shared.domain.formations import Formation
 from squadforce_shared.domain.players import PlayerProfile
 from squadforce_shared.domain.positions import Position
-
-
-@dataclass(frozen=True)
-class Formation:
-    """Formação: nome e exatamente 11 posições (com repetição, ex.: dois DC)."""
-
-    name: str
-    slots: tuple[Position, ...]
 
 
 @dataclass(frozen=True)
@@ -146,8 +140,12 @@ class AuctionModelError(ValueError):
 
 def load_auction_model() -> AuctionModel | None:
     spec = os.environ.get("SQUADFORCE_AUCTION_MODEL", "").strip()
-    if not spec:
+    if spec.lower() == "none":
         return None
+    if not spec:
+        from .official_model import OfficialAuctionModel
+
+        return OfficialAuctionModel()
     module, _, attr = spec.partition(":")
     obj = getattr(importlib.import_module(module), attr or "MODEL")
     return obj() if isinstance(obj, type) else obj

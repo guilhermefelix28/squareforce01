@@ -51,7 +51,7 @@ Game Design v5.2 e que lacunas sejam registradas — nunca inventadas. As demais
 - Inferir a divisão Série A/B a partir de `club_reputation`: a fonte é `club_divisions` (temporada 2026, PD-01).
 - Expor informações declaradas ocultas (overall, atributos no leilão, reputação, personalidade dos bots).
 - Persistir progresso de competição.
-- Apresentar parâmetros provisórios (`services/match_engine/params.py`, `AuctionModel`) como calibrados ou aprovados.
+- Apresentar parâmetros provisórios (IA tática, concorrência do leilão — PB-03…PB-06) como aprovados; alterar regras aprovadas sem o responsável.
 
 ## Critérios de teste
 - Testes citam a regra do GDD que verificam (nome ou comentário).
@@ -59,7 +59,7 @@ Game Design v5.2 e que lacunas sejam registradas — nunca inventadas. As demais
   (ex.: `test_table_is_exactly_the_official_one`, `test_options_contract_matches_game_design`).
 
 ## Estado na homologação (Entrega 9)
-Homologação: regras do GDD conferidas por testes; nenhuma regra alterada para aprovar. Bloqueios externos: fórmulas do leilão (`AuctionModel`) e critérios de desempate (PC-01). Novas decisões a confirmar: PH-01 a PH-03 em `pendencias.md`.
+Homologação: regras do GDD conferidas por testes; nenhuma regra alterada para aprovar. Conclusão (2026-11-19): `AuctionModel` oficial, 11 formações, desempate Brasileirão, 3/1/0, referências do motor e PH-01/PH-02 aprovados pelo responsável. Abertas: PC-03 (mando), PM-03, PI-01, PB-03–PB-06 provisórias; ver `pendencias.md`.
 
 ## Referências
 - [Game Design v5.2](../../../docs/game-design/game-design-v5.2.md)

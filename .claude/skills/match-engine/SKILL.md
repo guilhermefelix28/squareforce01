@@ -7,7 +7,8 @@ description: Motor de partidas do SquadForce — simulação por eventos encadea
 
 ## Finalidade
 Orientar o serviço `services/match_engine`. **Implementado na Entrega 5** como biblioteca pura e determinística;
-**todos os números são provisórios** (`params.py`, `MatchParams.version`) e o motor **não está calibrado** (PM-02).
+os números (`params.py`, `MatchParams.version`) foram **calibrados contra as referências públicas aceitas pelo responsável**
+(PM-02, 2026-11-19); mudanças exigem nova verificação das faixas de `docs/homologacao/criterios.md`.
 
 ## Quando utilizar
 Implementação, calibração ou revisão de qualquer parte da simulação de partidas.

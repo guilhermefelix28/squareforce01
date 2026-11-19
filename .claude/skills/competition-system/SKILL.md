@@ -52,7 +52,7 @@ Formatos; participantes; calendário/chave; disparo paralelo das partidas; conso
    `live.py` (`LiveMatch`); antes de `play`, registrar as decisões e `expect_result` (resultado idêntico).
 
 ## Restrições e comportamentos proibidos
-Inventar critérios de desempate (PC-01) ou efeito de mando (PC-03); atribuir mando na Copa (PC-05); expor a semente; consolidar rodada parcialmente; persistir progresso; expor `register_cup_winner` diretamente por API; aplicar critérios de desempate não enviados (lista padrão vazia);
+Mudar o desempate aprovado (PC-01: padrão Brasileirão, `BRASILEIRAO_TIEBREAKERS`) ou inventar efeito de mando (PC-03); atribuir mando na Copa (PC-05); expor a semente; consolidar rodada parcialmente; persistir progresso; expor `register_cup_winner` diretamente por API; aplicar critérios de desempate não enviados (lista padrão vazia);
 usar `random` global ou semente dependente da ordem de execução.
 
 ## Critérios de teste

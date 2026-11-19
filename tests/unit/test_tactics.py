@@ -336,7 +336,7 @@ def test_emergency_players_only_below_eleven_available():
 
 
 def test_no_formations_is_an_explicit_error():
-    with pytest.raises(ValueError, match="PM-01"):
+    with pytest.raises(ValueError, match="Nenhuma formação"):
         choose_lineup(1, squad_for_tests(), [], ctx())
 
 

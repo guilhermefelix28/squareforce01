@@ -500,7 +500,7 @@ export interface paths {
         };
         /**
          * Season Formations
-         * @description Formações disponíveis (lista oficial pendente — PM-01: provisória).
+         * @description Formações oficiais (PM-01).
          */
         get: operations["season_formations_api_sessions__session_id__season_formations_get"];
         put?: never;
@@ -1241,7 +1241,7 @@ export interface components {
         FormationOut: {
             /**
              * Id
-             * @description Nome da formação (ex.: 4-3-3). Lista oficial pendente (PM-01): provisória.
+             * @description Nome da formação oficial (PM-01), ex.: 4-2-3-1.
              */
             id: string;
             /**

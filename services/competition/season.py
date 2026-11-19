@@ -175,7 +175,7 @@ class Season:
         round_timeout: float = 600.0,
     ):
         if not formations:
-            raise SeasonError("NO_FORMATIONS", "Nenhuma formação disponível (lista oficial pendente — PM-01).")
+            raise SeasonError("NO_FORMATIONS", "Nenhuma formação disponível.")
         self.competition_id = competition_id
         self.kind = structure.kind
         self.schedule = structure if structure.kind == "league" else None

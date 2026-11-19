@@ -603,7 +603,7 @@ class TeamLineupOut(_Model):
 
 
 class FormationOut(_Model):
-    id: str = Field(description="Nome da formação (ex.: 4-3-3). Lista oficial pendente (PM-01): provisória.")
+    id: str = Field(description="Nome da formação oficial (PM-01), ex.: 4-2-3-1.")
     positions: list[str] = Field(description="11 vagas na ordem do campo (código interno).")
 
 
